@@ -1,0 +1,107 @@
+/dev/mali0                0666   system     system
+/dev/ion                  0666   system     system
+/dev/ump                  0666   system     graphics
+/dev/exynos-mem           0660   system     graphics
+/dev/video0               0660   system     camera
+/dev/video1               0660   system     camera
+/dev/video2               0660   system     camera
+/dev/video3               0660   system     camera
+/dev/video20              0660   system     system
+/dev/fimg2d               0666   system     graphics
+/dev/i2c-2                0660   system     system
+/dev/HPD                  0660   system     system
+
+# gscalers
+/dev/video23              0660   media      graphics
+/dev/video26              0660   media      graphics
+
+/dev/video24              0660   media      graphics
+/dev/video27              0660   media      graphics
+
+# scalers
+/dev/video50              0660   media      graphics
+/dev/video51              0660   media      graphics
+/dev/m2m1shot_scaler0     0666   media      graphics
+/dev/m2m1shot_scaler1     0666   media      graphics
+
+/dev/v4l-subdev*          0660   system     camera
+/dev/media0               0660   system     camera
+/dev/media1               0660   system     camera
+
+# seiren Audio
+/dev/seiren               0660   system     audio
+# Smart-PA
+/dev/i2c-7                0660   system     audio
+# DSP
+/dev/adnc0                0660   media      system
+/dev/adnc1                0660   media      system
+/dev/adnc2                0660   media      system
+/dev/adnc3                0660   media      system
+/dev/adnc4                0660   media      system
+/dev/adnc5                0664   media      system
+
+#mixer
+/dev/video16              0660   system     audio
+/dev/video17              0660   system     system
+/dev/video18              0660   system     system
+/dev/video19              0660   system     system
+
+#CEC
+/dev/CEC                  0660   system     system
+
+#JANUARY
+/dev/january		  0660   system     system
+
+# JPEG
+/dev/m2m1shot_jpeg	  0664   media      media
+/dev/video13              0660   media      media
+/dev/video14              0660   media      media
+
+# mfc
+/dev/video6               0660   media      media
+/dev/video7               0660   media      media
+/dev/video8               0660   media      media
+/dev/video9               0660   media      media
+
+# camera
+/dev/video101             0660   media      media
+/dev/video102             0660   media      media
+/dev/video103             0660   media      media
+/dev/video104             0660   media      media
+/dev/video110             0660   media      media
+/dev/video111             0660   media      media
+/dev/video112             0660   media      media
+/dev/video120             0660   media      media
+/dev/video121             0660   media      media
+/dev/video122             0660   media      media
+/dev/video130             0660   media      media
+/dev/video131             0660   media      media
+/dev/video132             0660   media      media
+/dev/video140             0660   media      media
+/dev/video141             0660   media      media
+/dev/video142             0660   media      media
+/dev/video150             0660   media      media
+/dev/video151             0660   media      media
+/dev/video152             0660   media      media
+/dev/video160             0660   media      media
+/dev/media2               0660   media      media
+
+# MobiCore
+/dev/mobicore             0600   system     system
+/dev/mobicore-user        0666   system	    system
+
+# Secure MEM driver
+/dev/s5p-smem             0660   system     system
+
+# for DM tools
+/dev/umts_dm0             0660   radio      radio
+/dev/umts_router          0660   radio      radio
+
+# SMI RIL
+/dev/umts_boot0           0660    radio       radio
+/dev/umts_ipc0            0660    radio       radio
+/dev/umts_ipc1            0660    radio       radio
+/dev/umts_rfs0            0660    radio       radio
+
+#fingerprint
+/dev/spidev4.0            0660   system     system

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<glgps xmlns="http://www.glpals.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.glpals.com/glconfig.xsd" >
+  <!--HAL Confguration  -->
+  <hal    	   
+       PortName="/dev/ttySAC1"
+       BaudRate="921600"
+       GpioNStdbyPath="/sys/class/misc/gps/device/pwr"
+       GpioDelayMs="130"
+       LogEnabled="false"
+       LogDirectory="/data/gps/log/"
+       NmeaOutName="/data/gps/gpspipe"
+       CtrlPipe="/data/gps/glgpsctrl"
+       NvStorageDir="/data/gps/"
+       GpslogdPipePath="/data/gps/.gpslogd.pipe"
+       Log="FILE"
+
+       TcpConnectionTimeout="20"
+       SuplEnable="true"
+       SuplMsbCapable="true"
+       SuplMsaCapable="true"
+       SuplEcidCapable="false"
+       SuplUseApn="false"
+       SuplServer="supl.nokia.com"
+       SuplPort="7275"
+       SuplTlsEnable="true"
+       SuplTlsCertPath="/data/gps"
+       SuplTlsStopForInvPath="false"
+       SuplSslMethod="TLSv1"
+       SuplSslVerify="none"
+       SuplLogEnable="true"
+       SuplLogFullName="/data/gps/log/supllog.txt"
+       SuplMinorVersion="0"
+       SuplVersion="2"
+
+       LbsEnable="true"
+       LbsLocal="false"
+       LbsServer="bcmls2.glpals.com"
+       LbsPort="7275"
+       LbsLog="true"
+       LbsTAC="10119100" 
+       LbsSyncLto="true"
+       SyncLto="true"   
+       LtoFileName="lto.dat"
+       LtoDir="/data/gps/"
+       LtoSyncThresholdDays="3"
+
+       HulaEnable="true"
+       HulaLog="true"
+
+  />	   
+	
+  <!-- NOTE: BrcmRFwildBase, BrcmRFclkDiv, anBrcmRFclkRefHz only needed for Broadcom RF front end test chips
+            ( i.e. GL_RF_2075_BRCM and GL_RF_PALS7_BRCM ) -->
+
+  <gll
+       LogPriMask=" LOG_INFO" 
+       LogFacMask=" LOG_DEFAULT "
+       FrqPlan="FRQ_PLAN_26MHZ_2PPM_13MHZ_300PPB"
+       RfType="GL_RF_47531_BRCM_EXT_LNA"
+  />
+
+  <!-- List of jobs can be performed by the GPS controller    -->
+
+  <!-- The default job  all parameters are set to default values  -->
+  <job id="normal">
+      <task >
+		<req_pos validfix="10"/>
+      </task>
+   </job>
+   
+<!-- Periodic Position with the ROM almanac Ignored for simulator testing -->
+<job Id="Simulator_Periodic">
+    <task Id="cont" Repeat="1">
+        <startup IgnoreRomAlm="true" />
+        <req_pos ValidFixes="2000" DurationSec="4500"/>      
+    </task>
+</job>
+
+  <job id="periodic">
+      <task >
+      </task>
+   </job>
+
+<!-- Systematic Test: Repetitive cold starts with the ROM almanac Ignored for 
+        simulator testing -->
+<job Id="Simulator_Cold_Starts">
+    <task Repeat="10">
+            <startup
+                IgnoreOsc="false"
+                IgnoreRomAlm="true"
+                IgnoreRamAlm="false"
+                IgnorePosition="true"
+                IgnoreNav="true"
+                IgnoreTime="true"
+            />
+        <req_pos ValidFixes="1"/>
+    </task>
+</job>
+<!-- Systematic Test: Repetetive warm starts  
+     Stored ephemeris data is discarded before the start begins
+     Simulates GPS receiver start after it was left off for more that 4 hours
+-->
+<job Id="Warm_Starts">
+    <task Repeat="100">
+        <startup IgnoreNav="true"/>
+        <req_pos ValidFixes="1"/>
+    </task>
+</job>
+
+<!-- Systematic Test: Repetetive warm starts performed on GPS simulator -->
+<job Id="Simulator_Warm_Starts">
+    <task Repeat="20">
+        <startup 
+            IgnoreRomAlm="true"
+            IgnoreNav="true" 
+        />
+        <req_pos ValidFixes="1"/>
+    </task>
+</job>
+
+<!-- Systematic Test: Repetetive hot starts  -->
+<job Id="Hot_Starts">
+    <task Repeat="20">
+        <req_pos ValidFixes="1"/>
+    </task>
+</job>
+
+<!-- Systematic Test: Repetitive far starts -->
+<job Id="Far_Starts">
+    <task Repeat="100">
+        <!-- Tell GLL to Ignore all elements stored in NVRAM listed below -->
+        <startup 
+            IgnoreNav="true" 
+            PosError="true"
+        />
+        <req_pos ValidFixes="1" />
+    </task>
+</job>
+<job Id="Factory_Track_Test">
+    <task Id="test" Repeat="1">
+        <startup
+            IgnoreOsc="true"
+            IgnoreRomAlm="true"
+            IgnoreRamAlm="true"
+            IgnorePosition="true"
+            IgnoreNav="true"
+            IgnoreTime="true"
+        />
+        <req_ftest
+            Prn="1"
+            FactoryTestItems="GL_FACT_TEST_WER"
+            FactoryTestMode="GL_FACT_TEST_CONT"
+            AvgeragingIntervalSec="10"
+            DurationSec="60"
+        />
+    </task>
+</job>
+<job Id="Factory_High_SNR">
+    <task Id="test" Repeat="1">
+        <startup
+            IgnoreOsc="true"
+            IgnoreRomAlm="true"
+            IgnoreRamAlm="true"
+            IgnorePosition="true"
+            IgnoreNav="true"
+            IgnoreTime="true"
+        />
+        <req_ftest
+            Prn="1"
+            FactoryTestItems="GL_FACT_TEST_WER"
+            FactoryTestMode="GL_FACT_TEST_CONT"
+            AvgeragingIntervalSec="10"
+            DurationSec="60"
+        />
+     </task>
+</job>
+ </glgps>

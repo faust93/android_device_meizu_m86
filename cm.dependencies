@@ -1,0 +1,28 @@
+[
+    {
+        "repository": "android_external_stlport",
+        "target_path": "external/stlport"
+    },
+    {
+        "repository": "android_hardware_samsung",
+        "target_path": "hardware/samsung"
+    },
+    {
+        "repository": "android_hardware_samsung_slsi-cm_exynos",
+        "target_path": "hardware/samsung_slsi-cm/exynos"
+    },
+    {
+        "repository": "android_hardware_samsung_slsi-cm_exynos5",
+        "target_path": "hardware/samsung_slsi-cm/exynos5"
+    },
+    {
+        "repository": "android_hardware_samsung_slsi-cm_exynos7420",
+        "target_path": "hardware/samsung_slsi-cm/exynos7420"
+    },
+    {
+        "repository": "android_hardware_samsung_slsi-cm_openmax",
+        "target_path": "hardware/samsung_slsi-cm/openmax"
+    }
+]
+
+

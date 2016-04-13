@@ -1,0 +1,71 @@
+# Cloned from bcm94345wlpagb_p2xx.txt, ver20150909_A
+
+NVRAMRev=$Rev: 498373 $
+sromrev=11
+vendid=0x14e4
+devid=0x43ab
+manfid=0x2d0
+prodid=0x06e4
+macaddr=00:90:4c:c5:12:38
+nocrc=1
+boardtype=0x6e4
+boardrev=0x1304
+xtalfreq=37400
+#boardflags: 5GHz eTR switch by default
+#            2.4GHz eTR switch by default
+#            bit1 for btcoex
+boardflags=0x00080001
+boardflags2=0x40000000
+boardflags3=0x48200100
+rxgains2gelnagaina0=0
+rxgains2gtrisoa0=0
+rxgains2gtrelnabypa0=0
+rxgains5gelnagaina0=0
+rxgains5gtrisoa0=0
+rxgains5gtrelnabypa0=0
+rxchain=1
+txchain=1
+aa2g=1
+aa5g=1
+tssipos5g=1
+tssipos2g=1
+femctrl=0
+AvVmid_c0=0,152,2,96,2,96,2,96,2,96
+pa2ga0=-168,5581,-670
+pa5ga0=-147,5163,-609,-153,5156,-611,-147,5284,-608,-154,5440,-626
+itrsw=1
+pdoffset40ma0=0x8888
+pdoffset80ma0=0x8888
+extpagain5g=2
+extpagain2g=2
+
+maxp2ga0=70
+ofdmlrbw202gpo=0x0022
+dot11agofdmhrbw202gpo=0x4321
+mcsbw202gpo=0x76543222
+
+maxp5ga0=70,70,70,70
+mcsbw205glpo=0x65552100
+mcsbw205gmpo=0x65552100
+mcsbw205ghpo=0x43332100
+#mcsbw205g 4bit assign to 54Mbps for 11a mode, 1bit assign to mcs7 11nht20 and mcs8 11avht20
+mcsbw405glpo=0xa8642000
+mcsbw405gmpo=0xa8642000
+mcsbw405ghpo=0x87642000
+mcsbw805glpo=0xeca86420
+mcsbw805gmpo=0xeca86420
+mcsbw805ghpo=0x97654200
+
+swctrlmap_2g=0x00040004,0x00020002,0x00040004,0x010a02,0x1ff
+swctrlmap_5g=0x00100010,0x00200020,0x00100010,0x010a02,0x2f4
+swctrlmapext_5g=0x00000000,0x00000000,0x00000000,0x000000,0x000
+swctrlmapext_2g=0x00000000,0x00000000,0x00000000,0x000000,0x000
+
+# 2G RSSI compensation 20/40
+rssicorrnorm_c0=3,3
+
+vcodivmode=1
+deadman_to=481500000
+host_wake_opt=0
+cbfilttype=0
+pacalindex2g=65

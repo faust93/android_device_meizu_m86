@@ -1,0 +1,7 @@
+
+/system		ext4	/dev/block/platform/15570000.ufs/by-name/system         flags=display="System"
+/data		ext4	/dev/block/platform/15570000.ufs/by-name/userdata
+/cache		ext4	/dev/block/platform/15570000.ufs/by-name/cache          flags=display="Cache";backup=1
+/boot		emmc 	/dev/block/platform/15570000.ufs/by-name/bootimg		flags=display="Boot";backup=1
+/recovery	emmc 	/dev/block/platform/15570000.ufs/by-name/recovery		flags=display="Recovery";backup=1
+/external_sd   vfat      /dev/block/mmcblk0p1 		flags=display="Micro SDcard";storage;wipeingui;removable

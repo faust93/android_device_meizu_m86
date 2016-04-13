@@ -1,0 +1,38 @@
+# system.prop for m86
+
+ro.sf.lcd_density=480
+
+ro.arch=exynos7420
+persist.demo.hdmirotationlock=false
+
+# HACK - Error on the 3D test of Antutu v5.6
+ro.kernel.android.checkjni=0
+
+wifi.interface=wlan0
+
+rild.libpath=/system/lib64/libsmiril.so
+rild.libargs=-d /dev/umts_ipc0
+
+#exynos.modempath=/dev/block/sda5
+exynos.modempath=/system/vendor/firmware/modem.bin
+exynos.telephony.feature=true
+
+# Set to DSDS mode as default
+persist.radio.multisim.config=dsds
+
+#Define PhoneApp ToneVolume
+persist.dialpad.volume=45
+persist.dialpad.ecc.volume=45
+persist.dtmf.volume=85
+persist.call.waiting.volume=60
+persist.ring.back.volume=200
+
+# Aricent Integration [START]
+# To make setkeydamon enable/disable
+persist.ari.ims.setkeydaemon=disabled
+# Aricent Integration [END]
+qemu.hw.mainkeys=1
+
+#NFC for uniconpay
+ro.product.cuptsm=MEIZU|ESE|01|02
+
