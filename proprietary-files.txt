@@ -63,7 +63,10 @@ lib/extend/libExtractor.MPEG4.so
 lib/extend/libExtractor.REALMEDIA.so
 lib/extend/libExtractor.WAV.so
 lib/extend/libExtractor.matroska.so
+lib/hw/audio.a2dp.default.so
 lib/hw/audio.primary.m86.so
+lib/hw/audio.r_submix.default.so
+lib/hw/audio.usb.default.so
 lib/hw/audio_policy.default.so
 lib/hw/camera.m86.so
 lib/hw/dis_effect.m86.so
@@ -143,7 +146,10 @@ lib64/extend/libExtractor.MPEG4.so
 lib64/extend/libExtractor.REALMEDIA.so
 lib64/extend/libExtractor.WAV.so
 lib64/extend/libExtractor.matroska.so
+lib64/hw/audio.a2dp.default.so
 lib64/hw/audio.primary.m86.so
+lib64/hw/audio.r_submix.default.so
+lib64/hw/audio.usb.default.so
 lib64/hw/audio_policy.default.so
 lib64/hw/dis_effect.m86.so
 lib64/hw/gps.default.so
