@@ -64,8 +64,9 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.android.nfc_extras.xml \
     frameworks/native/data/etc/com.nxp.mifare.xml:system/etc/permissions/com.nxp.mifare.xml \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:system/etc/permissions/android.hardware.audio.low_latency.xml \
-    frameworks/native/data/etc/cyanogenmod.hardware.fingerprint.xml:system/etc/permissions/cyanogenmod.hardware.fingerprint.xml \
     frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml
+
+#    frameworks/native/data/etc/cyanogenmod.hardware.fingerprint.xml:system/etc/permissions/cyanogenmod.hardware.fingerprint.xml \
 
 # Audio
 PRODUCT_COPY_FILES += \
@@ -103,7 +104,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
-    $(LOCAL_PATH)/configs/gps.conf:system/etc/gpsconfig.xml
+    $(LOCAL_PATH)/configs/gpsconfig.xml:system/etc/gpsconfig.xml
 
 
 # Keylayouts
@@ -156,6 +157,10 @@ PRODUCT_PACKAGES += \
     init.m86.rc \
     init.m86.usb.rc \
     ueventd.m86.rc
+
+PRODUCT_COPY_FILES += \
+    device/meizu/m86/rootdir/etc/init.rc:root/init.rc \
+    device/meizu/m86/rootdir/sbin/cbd:root/sbin/cbd
 
 PRODUCT_PACKAGES += \
     dhcpcd.conf \
