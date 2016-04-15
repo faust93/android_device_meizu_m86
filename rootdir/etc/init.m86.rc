@@ -1,15 +1,14 @@
 import init.m86.usb.rc
 
 on init
-    #start watchdogd
 
     # See storage config details at http://source.android.com/tech/storage/
     mkdir /mnt/shell/emulated 0700 shell shell
     mkdir /storage/emulated 0555 root root
-   # mkdir /storage/sdcard 0000 root root
+    mkdir /storage/sdcard 0000 root root
     mkdir /storage/sdcard1 0700 root root
-    #mkdir /storage/usb1 0000 root root
-    #mkdir /mnt/media_rw/usb1 0700 media_rw media_rw
+    mkdir /storage/usb1 0000 root root
+    mkdir /mnt/media_rw/usb1 0700 media_rw media_rw
     mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
     mkdir /mnt/cdrom 0555 root root
 
@@ -17,7 +16,6 @@ on init
     mkdir /custom 0555 root root
 
     export EXTERNAL_STORAGE /storage/emulated/legacy
-    #export SECONDARY_STORAGE /storage/sdcard1:/storage/usb1
     export SECONDARY_STORAGE /storage/sdcard1
     export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
     export EMULATED_STORAGE_TARGET /storage/emulated
@@ -75,7 +73,7 @@ on boot
 
     # Allow to access debugfs for system:system
     chown system system /sys/kernel/debug
-	chmod 0755 /sys/kernel/debug
+    chmod 0755 /sys/kernel/debug
     #allow access to fake temperature for system:system
     chmod 0644 /sys/class/battery_class/battery_device/fake_temp_enable
     chown system system /sys/class/battery_class/battery_device/fake_temp_enable
@@ -545,22 +543,17 @@ on boot
     setprop ril.context.net.volte_available 1
     # Aricent Integration [END]
 
-service setup_fs /system/bin/setup_fs \
-        sda22 \
-        sda30 \
-        sda42 \
-        sda43 \
-        sda44
-    class core
+service fs_mount /init.mount.sh
     user root
-    group root
     oneshot
+    disabled
 
 on fs
     mkdir /efs 0771 radio system
     mkdir /mnv 0771 radio system
+
     mount_all /fstab.m86
-    mount iso9660 loop@/system/cdrom.iso /mnt/cdrom ro
+
     chown radio system /efs
     mkdir /efs/nv_data 0771 radio system
     #mkdir /mnv/nv_backup 0771 radio system
@@ -605,9 +598,9 @@ service mobicore /system/bin/mcDriverDaemon -r /system/app/mcRegistry/020a000000
 # virtual sdcard daemon running as media_rw (1023)
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
-#service fuse_usb1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/usb1 /storage/usb1
-#    class late_start
-#    disabled
+service fuse_usb1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/usb1 /storage/usb1
+    class late_start
+    disabled
 service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
     class late_start
     disabled
