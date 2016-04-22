@@ -13,6 +13,6 @@
 /dev/block/platform/15570000.ufs/by-name/bootimg	/boot	emmc	defaults	recoveryonly
 
 # VOLD
-/devices/15560000.dwmmc2/mmc_host/mmc0*		auto		vfat	default	voldmanaged=sdcard1:auto
-/devices/15400000.usb/15400000.dwc3/xhci-hcd*	auto		vfat	default	voldmanaged=usb1:auto
+/devices/15560000.dwmmc2/mmc_host/mmc0*		auto		vfat	default	voldmanaged=sdcard1:auto,noemulatedsd
+/devices/15400000.usb/15400000.dwc3/xhci-hcd*	auto		vfat	default	voldmanaged=usb1:auto,noemulatedsd
 #/devices/15510000.usb				auto		vfat	default	voldmanaged=usb2:auto

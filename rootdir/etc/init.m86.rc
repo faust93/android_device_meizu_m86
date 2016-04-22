@@ -312,6 +312,12 @@ on boot
     chown system system /sys/class/meizu/tp/gesture_control
     chown system system /sys/class/meizu/tp/gesture_data
 
+#Permissions for led
+    chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/led_pattern
+    chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/leds/m86_led/brightness
+    chmod 0666 /sys/devices/gpioi2c0.14/i2c-12/12-0030/led_pattern
+    chmod 0666 /sys/devices/gpioi2c0.14/i2c-12/12-0030/leds/m86_led/brightness
+
 #Permission for power mode
     chown system system /sys/power/power_mode
     chmod 0660 /sys/power/power_mode
@@ -830,6 +836,13 @@ on init
 
     mkdir /dev/pipes 0771 system system
     export VIBE_PIPE_PATH /dev/pipes
+
+# TouchSense Player Service -- now minimally working without blob!
+service openimmvibed /system/bin/openimmvibed
+    class main
+    user system
+    group system
+    oneshot
 
 # TouchSense Player Service
 service immvibed /system/bin/immvibed -p 99 -u 1000

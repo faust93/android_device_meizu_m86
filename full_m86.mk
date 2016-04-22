@@ -22,8 +22,16 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, device/meizu/m86/device.mk)
 
 # Set those variables here to overwrite the inherited values.
-PRODUCT_NAME := full_m86
-PRODUCT_DEVICE := m86
-PRODUCT_BRAND := meizu
-PRODUCT_MANUFACTURER := meizu
-PRODUCT_MODEL := m86
+PRODUCT_BRAND := Meizu
+PRODUCT_MANUFACTURER := Meizu
+PRODUCT_MODEL := PRO5
+
+TARGET_VENDOR_PRODUCT_NAME := meizu_PRO5
+TARGET_VENDOR_DEVICE_NAME := PRO5
+
+PRODUCT_BUILD_PROP_OVERRIDES += \
+        TARGET_DEVICE=PRO5 \
+        PRODUCT_NAME=meizu_PRO5 \
+        PRODUCT_MODEL="PRO 5" \
+        BUILD_FINGERPRINT=Meizu/meizu_PRO5/PRO5:5.1/LMY49J/m86.Flyme_OS_5.1460049852:user/release-keys \
+        PRIVATE_BUILD_DESC="meizu_PRO5-user 5.1 LMY49J m86.Flyme_OS_5.1460049852 release-keys"

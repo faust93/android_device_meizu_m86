@@ -22,10 +22,6 @@ $(call inherit-product, vendor/cm/config/nfc_enhanced.mk)
 # Inherit common CM phone.
 $(call inherit-product, vendor/cm/config/common_full_phone.mk)
 
-PRODUCT_DEVICE := m86
 PRODUCT_NAME := cm_m86
-
-TARGET_VENDOR_PRODUCT_NAME := meizu_PRO5
-TARGET_VENDOR_DEVICE_NAME := PRO5
-PRODUCT_BUILD_PROP_OVERRIDES += TARGET_DEVICE=PRO5 PRODUCT_NAME=PRO5
+PRODUCT_DEVICE := m86
 

@@ -73,8 +73,6 @@ lib/hw/dis_effect.m86.so
 lib/hw/gralloc.exynos5.so
 lib/hw/hwcomposer.exynos5.so
 lib/hw/keystore.exynos7420.so
-lib/hw/lights.m86.so
-lib/hw/vibrator.default.so
 lib/libExynosHWCService.so
 lib/libExynosOMX_Core.so
 lib/libExynosOMX_Resourcemanager.so
@@ -156,10 +154,8 @@ lib64/hw/gps.default.so
 lib64/hw/gralloc.exynos5.so
 lib64/hw/hwcomposer.exynos5.so
 lib64/hw/keystore.exynos7420.so
-lib64/hw/lights.m86.so
 lib64/hw/nfc_nci.pn54x.default.so
 lib64/hw/sensors.m86.so
-lib64/hw/vibrator.default.so
 lib64/libExynosHWCService.so
 lib64/libExynosOMX_Core.so
 lib64/libExynosOMX_Resourcemanager.so
