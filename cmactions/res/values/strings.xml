@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2013-2014 The CyanogenMod Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Gesture shortcuts -->
+    <string name="screen_gestures_panel_title">Gesture shortcuts</string>
+    <string name="screen_gestures_panel_summary">Use gestures while the screen is off</string>
+
+    <string name="touchscreen_control_gesture_title">Enable Gestures</string>
+    <string name="gesture_category_title">Available Gestures</string>
+    <string name="touchscreen_dtp_gesture_title">Double Tap</string>
+    <string name="touchscreen_dtp_gesture_summary">Double Tap to Wake-Up device</string>
+    <string name="touchscreen_c_gesture_title">Camera</string>
+    <string name="touchscreen_c_gesture_summary">Draw a \"C\" to activate Camera</string>
+    <string name="touchscreen_z_gesture_title">Music</string>
+    <string name="touchscreen_z_gesture_summary">Draw an \"Z\" to Play/Pause</string>
+    <string name="touchscreen_ltr_gesture_title">Music</string>
+    <string name="touchscreen_ltr_gesture_summary">Draw a \"left\" to Prev Track</string>
+    <string name="touchscreen_gtr_gesture_title">Music</string>
+    <string name="touchscreen_gtr_gesture_summary">Draw a \"right\" to Next Track</string>
+    <string name="touchscreen_s_gesture_title">Notifications</string>
+    <string name="touchscreen_s_gesture_summary">Draw a \"S\" to activate \"Do Not Disturb\" Mode</string>
+    <string name="touchscreen_w_gesture_title">Notifications</string>
+    <string name="touchscreen_w_gesture_summary">Draw a \"W\" to activate \"Normal\" Mode</string>
+    <string name="touchscreen_m_gesture_title">Notifications</string>
+    <string name="touchscreen_m_gesture_summary">Draw a \"M\" to activate \"Mute\" Mode</string>
+    <string name="touchscreen_ydown_gesture_title">Flashlight</string>
+    <string name="touchscreen_ydown_gesture_summary">Draw a \"down\" to activate Flashlight</string>
+
+</resources>
