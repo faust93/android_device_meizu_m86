@@ -27,9 +27,7 @@
 #include <hardware/hardware.h>
 #include <hardware/power.h>
 
-#define PATH_GPIO_KEYS "/sys/class/input/input6/enabled"
-#define PATH_TOUCHKEY "/sys/class/input/input4/enabled"
-#define PATH_TOUCHSCREEN "/sys/class/input/input7/enabled"
+#define PATH_FPC_KEYS "/proc/nav_switch"
 
 static void sysfs_write(char *path, char *s)
 {
@@ -63,9 +61,7 @@ static void power_set_interactive(struct power_module *module, int on)
 {
     ALOGD("%s: %s input devices", __func__, on ? "enabling" : "disabling");
 
-    sysfs_write(PATH_TOUCHSCREEN, on ? "1" : "0");
-    sysfs_write(PATH_TOUCHKEY, on ? "1" : "0");
-    sysfs_write(PATH_GPIO_KEYS, on ? "1" : "0");
+    sysfs_write(PATH_FPC_KEYS, on ? "2" : "0");
 }
 
 static void power_hint(struct power_module *module, power_hint_t hint,
