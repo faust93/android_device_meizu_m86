@@ -16,9 +16,32 @@
 -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory
+        android:key="fpc_gestures"
+        android:title="@string/fpc_gesture_title" >
+
+    <SwitchPreference
+            android:key="fpc_gesture_tap"
+            android:title="@string/fpc_gesture_tap_summary" />
+
+    <SwitchPreference
+            android:key="fpc_gesture_left"
+            android:title="@string/fpc_gesture_left_summary" />
+
+    <SwitchPreference
+            android:key="fpc_gesture_right"
+            android:title="@string/fpc_gesture_right_summary" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/touchscreen_control_gesture_head" >
+
     <SwitchPreference
         android:key="touchscreen_gesture_control"
         android:title="@string/touchscreen_control_gesture_title" />
+
+    </PreferenceCategory>
 
     <PreferenceCategory
         android:key="category_gestures"
@@ -68,6 +91,16 @@
             android:key="touchscreen_gesture_ydown"
             android:title="@string/touchscreen_ydown_gesture_title"
             android:summary="@string/touchscreen_ydown_gesture_summary" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/touchscreen_extras">
+
+        <SwitchPreference
+            android:key="touchscreen_gesture_haptic_feedback"
+            android:title="@string/haptic_feedback"
+            android:summary="@string/haptic_feedback_summary" />
 
     </PreferenceCategory>
 

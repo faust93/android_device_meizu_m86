@@ -20,7 +20,8 @@
     <string name="screen_gestures_panel_title">Gesture shortcuts</string>
     <string name="screen_gestures_panel_summary">Use gestures while the screen is off</string>
 
-    <string name="touchscreen_control_gesture_title">Enable Gestures</string>
+    <string name="touchscreen_control_gesture_head">Screen Off Gestures</string>
+    <string name="touchscreen_control_gesture_title">Enable Screen Gestures</string>
     <string name="gesture_category_title">Available Gestures</string>
     <string name="touchscreen_dtp_gesture_title">Double Tap</string>
     <string name="touchscreen_dtp_gesture_summary">Double Tap to Wake-Up device</string>
@@ -29,9 +30,9 @@
     <string name="touchscreen_z_gesture_title">Music</string>
     <string name="touchscreen_z_gesture_summary">Draw an \"Z\" to Play/Pause</string>
     <string name="touchscreen_ltr_gesture_title">Music</string>
-    <string name="touchscreen_ltr_gesture_summary">Draw a \"left\" to Prev Track</string>
+    <string name="touchscreen_ltr_gesture_summary">Swipe left to Prev Track</string>
     <string name="touchscreen_gtr_gesture_title">Music</string>
-    <string name="touchscreen_gtr_gesture_summary">Draw a \"right\" to Next Track</string>
+    <string name="touchscreen_gtr_gesture_summary">Swipe right to Next Track</string>
     <string name="touchscreen_s_gesture_title">Notifications</string>
     <string name="touchscreen_s_gesture_summary">Draw a \"S\" to activate \"Do Not Disturb\" Mode</string>
     <string name="touchscreen_w_gesture_title">Notifications</string>
@@ -39,6 +40,15 @@
     <string name="touchscreen_m_gesture_title">Notifications</string>
     <string name="touchscreen_m_gesture_summary">Draw a \"M\" to activate \"Mute\" Mode</string>
     <string name="touchscreen_ydown_gesture_title">Flashlight</string>
-    <string name="touchscreen_ydown_gesture_summary">Draw a \"down\" to activate Flashlight</string>
+    <string name="touchscreen_ydown_gesture_summary">Draw a vertical line down to activate Flashlight</string>
 
+    <string name="fpc_gesture_title">Fingerprint Sensor Gestures</string>
+    <string name="fpc_gesture_tap_summary">Tap once to Back</string>
+    <string name="fpc_gesture_left_summary">Swipe left for Menu</string>
+    <string name="fpc_gesture_right_summary">Swipe right for Recent Apps</string>
+
+    <!-- haptic feedback  -->
+    <string name="touchscreen_extras">Extras</string>
+    <string name="haptic_feedback">Haptic feedback</string>
+    <string name="haptic_feedback_summary">Vibrate when a gesture is detected</string>
 </resources>

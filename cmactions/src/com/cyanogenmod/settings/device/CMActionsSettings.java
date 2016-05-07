@@ -44,6 +44,13 @@ public class CMActionsSettings {
     public static final String TOUCHSCREEN_M_GESTURE_KEY = "touchscreen_gesture_m";
     public static final String TOUCHSCREEN_YDOWN_GESTURE_KEY = "touchscreen_gesture_ydown";
 
+    public static final String FPC_GESTURE_TAP_KEY = "fpc_gesture_tap";
+    public static final String FPC_GESTURE_LEFT_GESTURE_KEY = "fpc_gesture_left";
+    public static final String FPC_GESTURE_RIGHT_KEY = "fpc_gesture_right";
+
+    public static final String TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK =
+            "touchscreen_gesture_haptic_feedback";
+
     // Proc nodes
     public static final String TOUCHSCREEN_GESTURE_MODE_NODE = "/sys/devices/13660000.hsi2c/i2c-4/4-0049/gesture_control";
 
@@ -85,9 +92,51 @@ public class CMActionsSettings {
 
     private final Context mContext;
 
+    private static SharedPreferences.OnSharedPreferenceChangeListener mPrefListener;
+
     public CMActionsSettings(Context context ) {
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         loadPreferences(sharedPrefs);
+
+        mPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                    boolean updated = true;
+                    if (TOUCHSCREEN_GESTURE_CONTROL_KEY.equals(key)) {
+                        mIsGestureEnabled = sharedPreferences.getBoolean(TOUCHSCREEN_GESTURE_CONTROL_KEY, false);
+                        Log.d(TAG, "prefChanged: gesture control " + mIsGestureEnabled);
+                        TouchscreenGestureSettings.gestureCat.setEnabled(areGesturesEnabled());
+                    } else if (TOUCHSCREEN_DOUBLETAP_KEY.equals(key)) {
+                        mIsGesture_DTP_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_DOUBLETAP_KEY, false);
+                    } else if (TOUCHSCREEN_C_GESTURE_KEY.equals(key)) {
+                        mIsGesture_C_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_C_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_S_GESTURE_KEY.equals(key)) {
+                        mIsGesture_S_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_S_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_W_GESTURE_KEY.equals(key)) {
+                        mIsGesture_W_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_W_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_M_GESTURE_KEY.equals(key)) {
+                        mIsGesture_M_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_M_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_Z_GESTURE_KEY.equals(key)) {
+                        mIsGesture_Z_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_Z_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_YDOWN_GESTURE_KEY.equals(key)) {
+                        mIsGesture_YDOWN_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_YDOWN_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_LTR_GESTURE_KEY.equals(key)) {
+                        mIsGesture_LTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_LTR_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_GTR_GESTURE_KEY.equals(key)) {
+                        mIsGesture_GTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
+                    } else if (TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK.equals(key)) {
+                        //CMSettings.System.putInt(getContentResolver(),CMSettings.System.TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, value ? 1 : 0);
+                        final boolean val  = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
+                    } else {
+                        updated = false;
+                    }
+                    if (updated) {
+                        updateGestureMode();
+                    }
+                }
+            };
+
         sharedPrefs.registerOnSharedPreferenceChangeListener(mPrefListener);
         mContext = context;
     }
@@ -112,41 +161,6 @@ public class CMActionsSettings {
         updateGestureMode();
     }
 
-    private SharedPreferences.OnSharedPreferenceChangeListener mPrefListener =
-            new SharedPreferences.OnSharedPreferenceChangeListener() {
-                @Override
-                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    boolean updated = true;
-
-                    if (TOUCHSCREEN_GESTURE_CONTROL_KEY.equals(key)) {
-                        mIsGestureEnabled = sharedPreferences.getBoolean(TOUCHSCREEN_GESTURE_CONTROL_KEY, false);
-                        TouchscreenGestureSettings.gestureCat.setEnabled(areGesturesEnabled());
-                    } else if (TOUCHSCREEN_DOUBLETAP_KEY.equals(key)) {
-                        mIsGesture_DTP_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_DOUBLETAP_KEY, false);
-                    } else if (TOUCHSCREEN_C_GESTURE_KEY.equals(key)) {
-                        mIsGesture_C_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_C_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_S_GESTURE_KEY.equals(key)) {
-                        mIsGesture_S_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_S_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_W_GESTURE_KEY.equals(key)) {
-                        mIsGesture_W_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_W_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_M_GESTURE_KEY.equals(key)) {
-                        mIsGesture_M_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_M_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_Z_GESTURE_KEY.equals(key)) {
-                        mIsGesture_Z_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_Z_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_YDOWN_GESTURE_KEY.equals(key)) {
-                        mIsGesture_YDOWN_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_YDOWN_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_LTR_GESTURE_KEY.equals(key)) {
-                        mIsGesture_LTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_LTR_GESTURE_KEY, false);
-                    } else if (TOUCHSCREEN_GTR_GESTURE_KEY.equals(key)) {
-                        mIsGesture_GTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
-                    } else {
-                        updated = false;
-                    }
-                    if (updated) {
-                        updateGestureMode();
-                    }
-                }
-            };
 
     /* Use bitwise logic to set gesture_mode in kernel driver.
        Check each if each key is enabled with & operator and KEY_MASK,
