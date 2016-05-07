@@ -193,7 +193,6 @@ on boot
     mkdir /data/smartmx 777 system system
     setprop ro.nfc.platform nxppn547
 
-    
     #tmd27713
     chown system system /sys/class/input/input0/device/enable_als
     chmod 0600 /sys/class/input/input0/device/enable_als
@@ -311,6 +310,7 @@ on boot
 #Permissions for gesture
     chown system system /sys/class/meizu/tp/gesture_control
     chown system system /sys/class/meizu/tp/gesture_data
+    chown system system /sys/class/meizu/tp/glove_control
 
 #Permissions for led
     chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/led_pattern
@@ -673,7 +673,7 @@ service record_panic /system/bin/record_panic_msg
     user root
     group radio cache inet misc audio sdcard_rw log sdcard_r
     oneshot
-    
+
 service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
     class main
     disabled
@@ -773,7 +773,7 @@ service cpboot-daemon /sbin/cbd -d
     class main
     user root
     group system
-    seclabel u:r:cbd:s0
+#    seclabel u:r:cbd:s0
 
 # DM daemon
 service DM-daemon /system/bin/dmd
@@ -781,7 +781,7 @@ service DM-daemon /system/bin/dmd
     socket diag_stream stream 660 radio system
     user root
     group system
-    seclabel u:r:dmd:s0
+#    seclabel u:r:dmd:s0
 
 # VC daemon
 service VC-daemon /system/bin/vcd
@@ -789,7 +789,7 @@ service VC-daemon /system/bin/vcd
     socket app_stream stream 660 radio system
     user root
     group system
-    seclabel u:r:vcd:s0
+#    seclabel u:r:vcd:s0
 
 # SCE daemon
 service SCE-daemon /system/bin/sced
@@ -797,7 +797,7 @@ service SCE-daemon /system/bin/sced
     socket logdump stream 660 radio system
     user root
     group system
-    seclabel u:r:sced:s0
+#    seclabel u:r:sced:s0
 
 ## Aricent Integration [START] ##
 # Aricent Setkey based IPSec daemon
