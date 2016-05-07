@@ -97,9 +97,9 @@ BOARD_HAVE_OPENSOURCE_IMMVIBE := true
 BOARD_HARDWARE_CLASS := $(M86_PATH)/cmhw
 
 # Radio
-#BOARD_PROVIDES_LIBRIL := true
 #BOARD_MODEM_TYPE := ss333
-#BOARD_RIL_CLASS := ../../../$(M86_PATH)/ril
+BOARD_PROVIDES_LIBRIL := true
+BOARD_RIL_CLASS := ../../../device/meizu/m86/ril/m86RIL.java
 
 # Recovery
 TARGET_RECOVERY_FSTAB := $(M86_PATH)/rootdir/etc/fstab.m86

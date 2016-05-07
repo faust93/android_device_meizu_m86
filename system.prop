@@ -10,10 +10,10 @@ ro.kernel.android.checkjni=0
 
 wifi.interface=wlan0
 
+ro.telephony.ril_class=m86RIL
 rild.libpath=/system/lib64/libsmiril.so
 rild.libargs=-d /dev/umts_ipc0
 
-#exynos.modempath=/dev/block/sda5
 exynos.modempath=/system/vendor/firmware/modem.bin
 exynos.telephony.feature=true
 
