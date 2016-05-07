@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2013-2014 The CyanogenMod Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Gesture shortcuts -->
+    <string name="screen_gestures_panel_title">Управление жестами</string>
+    <string name="screen_gestures_panel_summary">Use gestures while the screen is off</string>
+
+    <string name="touchscreen_control_gesture_head">Жесты выключенного экрана</string>
+    <string name="touchscreen_control_gesture_title">Включить управление жестами</string>
+    <string name="gesture_category_title">Доступные жесты</string>
+    <string name="touchscreen_dtp_gesture_title">Двойной тап</string>
+    <string name="touchscreen_dtp_gesture_summary">Пробуждение двойным тапом</string>
+    <string name="touchscreen_c_gesture_title">Камера</string>
+    <string name="touchscreen_c_gesture_summary">Нарисуйте \"C\" для активации камеры</string>
+    <string name="touchscreen_z_gesture_title">Музыка</string>
+    <string name="touchscreen_z_gesture_summary">Нарисуйте \"Z\" для Play/Pause</string>
+    <string name="touchscreen_ltr_gesture_title">Музыка</string>
+    <string name="touchscreen_ltr_gesture_summary">Черта влево - предыдущий трек</string>
+    <string name="touchscreen_gtr_gesture_title">Музыка</string>
+    <string name="touchscreen_gtr_gesture_summary">Черта вправо - следующий трек</string>
+    <string name="touchscreen_s_gesture_title">Уведомления</string>
+    <string name="touchscreen_s_gesture_summary">Нарисуйте \"S\" для активации режима \"Не беспокоить\"</string>
+    <string name="touchscreen_w_gesture_title">Уведомления</string>
+    <string name="touchscreen_w_gesture_summary">Нарисуйте \"W\" для активации нормального режима</string>
+    <string name="touchscreen_m_gesture_title">Уведомления</string>
+    <string name="touchscreen_m_gesture_summary">Нарисуйте \"M\" для активации режима \"Без звука\"</string>
+    <string name="touchscreen_ydown_gesture_title">Фонарик</string>
+    <string name="touchscreen_ydown_gesture_summary">Нарисуйте вертикальную черту для активации фонарика</string>
+
+    <string name="fpc_gesture_title">Жесты кнопки сенсора</string>
+    <string name="fpc_gesture_tap_summary">Одиночный тап для возврата</string>
+    <string name="fpc_gesture_left_summary">Свайп влево для вызова меню</string>
+    <string name="fpc_gesture_right_summary">Свайп вправо для вызова недавних приложений</string>
+
+    <!-- haptic feedback  -->
+    <string name="touchscreen_extras">Дополнительные настройки</string>
+    <string name="haptic_feedback">Вибрация</string>
+    <string name="haptic_feedback_summary">Использовать вбирацию при обработке жеста</string>
+
+</resources>

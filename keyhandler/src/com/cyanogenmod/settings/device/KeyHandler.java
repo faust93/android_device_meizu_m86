@@ -49,12 +49,25 @@ import android.view.WindowManagerGlobal;
 import com.android.internal.os.DeviceKeyHandler;
 import com.android.internal.util.ArrayUtils;
 
+import android.app.Instrumentation;
+import android.content.SharedPreferences;
+import android.content.ContextWrapper;
+
 public class KeyHandler implements DeviceKeyHandler {
 
     private static final String TAG = KeyHandler.class.getSimpleName();
     private static final int GESTURE_REQUEST = 1;
 
     private static final String KEY_GESTURE_HAPTIC_FEEDBACK =
+            "touchscreen_gesture_haptic_feedback";
+    private static final String KEY_FPC_TAP =
+            "fpc_gesture_tap";
+    private static final String KEY_FPC_LEFT =
+            "fpc_gesture_left";
+    private static final String KEY_FPC_RIGHT =
+            "fpc_gesture_right";
+
+    private static final String TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK =
             "touchscreen_gesture_haptic_feedback";
 
     private static final String ACTION_DISMISS_KEYGUARD =
@@ -71,6 +84,10 @@ public class KeyHandler implements DeviceKeyHandler {
     private static final int MODE_DO_NOT_DISTURB = 616; //S
     private static final int MODE_NORMAL = 621; //W
 
+    private static final int GESTURE_FPC_TAP_SCANCODE = 189;
+    private static final int GESTURE_FPC_LEFT_SCANCODE = 191;
+    private static final int GESTURE_FPC_RIGHT_SCANCODE = 190;
+
     private static final int GESTURE_WAKELOCK_DURATION = 3000;
 
     private static final int[] sSupportedGestures = new int[] {
@@ -82,10 +99,14 @@ public class KeyHandler implements DeviceKeyHandler {
         GESTURE_GTR_SCANCODE,
         MODE_MUTE,
         MODE_DO_NOT_DISTURB,
-        MODE_NORMAL
+        MODE_NORMAL,
+        GESTURE_FPC_TAP_SCANCODE,
+        GESTURE_FPC_LEFT_SCANCODE,
+        GESTURE_FPC_RIGHT_SCANCODE
     };
 
     private final Context mContext;
+
     private final PowerManager mPowerManager;
     private KeyguardManager mKeyguardManager;
     private EventHandler mEventHandler;
@@ -97,6 +118,8 @@ public class KeyHandler implements DeviceKeyHandler {
     private WakeLock mGestureWakeLock;
     private int mProximityTimeOut;
     private boolean mProximityWakeSupported;
+    private Instrumentation m_Instrumentation;
+    private Context cmaContext = null;
 
     private boolean mNotificationSliderVibrate;
 
@@ -104,8 +127,15 @@ public class KeyHandler implements DeviceKeyHandler {
         mContext = context;
         mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         mEventHandler = new EventHandler();
+        m_Instrumentation = new Instrumentation();
         mGestureWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "GestureWakeLock");
+
+        try {
+            cmaContext = mContext.createPackageContext("com.cyanogenmod.settings.device", Context.CONTEXT_RESTRICTED);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         final Resources resources = mContext.getResources();
         mProximityTimeOut = resources.getInteger(
@@ -160,6 +190,24 @@ public class KeyHandler implements DeviceKeyHandler {
                 Intent intent = new Intent(action, null);
                 startActivitySafely(intent);
                 doHapticFeedback();
+                break;
+            case GESTURE_FPC_TAP_SCANCODE:
+                if(getCMApref(KEY_FPC_TAP, true)) {
+                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_BACK );
+                    doHapticFeedback();
+                }
+                break;
+            case GESTURE_FPC_LEFT_SCANCODE:
+                if(getCMApref(KEY_FPC_LEFT, false)) {
+                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_MENU );
+                    doHapticFeedback();
+                }
+                break;
+            case GESTURE_FPC_RIGHT_SCANCODE:
+                if(getCMApref(KEY_FPC_RIGHT, false)) {
+                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_APP_SWITCH );
+                    doHapticFeedback();
+                }
                 break;
             case GESTURE_Z_SCANCODE:
                 dispatchMediaKeyWithWakeLockToMediaSession(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
@@ -281,12 +329,18 @@ public class KeyHandler implements DeviceKeyHandler {
         }
     }
 
+    // TODO implement it more graceful way
+    private boolean getCMApref(String prefKey, boolean defVal) {
+        SharedPreferences cmaPrefs = null;
+        cmaPrefs = cmaContext.getSharedPreferences("com.cyanogenmod.settings.device_preferences", Context.MODE_MULTI_PROCESS);
+        return cmaPrefs.getBoolean(prefKey, defVal);
+    }
+
     private void doHapticFeedback() {
         if (mVibrator == null) {
             return;
         }
-        boolean enabled = Settings.System.getInt(mContext.getContentResolver(),
-                KEY_GESTURE_HAPTIC_FEEDBACK, 1) != 0;
+        boolean enabled = getCMApref(TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, false);
         if (enabled) {
             mVibrator.vibrate(50);
         }
