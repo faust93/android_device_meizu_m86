@@ -68,6 +68,7 @@ lib/hw/audio.primary.m86.so
 lib/hw/audio.r_submix.default.so
 lib/hw/audio.usb.default.so
 lib/hw/audio_policy.default.so
+lib/hw/bluetooth.default.so
 lib/hw/camera.m86.so
 lib/hw/dis_effect.m86.so
 lib/hw/gralloc.exynos5.so
@@ -82,6 +83,8 @@ lib/libSonyIMX230PdafLibrary.so
 lib/libaudioflinger.so
 lib/libaudioresamplerMz.so
 lib/libaudioutils.so
+lib/libbluetooth_jni.so
+lib/libbt-aptX-ARM-4.2.2.so
 lib/libcsc.so
 lib/libdisplay.so
 lib/libdisplaymodule.so
@@ -125,6 +128,11 @@ lib/omx/libOMX.Exynos.VP8.Decoder.so
 lib/omx/libOMX.Exynos.VP8.Encoder.so
 lib/omx/libOMX.Exynos.VP9.Decoder.so
 lib/omx/libOMX.Exynos.WMV.Decoder.so
+lib/soundfx/libbundlewrapper.so
+lib/soundfx/libdownmix.so
+lib/soundfx/libequalizer.so
+lib/soundfx/libldnhncr.so
+lib/soundfx/libreverbwrapper.so
 lib64/extend/libCodec.ac3.so
 lib64/extend/libCodec.adpcmdec.so
 lib64/extend/libCodec.lpcm.so
@@ -203,6 +211,11 @@ lib64/omx/libOMX.Exynos.VP8.Decoder.so
 lib64/omx/libOMX.Exynos.VP8.Encoder.so
 lib64/omx/libOMX.Exynos.VP9.Decoder.so
 lib64/omx/libOMX.Exynos.WMV.Decoder.so
+lib64/soundfx/libbundlewrapper.so
+lib64/soundfx/libdownmix.so
+lib64/soundfx/libequalizer.so
+lib64/soundfx/libldnhncr.so
+lib64/soundfx/libreverbwrapper.so
 vendor/etc/dirac_types.xml
 vendor/etc/diracmobile.config
 vendor/firmware/Project.hex
