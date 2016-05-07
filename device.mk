@@ -81,8 +81,8 @@ PRODUCT_PACKAGES += \
     tinymix
 
 # Fingerprint
-PRODUCT_PACKAGES += \
-    fingerprint.exynos5
+#PRODUCT_PACKAGES += \
+#    fingerprint.exynos5
 
 # Bluetooth
 PRODUCT_COPY_FILES += \
@@ -152,6 +152,13 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml \
     $(LOCAL_PATH)/configs/libnfc-brcm.conf:system/etc/libnfc-brcm.conf \
     $(LOCAL_PATH)/configs/libnfc-nxp.conf:system/etc/libnfc-nxp.conf
+
+# Chromium
+PRODUCT_PACKAGES += \
+    webview \
+    libwebviewchromium_loader \
+    libwebviewchromium_plat_support
+#    libwebviewchromium
 
 # Power
 PRODUCT_PACKAGES += \
