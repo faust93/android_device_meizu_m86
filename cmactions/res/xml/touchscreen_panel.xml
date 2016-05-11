@@ -21,10 +21,6 @@
         android:title="@string/fpc_gesture_title" >
 
     <SwitchPreference
-            android:key="fpc_gesture_tap"
-            android:title="@string/fpc_gesture_tap_summary" />
-
-    <SwitchPreference
             android:key="fpc_gesture_left"
             android:title="@string/fpc_gesture_left_summary" />
 
