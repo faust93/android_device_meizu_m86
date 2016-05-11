@@ -5,6 +5,8 @@ ro.sf.lcd_density=480
 ro.arch=exynos7420
 persist.demo.hdmirotationlock=false
 
+ro.meizu.hardware.hifi=true
+
 # HACK - Error on the 3D test of Antutu v5.6
 ro.kernel.android.checkjni=0
 
