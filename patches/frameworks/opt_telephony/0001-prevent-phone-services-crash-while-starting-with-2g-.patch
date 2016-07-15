@@ -1,0 +1,25 @@
+From 47e409de0c36920a29ac1e33c9a2acdf7c570a13 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 29 Apr 2016 19:23:08 +0300
+Subject: [PATCH] prevent phone services crash while starting with 2g mode
+
+---
+ src/java/com/android/internal/telephony/ModemBindingPolicyHandler.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/java/com/android/internal/telephony/ModemBindingPolicyHandler.java b/src/java/com/android/internal/telephony/ModemBindingPolicyHandler.java
+index 0810165..52e79ba 100644
+--- a/src/java/com/android/internal/telephony/ModemBindingPolicyHandler.java
++++ b/src/java/com/android/internal/telephony/ModemBindingPolicyHandler.java
+@@ -284,6 +284,8 @@ public class ModemBindingPolicyHandler extends Handler {
+ 
+     private void handleGetPreferredNetwork(Message msg) {
+         AsyncResult ar = (AsyncResult) msg.obj;
++        if(ar.result == null)
++            return;
+         int modemNetworkMode = ((int[]) ar.result)[0];
+         int phoneId = msg.arg1;
+         int networkMode = msg.arg2; // unused.
+-- 
+1.9.3 (Apple Git-50)
+

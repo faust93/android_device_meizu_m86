@@ -1,0 +1,198 @@
+From 14e3b3d4dbe770b165433f57ed4320d9e083cb6f Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 12 May 2016 13:53:47 +0300
+Subject: [PATCH] convert pcm to s16 before proecessing
+
+---
+ .../libeffects/lvm/wrapper/Reverb/EffectReverb.cpp | 102 ++++++++++++++++++---
+ 1 file changed, 88 insertions(+), 14 deletions(-)
+
+diff --git a/media/libeffects/lvm/wrapper/Reverb/EffectReverb.cpp b/media/libeffects/lvm/wrapper/Reverb/EffectReverb.cpp
+index 4dc8b45..ca1a210 100644
+--- a/media/libeffects/lvm/wrapper/Reverb/EffectReverb.cpp
++++ b/media/libeffects/lvm/wrapper/Reverb/EffectReverb.cpp
+@@ -392,6 +392,70 @@ static inline int16_t clamp16(int32_t sample)
+     return sample;
+ }
+ 
++static inline int16_t clamp16_from_float(float f)
++{
++    static const float offset = (float)(3 << (22 - 15));
++    /* zero = (0x10f << 22) =  0x43c00000 (not directly used) */
++    static const int32_t limneg = (0x10f << 22) /*zero*/ - 32768; /* 0x43bf8000 */
++    static const int32_t limpos = (0x10f << 22) /*zero*/ + 32767; /* 0x43c07fff */
++
++    union {
++        float f;
++        int32_t i;
++    } u;
++
++    u.f = f + offset; /* recenter valid range */
++    if (u.i < limneg)
++        u.i = -32768;
++    else if (u.i > limpos)
++        u.i = 32767;
++    return u.i; /* Return lower 16 bits, the part of interest in the significand. */
++}
++
++static inline int32_t clamp32_from_float(float f)
++{
++    static const float scale = (float)(1UL << 31);
++    static const float limpos = 1.;
++    static const float limneg = -1.;
++
++    if (f <= limneg) {
++        return -0x80000000; /* or 0x80000000 */
++    } else if (f >= limpos) {
++        return 0x7fffffff;
++    }
++    f *= scale;
++    return f > 0 ? f + 0.5 : f - 0.5;
++}
++
++static inline float float_from_i16(int16_t ival)
++{
++    static const float scale = 1. / (float)(1UL << 15);
++
++    return ival * scale;
++}
++
++static inline float float_from_i32(int32_t ival)
++{
++    static const float scale = 1. / (float)(1UL << 31);
++
++    return ival * scale;
++}
++
++
++void memcpy_to_float_from_i16(float *dst, const int16_t *src, size_t count)
++{
++    while (count--) {
++        *dst++ = float_from_i16(*src++);
++    }
++}
++
++void memcpy_to_i16_from_float(int16_t *dst, const float *src, size_t count)
++{
++    while (count--) {
++        *dst++ = clamp16_from_float(*src++);
++    }
++}
++
+ //----------------------------------------------------------------------------
+ // process()
+ //----------------------------------------------------------------------------
+@@ -419,6 +483,8 @@ int process( LVM_INT16     *pIn,
+     LVREV_ReturnStatus_en   LvmStatus = LVREV_SUCCESS;              /* Function call status */
+     LVM_INT16 *OutFrames16;
+ 
++    LVM_INT16 *tmpIn;
++
+ 
+     // Check that the input is either mono or stereo
+     if (pContext->config.inputCfg.channels == AUDIO_CHANNEL_OUT_STEREO) {
+@@ -446,17 +512,19 @@ int process( LVM_INT16     *pIn,
+     }
+ 
+ 
++    tmpIn = (LVM_INT16*)malloc(LVREV_MAX_FRAME_SIZE * sizeof(LVM_INT16) * 2);
++    memcpy_to_i16_from_float(tmpIn, (float*)pIn, frameCount*sizeof(float)*2);
+ 
+     // Convert to Input 32 bits
+     if (pContext->auxiliary) {
+         for(int i=0; i<frameCount*samplesPerFrame; i++){
+-            pContext->InFrames32[i] = (LVM_INT32)pIn[i]<<8;
++            pContext->InFrames32[i] = (LVM_INT32)tmpIn[i]<<8;
+         }
+     } else {
+         // insert reverb input is always stereo
+         for (int i = 0; i < frameCount; i++) {
+-            pContext->InFrames32[2*i] = (pIn[2*i] * REVERB_SEND_LEVEL) >> 4; // <<8 + >>12
+-            pContext->InFrames32[2*i+1] = (pIn[2*i+1] * REVERB_SEND_LEVEL) >> 4; // <<8 + >>12
++            pContext->InFrames32[2*i] = (tmpIn[2*i] * REVERB_SEND_LEVEL) >> 4; // <<8 + >>12
++            pContext->InFrames32[2*i+1] = (tmpIn[2*i+1] * REVERB_SEND_LEVEL) >> 4; // <<8 + >>12
+         }
+     }
+ 
+@@ -485,7 +553,7 @@ int process( LVM_INT16     *pIn,
+         }
+     } else {
+         for (int i=0; i < frameCount*2; i++) { //always stereo here
+-            OutFrames16[i] = clamp16((pContext->OutFrames32[i]>>8) + (LVM_INT32)pIn[i]);
++            OutFrames16[i] = clamp16((pContext->OutFrames32[i]>>8) + (LVM_INT32)tmpIn[i]);
+         }
+ 
+         // apply volume with ramp if needed
+@@ -532,15 +600,17 @@ int process( LVM_INT16     *pIn,
+ 
+     // Accumulate if required
+     if (pContext->config.outputCfg.accessMode == EFFECT_BUFFER_ACCESS_ACCUMULATE){
+-        //ALOGV("\tBuffer access is ACCUMULATE");
++        ALOGV("\tBuffer access is ACCUMULATE");
+         for (int i=0; i<frameCount*2; i++){ //always stereo here
+-            pOut[i] = clamp16((int32_t)pOut[i] + (int32_t)OutFrames16[i]);
++            pOut[i] = float_from_i32((int32_t)pOut[i] + (int32_t)OutFrames16[i]);
+         }
+     }else{
+-        //ALOGV("\tBuffer access is WRITE");
+-        memcpy(pOut, OutFrames16, frameCount*sizeof(LVM_INT16)*2);
++        ALOGV("\tBuffer access is WRITE");
++        memcpy_to_float_from_i16((float*)pOut, (int16_t*)OutFrames16, frameCount*sizeof(LVM_INT16)*2);
+     }
+-
++    
++    free(tmpIn);
++    
+     return 0;
+ }    /* end process */
+ 
+@@ -604,21 +674,25 @@ void Reverb_free(ReverbContext *pContext){
+ 
+ int Reverb_setConfig(ReverbContext *pContext, effect_config_t *pConfig){
+     LVM_Fs_en   SampleRate;
+-    //ALOGV("\tReverb_setConfig start");
++    ALOGV("\tReverb_setConfig start");
+ 
+     CHECK_ARG(pContext != NULL);
+     CHECK_ARG(pConfig != NULL);
+ 
+     CHECK_ARG(pConfig->inputCfg.samplingRate == pConfig->outputCfg.samplingRate);
++    ALOGV("\tReverb_setConfig start1");
++
+     CHECK_ARG(pConfig->inputCfg.format == pConfig->outputCfg.format);
++    ALOGV("\tReverb_setConfig start2");
++
+     CHECK_ARG((pContext->auxiliary && pConfig->inputCfg.channels == AUDIO_CHANNEL_OUT_MONO) ||
+               ((!pContext->auxiliary) && pConfig->inputCfg.channels == AUDIO_CHANNEL_OUT_STEREO));
+     CHECK_ARG(pConfig->outputCfg.channels == AUDIO_CHANNEL_OUT_STEREO);
+     CHECK_ARG(pConfig->outputCfg.accessMode == EFFECT_BUFFER_ACCESS_WRITE
+               || pConfig->outputCfg.accessMode == EFFECT_BUFFER_ACCESS_ACCUMULATE);
+-    CHECK_ARG(pConfig->inputCfg.format == AUDIO_FORMAT_PCM_16_BIT);
++//    CHECK_ARG(pConfig->inputCfg.format == AUDIO_FORMAT_PCM_16_BIT);
+ 
+-    //ALOGV("\tReverb_setConfig calling memcpy");
++    ALOGV("\tReverb_setConfig calling memcpy");
+     pContext->config = *pConfig;
+ 
+ 
+@@ -725,7 +799,7 @@ int Reverb_init(ReverbContext *pContext){
+         pContext->config.inputCfg.channels                  = AUDIO_CHANNEL_OUT_STEREO;
+     }
+ 
+-    pContext->config.inputCfg.format                        = AUDIO_FORMAT_PCM_16_BIT;
++    pContext->config.inputCfg.format                        = AUDIO_FORMAT_PCM_16_BIT|AUDIO_FORMAT_PCM_8_24_BIT|AUDIO_FORMAT_PCM_32_BIT;
+     pContext->config.inputCfg.samplingRate                  = 44100;
+     pContext->config.inputCfg.bufferProvider.getBuffer      = NULL;
+     pContext->config.inputCfg.bufferProvider.releaseBuffer  = NULL;
+@@ -733,7 +807,7 @@ int Reverb_init(ReverbContext *pContext){
+     pContext->config.inputCfg.mask                          = EFFECT_CONFIG_ALL;
+     pContext->config.outputCfg.accessMode                   = EFFECT_BUFFER_ACCESS_ACCUMULATE;
+     pContext->config.outputCfg.channels                     = AUDIO_CHANNEL_OUT_STEREO;
+-    pContext->config.outputCfg.format                       = AUDIO_FORMAT_PCM_16_BIT;
++    pContext->config.outputCfg.format                       = AUDIO_FORMAT_PCM_16_BIT|AUDIO_FORMAT_PCM_8_24_BIT|AUDIO_FORMAT_PCM_32_BIT;
+     pContext->config.outputCfg.samplingRate                 = 44100;
+     pContext->config.outputCfg.bufferProvider.getBuffer     = NULL;
+     pContext->config.outputCfg.bufferProvider.releaseBuffer = NULL;
+-- 
+1.9.3 (Apple Git-50)
+

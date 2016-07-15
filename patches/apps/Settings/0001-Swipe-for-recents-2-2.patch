@@ -1,0 +1,61 @@
+From 256d2927bd32eb9b328775ce71e79e7636e3f4a5 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 16 May 2016 11:09:41 +0300
+Subject: [PATCH] Swipe for recents [2/2]
+
+Change-Id: I52ac9d0ea732cca8462f647e31e0861dce16a3a4
+---
+ res/values-ru/cm_strings.xml | 4 ++++
+ res/values/cm_strings.xml    | 4 ++++
+ res/xml/display_settings.xml | 7 +++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/res/values-ru/cm_strings.xml b/res/values-ru/cm_strings.xml
+index b3b130b..2715192 100644
+--- a/res/values-ru/cm_strings.xml
++++ b/res/values-ru/cm_strings.xml
+@@ -1014,4 +1014,8 @@
+                  <b>Всего коммитов:</b> <xliff:g id="total_commits">%2$s</xliff:g><br/><br/>
+                  <b>Последнее обновление:</b> <xliff:g id="date">%3$s</xliff:g>]]></string>
+   <string name="quick_settings_reset_message">Сбросить настройки плиток?</string>
++
++    <!-- Swipe bottom right up for recents -->
++    <string name="recents_finger_gesture">Свайп вызова недавних приложений</string>
++    <string name="recents_finger_gesture_summary">Свайп одним пальцем вверх из нижнего правого угла для вызова недавних</string>
+ </resources>
+diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
+index a0ea1d8..3917ba1 100644
+--- a/res/values/cm_strings.xml
++++ b/res/values/cm_strings.xml
+@@ -277,6 +277,10 @@
+     <string name="sweep_to_wake_title">Sweep to wake</string>
+     <string name="sweep_to_wake_summary">Swipe on the screen to turn on the display</string>
+ 
++    <!-- Swipe bottom right up for recents -->
++    <string name="recents_finger_gesture">Recents finger gesture</string>
++    <string name="recents_finger_gesture_summary">Swipe finger up from bottom-right for recent apps</string>
++
+     <!--- Sweep To Sleep -->
+     <string name="sweep_to_sleep_title">Sweep to sleep</string>
+     <string name="sweep_to_sleep_summary">Swipe rigth to left on the lower part of the screen to turn on the display</string>
+diff --git a/res/xml/display_settings.xml b/res/xml/display_settings.xml
+index 230ba11..705a6af 100644
+--- a/res/xml/display_settings.xml
++++ b/res/xml/display_settings.xml
+@@ -129,6 +129,13 @@
+                     android:title="@string/sweep_to_sleep_title"
+                     android:summary="@string/sweep_to_sleep_summary" />
+ 
++               <!-- Bottom-right swipe up to recents -->
++                <com.android.settings.cyanogenmod.SystemSettingSwitchPreference
++                    android:key="recents_finger_gesture"
++                    android:title="@string/recents_finger_gesture"
++                    android:summary="@string/recents_finger_gesture_summary"
++                    android:defaultValue="true" />
++
+         </PreferenceCategory>
+ 
+ </PreferenceScreen>
+-- 
+1.9.3 (Apple Git-50)
+

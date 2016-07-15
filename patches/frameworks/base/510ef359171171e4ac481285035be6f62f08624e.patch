@@ -1,0 +1,32 @@
+From 510ef359171171e4ac481285035be6f62f08624e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 13 May 2016 21:18:01 +0300
+Subject: [PATCH] Remove non existent methods
+
+---
+ .../src/com/android/systemui/qs/tiles/MusicTile.java         | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java
+index 2f4790c..46c6a58 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java
++++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java
+@@ -206,18 +206,6 @@ public void onClientPlaybackStateUpdate(int state) {
+         }
+ 
+         @Override
+-        public void onClientFolderInfoBrowsedPlayer(String stringUri) { }
+-
+-        @Override
+-        public void onClientUpdateNowPlayingEntries(long[] playList) { }
+-
+-        @Override
+-        public void onClientNowPlayingContentChange() { }
+-
+-        @Override
+-        public void onClientPlayItemResponse(boolean success) { }
+-
+-        @Override
+         public void onClientMetadataUpdate(RemoteController.MetadataEditor data) {
+             mMetadata.trackTitle = data.getString(MediaMetadataRetriever.METADATA_KEY_TITLE,
+                     mMetadata.trackTitle);

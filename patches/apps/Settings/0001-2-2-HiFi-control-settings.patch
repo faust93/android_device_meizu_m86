@@ -1,0 +1,597 @@
+From 22da224321935c092afc679246c29a2f87d25759 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 6 Jul 2016 23:46:24 +0300
+Subject: [PATCH] [2/2] HiFi control settings
+
+Change-Id: I19a80954e62244c19d25608b72cd771ed5e5c33d
+---
+ AndroidManifest.xml                                |  33 ++-
+ res/values-ru/strings_aicp.xml                     |   1 +
+ res/values/cm_strings.xml                          |   1 +
+ res/values/strings.xml                             |  10 +
+ res/values/strings_aicp.xml                        |   1 +
+ res/xml/hifi_sound_settings.xml                    |  63 +++++
+ res/xml/notification_settings.xml                  |   7 +
+ src/com/android/settings/Settings.java             |   1 +
+ src/com/android/settings/SettingsActivity.java     |   2 +
+ .../settings/cyanogenmod/qs/QSTileHolder.java      |   4 +
+ .../android/settings/hifi/HifiSoundSettings.java   | 270 +++++++++++++++++++++
+ src/com/android/settings/search/Ranking.java       |   3 +
+ .../settings/search/SearchIndexableResources.java  |   8 +
+ 13 files changed, 385 insertions(+), 19 deletions(-)
+ create mode 100644 res/xml/hifi_sound_settings.xml
+ create mode 100644 src/com/android/settings/hifi/HifiSoundSettings.java
+
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index f8e6119..2fc1e37 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -740,6 +740,20 @@
+                 android:resource="@id/display_settings" />
+         </activity>
+ 
++        <!-- Hifi settings activity. -->
++        <activity android:name="Settings$HifiSoundSettingsActivity"
++                android:label="@string/hifi_sound_title"
++                android:excludeFromRecents="true">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++                <category android:name="android.intent.category.DEFAULT" />
++            </intent-filter>
++            <meta-data android:name="com.android.settings.FRAGMENT_CLASS"
++                android:value="com.android.settings.hifi.HifiSoundSettings" />
++            <meta-data android:name="com.android.settings.TOP_LEVEL_HEADER_ID"
++                android:resource="@id/notification_settings" />
++        </activity>
++
+         <!-- Keep compatibility with old shortcuts. -->
+         <activity-alias android:name="DisplaySettings"
+                 android:label="@string/display_settings"
+@@ -2540,25 +2554,6 @@
+             android:name=".cyanogenmod.LtoService">
+         </service>
+ 
+-        <!-- Anti-piracy support -->
+-        <service android:name="org.antipiracy.support.AntiPiracyNotifyService"
+-            android:enabled="true"
+-            android:permission="android.permission.DELETE_PACKAGES" />
+-        <receiver android:name="org.antipiracy.support.AntiPiracyInstallReceiver"
+-            android:enabled="true"
+-            android:priority="1000"
+-            android:exported="true">
+-            <intent-filter>
+-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+-                <action android:name="android.intent.action.PACKAGE_INSTALL" />
+-                <action android:name="android.intent.action.PACKAGE_ADDED" />
+-                <action android:name="android.intent.action.PACKAGE_CHANGED" />
+-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+-                <category android:name="android.intent.category.DEFAULT" />
+-                <data android:scheme="package" />
+-            </intent-filter>
+-        </receiver>
+-
+         <receiver android:name=".cyanogenmod.ShortcutCleanupReceiver">
+             <intent-filter>
+                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
+diff --git a/res/values-ru/strings_aicp.xml b/res/values-ru/strings_aicp.xml
+index b03f692..a0b7078 100644
+--- a/res/values-ru/strings_aicp.xml
++++ b/res/values-ru/strings_aicp.xml
+@@ -94,6 +94,7 @@
+     <!-- Sound settings -->
+     <string name="advanced_sound_title">Дополнительные опции</string>
+     <string name="sound_title">Звук</string>
++    <string name="hifi_sound_title">Настройки Hi-Fi</string>
+ 
+     <!-- Camera sound switch -->
+     <string name="camera_sounds_title">Звук затвора камеры</string>
+diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
+index 3917ba1..7f60e1e 100644
+--- a/res/values/cm_strings.xml
++++ b/res/values/cm_strings.xml
+@@ -934,6 +934,7 @@
+     <string name="qs_tile_ambient_display">Ambient display</string>
+     <string name="qs_tile_kernel_adiutor">Kernel Adiutor</string>
+     <string name="qs_tile_navbar">Navigation Bar</string>
++    <string name="qs_tile_hifi">HiFi Switch</string>
+ 
+     <string name="qs_dynamic_tile_next_alarm">Next alarm</string>
+     <string name="qs_dynamic_tile_ime_selector">IME selector</string>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 4d24149..3eb5ee9 100755
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -6049,4 +6049,14 @@
+    <string name="imei_information_title">IMEI information</string>
+    <string name="imei_information_summary">IMEI relative information</string>
+    <string name="slot_number">(Slot<xliff:g id="slot_num">%1$d</xliff:g>)</string>
++
++   <!-- Title and summary for HiFi settings -->
++   <string name="hifi_sound_settings">Hifi sound settings</string>
++   <string name="hifi_enable_title">Enable ES9018 DAC</string>
++   <string name="hifi_impedance_title">HiFi Impedance</string>
++   <string name="hifi_gain_auto_title">Auto Gain</string>
++   <string name="hifi_gain_low_title">Low Gain</string>
++   <string name="hifi_gain_high_title">High Gain</string>
++   <string name="hifi_gain_line_title">LineOut</string>
++
+ </resources>
+diff --git a/res/values/strings_aicp.xml b/res/values/strings_aicp.xml
+index 9a9d940..f8c5846 100644
+--- a/res/values/strings_aicp.xml
++++ b/res/values/strings_aicp.xml
+@@ -94,6 +94,7 @@
+     <!-- Sound settings -->
+     <string name="advanced_sound_title">Advanced options</string>
+     <string name="sound_title">Sound</string>
++    <string name="hifi_sound_title">Hi-Fi options</string>
+ 
+     <!-- Camera sound switch -->
+     <string name="camera_sounds_title">Camera shutter sound</string>
+diff --git a/res/xml/hifi_sound_settings.xml b/res/xml/hifi_sound_settings.xml
+new file mode 100644
+index 0000000..b8af46e
+--- /dev/null
++++ b/res/xml/hifi_sound_settings.xml
+@@ -0,0 +1,63 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2014 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++
++<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
++        android:title="@string/hifi_sound_settings"
++        android:key="hifi_sound_settings"
++        xmlns:settings="http://schemas.android.com/apk/res/com.android.settings">
++
++    <SwitchPreference
++            android:key="hifi_enable"
++            android:title="@string/hifi_enable_title"
++            android:switchTextOff=""
++            android:switchTextOn=""
++            android:persistent="false" />
++
++    <PreferenceCategory
++            android:key="hifi_impedance"
++            android:title="@string/hifi_impedance_title">
++
++    <SwitchPreference
++            android:key="hifi_gain_auto"
++            android:title="@string/hifi_gain_auto_title"
++            android:switchTextOff=""
++            android:switchTextOn=""
++            android:persistent="false" />
++
++    <SwitchPreference
++            android:key="hifi_gain_low"
++            android:title="@string/hifi_gain_low_title"
++            android:switchTextOff=""
++            android:switchTextOn=""
++            android:persistent="false" />
++
++    <SwitchPreference
++            android:key="hifi_gain_high"
++            android:title="@string/hifi_gain_high_title"
++            android:switchTextOff=""
++            android:switchTextOn=""
++            android:persistent="false" />
++
++    <SwitchPreference
++            android:key="hifi_gain_line"
++            android:title="@string/hifi_gain_line_title"
++            android:switchTextOff=""
++            android:switchTextOn=""
++            android:persistent="false" />
++
++    </PreferenceCategory>
++
++</PreferenceScreen>
+diff --git a/res/xml/notification_settings.xml b/res/xml/notification_settings.xml
+index a8551b5..28d45ab 100644
+--- a/res/xml/notification_settings.xml
++++ b/res/xml/notification_settings.xml
+@@ -137,6 +137,13 @@
+                 android:persistent="false"
+                 android:fragment="com.android.settings.slim.SoundSettings" />
+ 
++        <!-- HiFi options -->
++        <PreferenceScreen
++                android:key="hifi_sound_settings"
++                android:title="@string/hifi_sound_title"
++                android:persistent="false"
++                android:fragment="com.android.settings.hifi.HifiSoundSettings" />
++
+     </PreferenceCategory>
+ 
+     <PreferenceCategory
+diff --git a/src/com/android/settings/Settings.java b/src/com/android/settings/Settings.java
+index e825ae8..d1148ca 100644
+--- a/src/com/android/settings/Settings.java
++++ b/src/com/android/settings/Settings.java
+@@ -99,6 +99,7 @@ public class Settings extends SettingsActivity {
+     public static class AppNotificationSettingsActivity extends SettingsActivity { /* empty */ }
+     public static class OtherSoundSettingsActivity extends SettingsActivity { /* empty */ }
+     public static class QuickLaunchSettingsActivity extends SettingsActivity { /* empty */ }
++    public static class HifiSoundSettingsActivity extends SettingsActivity { /* empty */ }
+ 
+     public static class TopLevelSettings extends SettingsActivity { /* empty */ }
+     public static class ApnSettingsActivity extends SettingsActivity { /* empty */ }
+diff --git a/src/com/android/settings/SettingsActivity.java b/src/com/android/settings/SettingsActivity.java
+index 5ea4404..3d04200 100644
+--- a/src/com/android/settings/SettingsActivity.java
++++ b/src/com/android/settings/SettingsActivity.java
+@@ -101,6 +101,7 @@ import com.android.settings.fuelgauge.PowerUsageSummary;
+ import com.android.settings.livedisplay.LiveDisplay;
+ import com.android.settings.notification.NotificationAppList;
+ import com.android.settings.notification.OtherSoundSettings;
++import com.android.settings.hifi.HifiSoundSettings;
+ import com.android.settings.profiles.NFCProfileTagCallback;
+ import com.android.settings.profiles.ProfilesSettings;
+ import com.android.settings.quicklaunch.QuickLaunchSettings;
+@@ -331,6 +332,7 @@ public class SettingsActivity extends Activity
+             AppNotificationSettings.class.getName(),
+             OtherSoundSettings.class.getName(),
+             QuickLaunchSettings.class.getName(),
++            HifiSoundSettings.class.getName(),
+             ApnSettings.class.getName(),
+             AicpSettings.class.getName(),
+             BlacklistSettings.class.getName(),
+diff --git a/src/com/android/settings/cyanogenmod/qs/QSTileHolder.java b/src/com/android/settings/cyanogenmod/qs/QSTileHolder.java
+index 7247717..5768d1d 100644
+--- a/src/com/android/settings/cyanogenmod/qs/QSTileHolder.java
++++ b/src/com/android/settings/cyanogenmod/qs/QSTileHolder.java
+@@ -226,6 +226,10 @@ public class QSTileHolder {
+                 resourceName = "ic_qs_floating_on";
+                 stringId = R.string.qs_tile_slim_floats;
+                 break;
++            case QSConstants.TILE_HIFI:
++                resourceName = "ic_qs_volume_panel"; //TODO hifi resource
++                stringId = R.string.qs_tile_hifi;
++                break;
+             case QSConstants.TILE_THEMES:
+                 resourceName = "ic_qs_themes";
+                 stringId = R.string.qs_tile_themes;
+diff --git a/src/com/android/settings/hifi/HifiSoundSettings.java b/src/com/android/settings/hifi/HifiSoundSettings.java
+new file mode 100644
+index 0000000..25ff145
+--- /dev/null
++++ b/src/com/android/settings/hifi/HifiSoundSettings.java
+@@ -0,0 +1,270 @@
++/*
++ * Copyright (C) 2014 The Android Open Source Project
++ * Copyright (C) 2016 faust93 at monumentum@gmail.com
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.settings.hifi;
++
++import static com.android.settings.notification.SettingPref.TYPE_GLOBAL;
++import static com.android.settings.notification.SettingPref.TYPE_SYSTEM;
++
++import android.app.Activity;
++import android.content.ContentResolver;
++import android.content.Context;
++import android.content.Intent;
++import android.content.res.Resources;
++import android.database.ContentObserver;
++import android.media.AudioManager;
++import android.media.Ringtone;
++import android.media.RingtoneManager;
++import android.net.Uri;
++import android.os.Bundle;
++import android.os.Handler;
++import android.os.UserHandle;
++import android.preference.Preference;
++import android.preference.PreferenceScreen;
++import android.preference.SwitchPreference;
++import android.provider.SearchIndexableResource;
++import android.provider.Settings;
++import android.provider.Settings.Global;
++import android.provider.Settings.System;
++import android.util.Log;
++
++import com.android.settings.R;
++import com.android.settings.SettingsPreferenceFragment;
++import com.android.settings.Utils;
++import com.android.settings.search.BaseSearchIndexProvider;
++import com.android.settings.search.Indexable;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.List;
++
++public class HifiSoundSettings extends SettingsPreferenceFragment implements Preference.OnPreferenceChangeListener, Indexable {
++    private static final String TAG = "HifiSoundSettings";
++
++    private static final String HIFI_MODE = "hifi_mode";
++
++    private static final String KEY_HIFI_IMPEDANCE = "hifi_impedance";
++
++    private static final String KEY_HIFI_ENABLE = "hifi_enable";
++    private static final String KEY_HIFI_GAIN_AUTO = "hifi_gain_auto";
++    private static final String KEY_HIFI_GAIN_LOW = "hifi_gain_low";
++    private static final String KEY_HIFI_GAIN_HIGH = "hifi_gain_high";
++    private static final String KEY_HIFI_GAIN_LINE = "hifi_gain_line";
++
++    private AudioManager mAudioManager;
++
++    private int mHifiMode;
++    private int mHifiState;
++
++    private SwitchPreference mHifiEnable;
++    private SwitchPreference mHifiAuto;
++    private SwitchPreference mHifiLowGain;
++    private SwitchPreference mHifiHighGain;
++    private SwitchPreference mHifiLineOut;
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++
++        mAudioManager = (AudioManager) getActivity().getSystemService("audio");
++
++        PreferenceScreen prefSet = getPreferenceScreen();
++
++        addPreferencesFromResource(R.xml.hifi_sound_settings);
++
++        mHifiMode = Settings.System.getIntForUser(getContentResolver(),
++                Settings.System.HIFI_MODE, 0, UserHandle.USER_CURRENT);
++
++        mHifiState = Settings.System.getIntForUser(getContentResolver(),
++                Settings.System.HIFI_ENABLE, 0, UserHandle.USER_CURRENT);
++
++        mHifiEnable = (SwitchPreference) findPreference(KEY_HIFI_ENABLE);
++        if(mHifiState!=0)
++            mHifiEnable.setChecked(true);
++        else
++            mHifiEnable.setChecked(false);
++
++        mHifiAuto = (SwitchPreference) findPreference(KEY_HIFI_GAIN_AUTO);
++        mHifiLowGain = (SwitchPreference) findPreference(KEY_HIFI_GAIN_LOW);
++        mHifiHighGain = (SwitchPreference) findPreference(KEY_HIFI_GAIN_HIGH);
++        mHifiLineOut = (SwitchPreference) findPreference(KEY_HIFI_GAIN_LINE);
++
++        mHifiEnable.setOnPreferenceChangeListener(this);
++        mHifiAuto.setOnPreferenceChangeListener(this);
++        mHifiLowGain.setOnPreferenceChangeListener(this);
++        mHifiHighGain.setOnPreferenceChangeListener(this);
++        mHifiLineOut.setOnPreferenceChangeListener(this);
++
++        if (mHifiState == 0) {
++            findPreference(KEY_HIFI_IMPEDANCE).setEnabled(false);
++        } else {
++            findPreference(KEY_HIFI_IMPEDANCE).setEnabled(true);
++        }
++
++        initMode(mHifiMode);
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++    }
++
++    @Override
++    public void onPause() {
++        super.onPause();
++    }
++
++    @Override
++    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
++        return super.onPreferenceTreeClick(preferenceScreen, preference);
++    }
++
++    public boolean onPreferenceChange(Preference preference, Object objValue) {
++        final String key = preference.getKey();
++
++        if (key.equals(KEY_HIFI_ENABLE)) {
++
++         if((Boolean)objValue){
++          mHifiState = 1;
++          mAudioManager.setParameters("hifi_state=on");
++         } else {
++          mHifiState = 0;
++          mAudioManager.setParameters("hifi_state=off");
++         }
++
++         Settings.System.putIntForUser(getContentResolver(),
++                    Settings.System.HIFI_ENABLE, (Boolean) objValue ? 1 : 0, UserHandle.USER_CURRENT);
++
++             if (mHifiState == 0) {
++                findPreference(KEY_HIFI_IMPEDANCE).setEnabled(false);
++             } else {
++                findPreference(KEY_HIFI_IMPEDANCE).setEnabled(true);
++             }
++
++        return true;
++        }
++
++        switch(key){
++            case KEY_HIFI_GAIN_AUTO:
++            case KEY_HIFI_GAIN_LOW:
++            case KEY_HIFI_GAIN_HIGH:
++            case KEY_HIFI_GAIN_LINE:
++            setMode(preference);
++        }
++        return true;
++    }
++
++    private void setMode(Preference preference) {
++        if (preference == mHifiAuto) {
++            if (!mHifiAuto.isChecked()) {
++                mHifiAuto.setChecked(true);
++                mHifiLowGain.setChecked(false);
++                mHifiHighGain.setChecked(false);
++                mHifiLineOut.setChecked(false);
++                System.putInt(getActivity().getContentResolver(), HIFI_MODE, 0);
++                mAudioManager.setParameters("hifi_gain=0");
++            }
++        } else if (preference == mHifiLowGain) {
++            if (!mHifiLowGain.isChecked()) {
++                mHifiAuto.setChecked(false);
++                mHifiLowGain.setChecked(true);
++                mHifiHighGain.setChecked(false);
++                mHifiLineOut.setChecked(false);
++                System.putInt(getActivity().getContentResolver(), HIFI_MODE, 1);
++                mAudioManager.setParameters("hifi_gain=1");
++            }
++        } else if (preference == mHifiHighGain) {
++            if (!mHifiHighGain.isChecked()) {
++                mHifiAuto.setChecked(false);
++                mHifiLowGain.setChecked(false);
++                mHifiHighGain.setChecked(true);
++                mHifiLineOut.setChecked(false);
++                checkAutoAdjustStreamVolume();
++                System.putInt(getActivity().getContentResolver(), HIFI_MODE, 2);
++                mAudioManager.setParameters("hifi_gain=2");
++            }
++        } else if (preference == mHifiLineOut && !mHifiLineOut.isChecked()) {
++            mHifiAuto.setChecked(false);
++            mHifiLowGain.setChecked(false);
++            mHifiHighGain.setChecked(false);
++            mHifiLineOut.setChecked(true);
++            System.putInt(getActivity().getContentResolver(), HIFI_MODE, 3);
++            mAudioManager.setParameters("hifi_gain=3");
++        }
++    }
++
++    private void checkAutoAdjustStreamVolume() {
++        if (mAudioManager.getStreamVolume(3) > 50) {
++            Log.d("HifiSettings", "checkAutoAdjustStreamVolume: auto set music_stream volume index: 50");
++            mAudioManager.setStreamVolume(3, 50, 0);
++        }
++    }
++
++    private void initMode(int mode) {
++        switch (mode) {
++            case 0:
++                mHifiAuto.setChecked(true);
++                mHifiLowGain.setChecked(false);
++                mHifiHighGain.setChecked(false);
++                mHifiLineOut.setChecked(false);
++                return;
++            case 1:
++                mHifiAuto.setChecked(false);
++                mHifiLowGain.setChecked(true);
++                mHifiHighGain.setChecked(false);
++                mHifiLineOut.setChecked(false);
++                return;
++            case 2:
++                this.mHifiAuto.setChecked(false);
++                this.mHifiLowGain.setChecked(false);
++                this.mHifiHighGain.setChecked(true);
++                this.mHifiLineOut.setChecked(false);
++                return;
++            case 3:
++                mHifiAuto.setChecked(false);
++                mHifiLowGain.setChecked(false);
++                mHifiHighGain.setChecked(false);
++                mHifiLineOut.setChecked(true);
++                return;
++            default:
++                Log.e("HifiSoundSettings", "HIFI_MODE:" + mode);
++                return;
++        }
++    }
++
++    public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
++            new BaseSearchIndexProvider() {
++
++        public List<SearchIndexableResource> getXmlResourcesToIndex(
++                Context context, boolean enabled) {
++            final SearchIndexableResource sir = new SearchIndexableResource(context);
++            sir.xmlResId = R.xml.hifi_sound_settings;
++            return Arrays.asList(sir);
++        }
++
++        public List<String> getNonIndexableKeys(Context context) {
++            final ArrayList<String> rt = new ArrayList<String>();
++//            for (SettingPref pref : PREFS) {
++//                if (!pref.isApplicable(context)) {
++//                    rt.add(pref.getKey());
++//                }
++//            }
++            return rt;
++        }
++    };
++
++}
+diff --git a/src/com/android/settings/search/Ranking.java b/src/com/android/settings/search/Ranking.java
+index 22ad56f..4c8989b 100644
+--- a/src/com/android/settings/search/Ranking.java
++++ b/src/com/android/settings/search/Ranking.java
+@@ -67,6 +67,7 @@ import com.android.settings.location.LocationSettings;
+ import com.android.settings.net.DataUsageMeteredSettings;
+ import com.android.settings.notification.NotificationSettings;
+ import com.android.settings.notification.OtherSoundSettings;
++import com.android.settings.hifi.HifiSoundSettings;
+ import com.android.settings.notification.ZenModeSettings;
+ import com.android.settings.print.PrintSettingsFragment;
+ import com.android.settings.sim.SimSettings;
+@@ -134,6 +135,7 @@ public final class Ranking {
+     public static final int RANK_PRINTING = 48;
+     public static final int RANK_DEVELOPEMENT = 49;
+     public static final int RANK_DEVICE_INFO = 50;
++    public static final int RANK_HIFI = 51;
+ 
+     public static final int RANK_UNDEFINED = -1;
+     public static final int RANK_OTHERS = 1024;
+@@ -262,6 +264,7 @@ public final class Ranking {
+         // Notifications
+         sRankMap.put(NotificationSettings.class.getName(), RANK_NOTIFICATIONS);
+         sRankMap.put(OtherSoundSettings.class.getName(), RANK_NOTIFICATIONS);
++        sRankMap.put(HifiSoundSettings.class.getName(), RANK_HIFI);
+         sRankMap.put(ZenModeSettings.class.getName(), RANK_NOTIFICATIONS);
+ 
+         // Storage
+diff --git a/src/com/android/settings/search/SearchIndexableResources.java b/src/com/android/settings/search/SearchIndexableResources.java
+index 0aea0aa..e06fb72 100644
+--- a/src/com/android/settings/search/SearchIndexableResources.java
++++ b/src/com/android/settings/search/SearchIndexableResources.java
+@@ -72,6 +72,7 @@ import com.android.settings.location.LocationSettings;
+ import com.android.settings.net.DataUsageMeteredSettings;
+ import com.android.settings.notification.NotificationSettings;
+ import com.android.settings.notification.OtherSoundSettings;
++import com.android.settings.hifi.HifiSoundSettings;
+ import com.android.settings.notification.ZenModeSettings;
+ import com.android.settings.print.PrintSettingsFragment;
+ import com.android.settings.sim.SimSettings;
+@@ -177,6 +178,13 @@ public final class SearchIndexableResources {
+                         OtherSoundSettings.class.getName(),
+                         R.drawable.ic_settings_notifications));
+ 
++        sResMap.put(HifiSoundSettings.class.getName(),
++                new SearchIndexableResource(
++                        Ranking.getRankForClassName(HifiSoundSettings.class.getName()),
++                        NO_DATA_RES_ID,
++                        HifiSoundSettings.class.getName(),
++                        R.drawable.ic_settings_notifications));
++
+         sResMap.put(ZenModeSettings.class.getName(),
+                 new SearchIndexableResource(
+                         Ranking.getRankForClassName(ZenModeSettings.class.getName()),
+-- 
+1.9.3 (Apple Git-50)
+

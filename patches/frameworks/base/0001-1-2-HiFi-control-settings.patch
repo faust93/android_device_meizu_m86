@@ -1,0 +1,200 @@
+From bc69252cee68965edd2e67c3427d650f620cc1f1 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 6 Jul 2016 23:35:07 +0300
+Subject: [PATCH] [1/2] HiFi control settings
+
+Change-Id: If75bf5822caa465e3653890d08beb93c75bbb861
+---
+ core/java/android/provider/Settings.java           |   7 ++
+ .../com/android/internal/util/cm/QSConstants.java  |   2 +
+ packages/SystemUI/res/values/strings_aicp.xml      |   4 +
+ .../com/android/systemui/qs/tiles/HifiTile.java    | 104 +++++++++++++++++++++
+ .../systemui/statusbar/phone/QSTileHost.java       |   3 +
+ 5 files changed, 120 insertions(+)
+ create mode 100644 packages/SystemUI/src/com/android/systemui/qs/tiles/HifiTile.java
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index be1cf0a..b381d35 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -5416,6 +5416,13 @@ public final class Settings {
+          */
+         public static final String HEADSET_CONNECT_PLAYER = "headset_connect_player";
+ 
++        /**
++         * DAC Settings
++         * @hide
++         */
++        public static final String HIFI_ENABLE = "hifi_enable";
++        public static final String HIFI_MODE = "hifi_mode";
++
+     }
+ 
+     /**
+diff --git a/core/java/com/android/internal/util/cm/QSConstants.java b/core/java/com/android/internal/util/cm/QSConstants.java
+index 032d1bd..30cfe90 100644
+--- a/core/java/com/android/internal/util/cm/QSConstants.java
++++ b/core/java/com/android/internal/util/cm/QSConstants.java
+@@ -68,6 +68,7 @@ public class QSConstants {
+     public static final String TILE_KERNEL_ADIUTOR = "kernel_adiutor";
+     public static final String TILE_NAVBAR = "toggleNavBar";
+     //public static final String TILE_ONTHEGO = "toggleOnTheGo";
++    public static final String TILE_HIFI = "hifi";
+ 
+     public static final String DYNAMIC_TILE_NEXT_ALARM = "next_alarm";
+     public static final String DYNAMIC_TILE_IME_SELECTOR = "ime_selector";
+@@ -125,6 +126,7 @@ public class QSConstants {
+         STATIC_TILES_AVAILABLE.add(TILE_THEMES);
+         STATIC_TILES_AVAILABLE.add(TILE_KERNEL_ADIUTOR);
+         STATIC_TILES_AVAILABLE.add(TILE_NAVBAR);
++        STATIC_TILES_AVAILABLE.add(TILE_HIFI);
+ 
+         DYNAMIC_TILES_AVAILABLE.add(DYNAMIC_TILE_NEXT_ALARM);
+         DYNAMIC_TILES_AVAILABLE.add(DYNAMIC_TILE_IME_SELECTOR);
+diff --git a/packages/SystemUI/res/values/strings_aicp.xml b/packages/SystemUI/res/values/strings_aicp.xml
+index 3193a9d..b2ebac2 100644
+--- a/packages/SystemUI/res/values/strings_aicp.xml
++++ b/packages/SystemUI/res/values/strings_aicp.xml
+@@ -155,4 +155,8 @@
+     <!-- Torch detail tile -->
+     <string name="disable_torch_screen_off_title">Disable torch on screen off</string>
+ 
++    <!-- Hifi tile -->
++    <string name="quick_settings_hifi_on">Hifi On</string>
++    <string name="quick_settings_hifi_off">Hifi Off</string>
++
+ </resources>
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/HifiTile.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/HifiTile.java
+new file mode 100644
+index 0000000..bdf3b8e
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/HifiTile.java
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (C) 2015 The CyanogenMod Project
++ * Copyright (C) 2016 faust93 at monumentum@gmail.com
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.qs.tiles;
++
++import android.content.Context;
++import android.content.Intent;
++import android.media.AudioManager;
++import android.provider.Settings;
++import android.os.UserHandle;
++import android.provider.Settings;
++import android.provider.Settings.Global;
++
++import com.android.systemui.R;
++import com.android.systemui.qs.QSTile;
++import com.android.systemui.qs.SecureSetting;
++import com.android.systemui.qs.GlobalSetting;
++
++public class HifiTile extends QSTile<QSTile.BooleanState> {
++
++    private final SecureSetting mSetting;
++    private boolean mListening;
++
++    public HifiTile(Host host) {
++        super(host);
++        mSetting = new SecureSetting(mContext, mHandler, Settings.System.HIFI_ENABLE) {
++            @Override
++            protected void handleValueChanged(int value, boolean observedChange) {
++            if (value != 0 || observedChange)
++                handleRefreshState(value);
++            }
++        };
++    }
++
++    @Override
++    protected void handleUserSwitch(int newUserId) {
++        mSetting.setUserId(newUserId);
++        handleRefreshState(mSetting.getValue());
++    }
++
++    @Override
++    protected void handleClick() {
++        AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
++        toggleState();
++        if (HifiEnabled())
++            am.setParameters("hifi_state=on");
++        else
++            am.setParameters("hifi_state=off");
++        refreshState();
++    }
++
++    @Override
++    protected void handleLongClick() {
++        Intent intent = new Intent(Intent.ACTION_MAIN);
++        intent.setClassName("com.android.settings",
++            "com.android.settings.Settings$HifiSoundSettingsActivity");
++        mHost.startSettingsActivity(intent);
++    }
++
++    @Override
++    protected void handleUpdateState(BooleanState state, Object arg) {
++        state.visible = true;
++        if(HifiEnabled())
++         state.label = mContext.getString(R.string.quick_settings_hifi_on);
++        else
++         state.label = mContext.getString(R.string.quick_settings_hifi_off);
++
++        state.icon = ResourceIcon.get(R.drawable.ic_qs_volume_panel); // TODO needs own icon
++    }
++
++    private boolean HifiEnabled() {
++        return Settings.System.getIntForUser(mContext.getContentResolver(),
++                Settings.System.HIFI_ENABLE, 0, UserHandle.USER_CURRENT) == 1;
++    }
++
++     protected void toggleState() {
++         Settings.System.putIntForUser(mContext.getContentResolver(),
++                        Settings.System.HIFI_ENABLE, !HifiEnabled() ? 1 : 0, UserHandle.USER_CURRENT);
++    }
++
++    @Override
++    protected BooleanState newTileState() {
++        return new BooleanState();
++    }
++
++    @Override
++    public void setListening(boolean listening) {
++        // Do nothing
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QSTileHost.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QSTileHost.java
+index c5752a9..7e514b1 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QSTileHost.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QSTileHost.java
+@@ -60,6 +60,7 @@ import com.android.systemui.qs.tiles.LockscreenToggleTile;
+ import com.android.systemui.qs.tiles.LteTile;
+ import com.android.systemui.qs.tiles.MusicTile;
+ import com.android.systemui.qs.tiles.NavBarTile;
++import com.android.systemui.qs.tiles.HifiTile;
+ import com.android.systemui.qs.tiles.NotificationsTile;
+ import com.android.systemui.qs.tiles.ProfilesTile;
+ import com.android.systemui.qs.tiles.PerfProfileTile;
+@@ -430,6 +431,8 @@ public class QSTileHost implements QSTile.Host {
+                 return new KernelAdiutorTile(this);
+             case QSConstants.TILE_NAVBAR:
+                 return new NavBarTile(this);
++            case QSConstants.TILE_HIFI:
++                return new HifiTile(this);
+             default:
+                 throw new IllegalArgumentException("Bad tile spec: " + tileSpec);
+         }
+-- 
+1.9.3 (Apple Git-50)
+

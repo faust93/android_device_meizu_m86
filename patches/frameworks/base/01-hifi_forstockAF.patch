@@ -1,0 +1,73 @@
+From d9f27e573db42ad88471cf71fefcca3f6731c2cf Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 13 May 2016 21:18:22 +0300
+Subject: [PATCH] Trying to make hi-fi alive
+
+---
+ media/java/android/media/AudioService.java | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/media/java/android/media/AudioService.java b/media/java/android/media/AudioService.java
+index 4ddd6e0..e6d9f03 100644
+--- a/media/java/android/media/AudioService.java
++++ b/media/java/android/media/AudioService.java
+@@ -673,6 +673,7 @@ public AudioService(Context context) {
+         createStreamStates();
+ 
+         readAndSetLowRamDevice();
++        MzReadAndSetHifiParam();
+ 
+         // Call setRingerModeInt() to apply correct mute
+         // state on streams affected by ringer mode.
+@@ -3893,6 +3894,7 @@ public void applyDeviceVolume_syncVSS(int device) {
+             } else {
+                 index = (getIndex(device) + 5)/10;
+             }
++            Log.v(TAG,"applyDeviceVolumemStreamType:" + mStreamType + ",device:" + device);
+             AudioSystem.setStreamVolumeIndex(mStreamType, index, device);
+         }
+ 
+@@ -4593,7 +4595,7 @@ public void handleMessage(Message msg) {
+                     AudioSystem.setParameters("restarting=true");
+ 
+                     readAndSetLowRamDevice();
+-
++                    MzReadAndSetHifiParam();
+                     // Restore device connection states
+                     synchronized (mConnectedDevices) {
+                         Set set = mConnectedDevices.entrySet();
+@@ -5217,6 +5219,9 @@ private void onSetWiredDeviceConnectionState(int device, int state, String name)
+             if (!isUsb && (device != AudioSystem.DEVICE_IN_WIRED_HEADSET)) {
+                 sendDeviceConnectionIntent(device, state, name);
+             }
++            if (device == 4 || device == 8) {
++                MzReadAndSetHifiParam();
++            }
+         }
+     }
+ 
+@@ -6345,6 +6350,24 @@ private void dumpAudioPolicies(PrintWriter pw) {
+         }
+     }
+ 
++    private void MzReadAndSetHifiParam() {
++        String hifiEnable = SystemProperties.get("ro.meizu.hardware.hifi", "false");
++        Log.d(TAG,"MzReadAndSetHifiParam: hifiEnable = " + hifiEnable);
++        if (hifiEnable.equals("true")) {
++            //String gainKeyPairs = "hifi_gain=" + System.getIntForUser(this.mContentResolver, MzSettings.System.HIFI_MUSIC_PARAM, 0, -2);
++            //synchronized (this.mConnectedDevices) {
++            //  if ((this.mConnectedDevices.containsKey(Integer.valueOf(4)) || this.mConnectedDevices.containsKey(Integer.valueOf(8))) && true) {
++                    AudioSystem.setParameters("hifi_state=on");
++                    //AudioSystem.setParameters(gainKeyPairs);
++                    AudioSystem.setParameters("hifi_gain=0");
++                    //log("MzReadAndSetHifiParam: hifi_state=on | " + gainKeyPairs);
++                    Log.d(TAG, "MzReadAndSetHifiParam: hifi_state=on");
++                } else {
++                    AudioSystem.setParameters("hifi_state=off");
++                    Log.d(TAG, "MzReadAndSetHifiParam: hifi_state=off");
++                }
++            //}
++        }
+     //======================
+     // Audio policy proxy
+     //======================

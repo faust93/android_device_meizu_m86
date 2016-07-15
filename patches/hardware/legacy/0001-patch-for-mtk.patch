@@ -1,0 +1,84 @@
+From 8163ec618f05d7fabe9b1bfae1e2c7575ed27a0a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E7=A7=8B=E5=8F=B6=E9=9A=8F=E9=A3=8Eivan?=
+ <yanziily@gmail.com>
+Date: Sun, 3 Jan 2016 21:28:59 +0800
+Subject: [PATCH] Patch for MTK
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: I3d9ff9bcb8c7ee46b5820d9ba1be0406236c09fb
+Signed-off-by: 秋叶随风ivan <yanziily@gmail.com>
+
+diff -ur libhardware_legacy/vibrator/Android.mk libhardware_legacy_mtk/vibrator/Android.mk
+--- libhardware_legacy/vibrator/Android.mk	2016-01-22 15:47:44.299870000 -0800
++++ libhardware_legacy_mtk/vibrator/Android.mk	2016-01-23 05:25:45.217410359 -0800
+@@ -2,3 +2,8 @@
+ 
+ LOCAL_SRC_FILES += vibrator/vibrator.c
+ 
++ifdef BOARD_HAVE_OPENSOURCE_IMMVIBE
++LOCAL_SHARED_LIBRARIES += libimmvibeconnector
++LOCAL_CFLAGS += -DHAVE_OPENSOURCE_IMMVIBE
++LOCAL_CPPFLAGS += -DHAVE_OPENSOURCE_IMMVIBE
++endif
+diff -ur libhardware_legacy/vibrator/vibrator.c libhardware_legacy_mtk/vibrator/vibrator.c
+--- libhardware_legacy/vibrator/vibrator.c	2016-01-22 15:47:44.299870000 -0800
++++ libhardware_legacy_mtk/vibrator/vibrator.c	2016-01-23 05:25:45.217410359 -0800
+@@ -13,6 +13,7 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
++
+ #include <hardware_legacy/vibrator.h>
+ #include "qemu.h"
+ 
+@@ -21,6 +22,12 @@
+ #include <fcntl.h>
+ #include <errno.h>
+ 
++#include <cutils/log.h>
++
++#ifdef HAVE_OPENSOURCE_IMMVIBE
++#include <immvibeconn.h>
++#endif
++
+ #define THE_DEVICE "/sys/class/timed_output/vibrator/enable"
+ 
+ int vibrator_exists()
+@@ -33,6 +40,11 @@
+     }
+ #endif
+ 
++#ifdef HAVE_OPENSOURCE_IMMVIBE
++    /* TODO */
++    return 1;
++#endif
++
+     fd = open(THE_DEVICE, O_RDWR);
+     if(fd < 0)
+         return 0;
+@@ -51,6 +63,23 @@
+     }
+ #endif
+ 
++#ifdef HAVE_OPENSOURCE_IMMVIBE
++    fd = immvibe_conn_open();
++    if (fd < 0) {
++        return errno;
++    }
++
++    if (timeout_ms) {
++        ret = immvibe_conn_vibrate(fd, timeout_ms);
++    } else {
++        ret = immvibe_conn_stop(fd);
++    }
++
++    close(fd);
++
++    return ret ? -1 : 0;
++#endif
++
+     fd = open(THE_DEVICE, O_RDWR);
+     if(fd < 0)
+         return errno;

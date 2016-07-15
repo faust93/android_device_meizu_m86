@@ -1,0 +1,61 @@
+From 803dd2e99d947eef6ea36357ce5f3ad7fd2facdc Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 15 Jul 2016 12:28:42 +0300
+Subject: [PATCH] specify hw boot, disable selinux
+
+Change-Id: Ie7900dfb68a92fe989c9ea77cba9b7cdf9b8933b
+---
+ init/Android.mk | 4 ++--
+ init/init.c     | 6 +++++-
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/init/Android.mk b/init/Android.mk
+index c6863bf..4f21e79 100755
+--- a/init/Android.mk
++++ b/init/Android.mk
+@@ -25,9 +25,9 @@ LOCAL_SRC_FILES += bootchart.c
+ LOCAL_CFLAGS    += -DBOOTCHART=1
+ endif
+ 
+-ifneq (,$(filter userdebug eng,$(TARGET_BUILD_VARIANT)))
++###ifneq (,$(filter userdebug eng,$(TARGET_BUILD_VARIANT)))
+ LOCAL_CFLAGS += -DALLOW_LOCAL_PROP_OVERRIDE=1 -DALLOW_DISABLE_SELINUX=1
+-endif
++###endif
+ 
+ # Enable ueventd logging
+ #LOCAL_CFLAGS += -DLOG_UEVENTS=1
+diff --git a/init/init.c b/init/init.c
+index 1cce8d8..a81ab15 100644
+--- a/init/init.c
++++ b/init/init.c
+@@ -793,7 +793,7 @@ static void export_kernel_boot_props(void)
+     ret = property_get("ro.boot.hardware", tmp);
+     if (ret)
+         strlcpy(hardware, tmp, sizeof(hardware));
+-    property_set("ro.hardware", hardware);
++    property_set("ro.hardware", "m86");
+ 
+     snprintf(tmp, PROP_VALUE_MAX, "%d", revision);
+     property_set("ro.revision", tmp);
+@@ -908,6 +908,8 @@ static bool selinux_is_disabled(void)
+ #ifdef ALLOW_DISABLE_SELINUX
+     char tmp[PROP_VALUE_MAX];
+ 
++    return true;
++
+     if (access("/sys/fs/selinux", F_OK) != 0) {
+         /* SELinux is not compiled into the kernel, or has been disabled
+          * via the kernel command line "selinux=0".
+@@ -929,6 +931,8 @@ static bool selinux_is_enforcing(void)
+ #ifdef ALLOW_DISABLE_SELINUX
+     char tmp[PROP_VALUE_MAX];
+ 
++    return false;
++
+     if (property_get("ro.boot.selinux", tmp) == 0) {
+         /* Property is not set.  Assume enforcing */
+         return true;
+-- 
+1.9.3 (Apple Git-50)
+

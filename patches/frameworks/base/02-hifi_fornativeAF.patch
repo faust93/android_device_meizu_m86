@@ -1,0 +1,51 @@
+From 5368137a8159e2ee08e8f9777b0f4f5b343a9b6f Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 6 Jul 2016 23:32:19 +0300
+Subject: [PATCH] Make HiFi work on native audioflinger
+
+Change-Id: I56adc3981c47c0cb3b8827b1687ce4381f96b151
+---
+ media/java/android/media/AudioService.java | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/media/java/android/media/AudioService.java b/media/java/android/media/AudioService.java
+index 0793c37..1a259e9 100644
+--- a/media/java/android/media/AudioService.java
++++ b/media/java/android/media/AudioService.java
+@@ -6352,23 +6352,23 @@ public class AudioService extends IAudioService.Stub {
+     }
+ 
+     private void MzReadAndSetHifiParam() {
+-        String hifiEnable = SystemProperties.get("ro.meizu.hardware.hifi", "false");
++        int hifiEnable = System.getIntForUser(mContentResolver, Settings.System.HIFI_ENABLE, 0, UserHandle.USER_CURRENT);
++        //SystemProperties.get("ro.meizu.hardware.hifi", "false");
+         Log.d(TAG,"MzReadAndSetHifiParam: hifiEnable = " + hifiEnable);
+-        if (hifiEnable.equals("true")) {
+-            //String gainKeyPairs = "hifi_gain=" + System.getIntForUser(this.mContentResolver, MzSettings.System.HIFI_MUSIC_PARAM, 0, -2);
+-            //synchronized (this.mConnectedDevices) {
+-            //  if ((this.mConnectedDevices.containsKey(Integer.valueOf(4)) || this.mConnectedDevices.containsKey(Integer.valueOf(8))) && true) {
++        if (hifiEnable == 1) {
++            String gainKeyPairs = "hifi_gain=" + System.getIntForUser(mContentResolver, Settings.System.HIFI_MODE, 0, UserHandle.USER_CURRENT); // -2);
++            synchronized (this.mConnectedDevices) {
++              if ((this.mConnectedDevices.containsKey(Integer.valueOf(4)) || this.mConnectedDevices.containsKey(Integer.valueOf(8))) && true) {
+                     AudioSystem.setParameters("hifi_state=on");
+-                    //AudioSystem.setParameters(gainKeyPairs);
+-                    AudioSystem.setParameters("hifi_gain=0");
+-                    //log("MzReadAndSetHifiParam: hifi_state=on | " + gainKeyPairs);
+-                    Log.d(TAG, "MzReadAndSetHifiParam: hifi_state=on");
++                    AudioSystem.setParameters(gainKeyPairs);
++                    Log.d(TAG, "MzReadAndSetHifiParam: hifi_state=on | " + gainKeyPairs);
+                 } else {
+                     AudioSystem.setParameters("hifi_state=off");
+                     Log.d(TAG, "MzReadAndSetHifiParam: hifi_state=off");
+                 }
+-            //}
++            }
+         }
++    }
+     //======================
+     // Audio policy proxy
+     //======================
+-- 
+1.9.3 (Apple Git-50)
+

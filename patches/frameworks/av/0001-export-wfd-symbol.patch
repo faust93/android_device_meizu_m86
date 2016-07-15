@@ -1,0 +1,25 @@
+From f37d3b00064143dd645bb3b650b3ebe496a71c1b Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 29 Apr 2016 19:21:34 +0300
+Subject: [PATCH] export wfd symbol
+
+---
+ media/libmedia/AudioEffect.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/media/libmedia/AudioEffect.cpp b/media/libmedia/AudioEffect.cpp
+index 0d5d7e4..aa0665a 100644
+--- a/media/libmedia/AudioEffect.cpp
++++ b/media/libmedia/AudioEffect.cpp
+@@ -29,7 +29,7 @@
+ #include <utils/Log.h>
+ #include <binder/IPCThreadState.h>
+ 
+-
++extern "C" void _ZN7android10WFDService11instantiateEv() {}
+ 
+ namespace android {
+ 
+-- 
+1.9.3 (Apple Git-50)
+
