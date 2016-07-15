@@ -194,18 +194,25 @@
          Must be overridden in platform specific overlays -->
     <integer-array name="config_autoBrightnessLevels">
         <item>2</item>
-        <item>7</item>
-        <item>15</item>
+        <item>10</item>
+        <item>20</item>
+        <item>40</item>
         <item>50</item>
-        <item>100</item>
-        <item>200</item>
-        <item>400</item>
-        <item>1000</item>
-        <item>2000</item>
-        <item>3000</item>
-        <item>5000</item>
-        <item>10000</item>
-        <item>30000</item>
+        <item>60</item>
+        <item>85</item>
+        <item>110</item>
+        <item>128</item>
+        <item>256</item>
+        <item>384</item>
+        <item>512</item>
+        <item>640</item>
+        <item>768</item>
+        <item>896</item>
+        <item>1024</item>
+        <item>2048</item>
+        <item>4096</item>
+        <item>6144</item>
+        <item>8192</item>
     </integer-array>
 
     <!-- Array of output values for LCD backlight corresponding to the LUX values
@@ -213,19 +220,26 @@
          than the size of the config_autoBrightnessLevels array.
          This must be overridden in platform specific overlays -->
     <integer-array name="config_autoBrightnessLcdBacklightValues">
-        <item>8</item>
-        <item>16</item>
-        <item>28</item>
-        <item>41</item>
-        <item>52</item>
-        <item>62</item>
-        <item>69</item>
-        <item>78</item>
-        <item>88</item>
-        <item>134</item>
-        <item>178</item>
-        <item>225</item>
-        <item>255</item>
+        <item>20</item>
+        <item>33</item>
+        <item>43</item>
+        <item>55</item>
+        <item>67</item>
+        <item>70</item>
+        <item>73</item>
+        <item>77</item>
+        <item>83</item>
+        <item>85</item>
+        <item>93</item>
+        <item>105</item>
+        <item>113</item>
+        <item>120</item>
+        <item>135</item>
+        <item>145</item>
+        <item>160</item>
+        <item>180</item>
+        <item>220</item>
+        <item>230</item>
         <item>255</item>
     </integer-array>
 
@@ -351,5 +365,14 @@
     <!-- Performance profiles -->
     <string name="config_perf_profile_prop">sys.perf.profile</string>
     <string name="config_perf_profile_default_entry">1</string>
+
+    <!-- Package name providing WebView implementation. -->
+    <string name="config_webViewPackageName" translatable="false">com.google.android.webview</string>
+
+    <string-array name="config_locationProviderPackageNames">
+        <item>com.android.location.fused</item>
+        <item>com.google.android.gms</item>
+        <item>com.baidu.map.location</item>
+    </string-array>
 
 </resources>

@@ -38,7 +38,7 @@ on property:sys.perf.profile=0
     write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 0
 
 # Balanced
-on property:sys.perf.profile=1
+on property:sys.perf.profile=11
     write /sys/kernel/hmp/packing_enable 1
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/io_is_busy 1
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy 1
@@ -80,20 +80,17 @@ on property:sys.perf.profile=2
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/go_hispeed_load 70
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/hispeed_freq 1500000
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/hispeed_freq 2100000
-    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/min_sample_time 80000
+    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/min_sample_time 60000
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/timer_rate 20000
-    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/boost 0
+    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/boost 1
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/max_freq_hysteresis 200000
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/max_freq_hysteresis 50000
     write /sys/devices/14ac0000.mali/tmu 0
     write /sys/devices/14ac0000.mali/dvfs_governor 1
-    write /sys/module/mmc_core/parameters/use_spi_crc "N"
     write /sys/kernel/dyn_fsync/Dyn_fsync_active 1
     write /proc/sys/kernel/random/read_wakeup_threshold 128
     write /proc/sys/kernel/random/write_wakeup_threshold 896
-    write /sys/class/input_booster/level 2
     write /sys/power/cpucore_max_num_limit 8
-    write /sys/module/bcmdhd/parameters/wl_divide 4
     write /proc/sys/net/ipv4/tcp_congestion_control "westwood"
     write /proc/sys/vm/dynamic_dirty_writeback 1
     write /proc/sys/kernel/randomize_va_space 0

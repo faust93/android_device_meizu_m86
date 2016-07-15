@@ -193,7 +193,7 @@ public class KeyHandler implements DeviceKeyHandler {
                 break;
             case GESTURE_FPC_LEFT_SCANCODE:
                 if(getCMApref(KEY_FPC_LEFT, false)) {
-                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_MENU );
+                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_HOME );
                     doHapticFeedback();
                 }
                 break;

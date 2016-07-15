@@ -1,25 +1,22 @@
 # system.prop for m86
-
+ro.build.characteristics=phone
+ro.opengles.version=196609
 ro.sf.lcd_density=480
 
 ro.arch=exynos7420
 persist.demo.hdmirotationlock=false
 
-ro.meizu.hardware.hifi=true
-
 # HACK - Error on the 3D test of Antutu v5.6
 ro.kernel.android.checkjni=0
-
 wifi.interface=wlan0
+net.dns1=8.8.8.8
+net.dns2=8.8.4.4
 
 ro.telephony.ril_class=m86RIL
 rild.libpath=/system/lib64/libsmiril.so
 rild.libargs=-d /dev/umts_ipc0
-
 exynos.modempath=/system/vendor/firmware/modem.bin
 exynos.telephony.feature=true
-
-# Set to DSDS mode as default
 persist.radio.multisim.config=dsds
 
 #Define PhoneApp ToneVolume
@@ -28,13 +25,16 @@ persist.dialpad.ecc.volume=45
 persist.dtmf.volume=85
 persist.call.waiting.volume=60
 persist.ring.back.volume=200
+ro.meizu.hardware.hifi=true
 
-# Aricent Integration [START]
 # To make setkeydamon enable/disable
 persist.ari.ims.setkeydaemon=disabled
-# Aricent Integration [END]
 qemu.hw.mainkeys=1
 
 #NFC for uniconpay
 ro.product.cuptsm=MEIZU|ESE|01|02
+
+debug.hwc.force_gpu=0
+debug.hwc.winupdate=1
+
 

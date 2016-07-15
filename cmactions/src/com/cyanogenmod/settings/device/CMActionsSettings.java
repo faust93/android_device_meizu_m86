@@ -64,14 +64,14 @@ public class CMActionsSettings {
     public static final int KEY_MASK_GESTURE_GTR = 0x2000000;
 
     public static final int KEY_MASK_GESTURE_CONTROL = 0x300;
+    public static final int KEY_MASK_GESTURE_V = 0x1000000;
     public static final int KEY_MASK_GESTURE_C = 0x2000000;
     public static final int KEY_MASK_GESTURE_E = 0x4000000;
-    public static final int KEY_MASK_GESTURE_S = 0x14000000;
-    public static final int KEY_MASK_GESTURE_V = 0x1000000;
     public static final int KEY_MASK_GESTURE_W = 0x8000000;
+    public static final int KEY_MASK_GESTURE_M = 0x10000000;
+    public static final int KEY_MASK_GESTURE_S = 0x20000000;
     public static final int KEY_MASK_GESTURE_Z = 0x40000000;
     public static final int KEY_MASK_GESTURE_O = 0x80000000;
-    public static final int KEY_MASK_GESTURE_M = 0x10000000;
 
     public static final int DISABLE_ALL_MASK = 0x100;
     public static final int ENABLE_ALL_MASK = 0x1000100;
@@ -168,6 +168,8 @@ public class CMActionsSettings {
     public static void updateGestureMode() {
         int gesture_mode = 0;
 
+        FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, DISABLE_ALL_MASK);
+
         if (mIsGestureEnabled) {
             FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, ENABLE_ALL_MASK);
             /* TAP_CTR masking */
@@ -200,11 +202,8 @@ public class CMActionsSettings {
                     gesture_mode = (gesture_mode ^ KEY_MASK_GESTURE_M);
             if (((gesture_mode & KEY_MASK_GESTURE_Z) == 1) != mIsGesture_Z_Enabled)
                     gesture_mode = (gesture_mode ^ KEY_MASK_GESTURE_Z);
-        } else {
-            gesture_mode = DISABLE_ALL_MASK;
-        }
         Log.d(TAG, "finished gesture mode: " + gesture_mode);
         FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, gesture_mode);
+	}
     }
-
 }

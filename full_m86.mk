@@ -35,3 +35,4 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
         PRODUCT_MODEL="PRO 5" \
         BUILD_FINGERPRINT=Meizu/meizu_PRO5/PRO5:5.1/LMY47D/m86.Flyme_OS_5.1460049852:user/release-keys \
         PRIVATE_BUILD_DESC="meizu_PRO5-user 5.1 LMY47D m86.Flyme_OS_5.1460049852 release-keys"
+

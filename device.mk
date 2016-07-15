@@ -16,10 +16,14 @@
 
 LOCAL_PATH := device/meizu/m86
 
+PRODUCT_PREBUILT_WEBVIEWCHROMIUM := yes
+
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 
 # Get non-open-source specific aspects
 $(call inherit-product-if-exists, vendor/meizu/m86/m86-vendor.mk)
+
+$(call inherit-product-if-exists, prebuilts/chromium/chromium_prebuilt.mk)
 
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += device/meizu/m86/overlay
@@ -142,6 +146,7 @@ PRODUCT_COPY_FILES += \
 
 # NFC
 PRODUCT_PACKAGES += \
+    nfc_nci.pn54x.default \
     libnfc-nci \
     libnfc_nci_jni \
     NfcNci \
@@ -154,10 +159,10 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/libnfc-nxp.conf:system/etc/libnfc-nxp.conf
 
 # Chromium
-PRODUCT_PACKAGES += \
-    webview \
-    libwebviewchromium_loader \
-    libwebviewchromium_plat_support
+#PRODUCT_PACKAGES += \
+#    webview \
+#    libwebviewchromium_loader \
+#    libwebviewchromium_plat_support
 #    libwebviewchromium
 
 # Power
@@ -176,7 +181,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     fstab.m86 \
     init.m86.rc \
+    init.power.rc \
     init.m86.usb.rc \
+    init.superuser.rc \
     ueventd.m86.rc
 
 PRODUCT_COPY_FILES += \
@@ -197,7 +204,8 @@ PRODUCT_COPY_FILES += \
 
 # Set default USB interface
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    persist.sys.usb.config=mtp
+    persist.sys.usb.config=mtp \
+    ro.build.characteristics=phone
 
 # TWRP Recovery
 PRODUCTY_COPY_FILES += \

@@ -8,8 +8,6 @@
     <item name="wifi.on">0.6</item>
     <item name="wifi.active">250</item>
     <item name="wifi.scan">108</item>
-    <item name="dsp.audio">28</item>
-    <item name="dsp.video">72</item>
     <item name="radio.active">230</item>
     <item name="radio.scanning">50</item>
     <item name="gps.on">52</item>

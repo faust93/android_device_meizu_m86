@@ -44,7 +44,7 @@
 
     <string name="fpc_gesture_title">Fingerprint Sensor Gestures</string>
     <string name="fpc_gesture_tap_summary">Tap once to Back</string>
-    <string name="fpc_gesture_left_summary">Swipe left for Menu</string>
+    <string name="fpc_gesture_left_summary">Swipe left for Home</string>
     <string name="fpc_gesture_right_summary">Swipe right for Recent Apps</string>
 
     <!-- haptic feedback  -->
