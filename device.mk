@@ -21,6 +21,8 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 # Get non-open-source specific aspects
 $(call inherit-product-if-exists, vendor/meizu/m86/m86-vendor.mk)
 
+$(call inherit-product-if-exists, prebuilts/chromium/chromium_prebuilt.mk)
+
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += device/meizu/m86/overlay
 
@@ -79,6 +81,18 @@ PRODUCT_PACKAGES += \
     audio.r_submix.default \
     audio.usb.default \
     tinymix
+
+PRODUCT_PACKAGES += \
+    libstlport
+
+# ril
+PRODUCT_PACKAGES += \
+    libril_smiril
+
+# shims
+PRODUCT_PACKAGES += \
+    libshim_media \
+    libgps_shim
 
 # Fingerprint
 #PRODUCT_PACKAGES += \
@@ -141,10 +155,24 @@ PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml
 
 # NFC
+#PRODUCT_PACKAGES += \
+#    nfc_nci.pn54x.default \
+#    libnfc-nci \
+#    libnfc_nci_jni \
+#    NfcNci \
+#    Tag \
+#    com.android.nfc_extras
+
 PRODUCT_PACKAGES += \
-    libnfc-nci \
-    libnfc_nci_jni \
-    NfcNci \
+    NQNfcNci \
+    libnqnfc-nci \
+    libnqnfc_nci_jni \
+    nfc_nci.pn54x.default \
+    libp61-jcop-kit \
+    com.nxp.nfc.nq \
+    com.nxp.nfc.nq.xml \
+    nqnfcee_access.xml \
+    nqnfcse_access.xml \
     Tag \
     com.android.nfc_extras
 
@@ -152,13 +180,6 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/nfcee_access.xml:system/etc/nfcee_access.xml \
     $(LOCAL_PATH)/configs/libnfc-brcm.conf:system/etc/libnfc-brcm.conf \
     $(LOCAL_PATH)/configs/libnfc-nxp.conf:system/etc/libnfc-nxp.conf
-
-# Chromium
-PRODUCT_PACKAGES += \
-    webview \
-    libwebviewchromium_loader \
-    libwebviewchromium_plat_support
-#    libwebviewchromium
 
 # Power
 PRODUCT_PACKAGES += \
@@ -176,7 +197,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     fstab.m86 \
     init.m86.rc \
+    init.power.rc \
     init.m86.usb.rc \
+    init.superuser.rc \
     ueventd.m86.rc
 
 PRODUCT_COPY_FILES += \
@@ -197,10 +220,14 @@ PRODUCT_COPY_FILES += \
 
 # Set default USB interface
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    persist.sys.usb.config=mtp
+    persist.sys.usb.config=mtp \
+    ro.build.characteristics=phone
 
 # TWRP Recovery
 PRODUCTY_COPY_FILES += \
     device/meizu/m86/twrp.fstab:recovery/root/etc/twrp.fstab \
     device/meizu/m86/recovery.fstab:recovery/root/etc/recovery.fstab \
     device/meizu/m86/rootdir/fstab.m86:recovery/root/fstab.m86
+
+# System properties
+-include $(LOCAL_PATH)/system_prop.mk

@@ -5,7 +5,7 @@
 
 /dev/block/platform/15570000.ufs/by-name/system	/system	ext4	ro	wait
 /dev/block/platform/15570000.ufs/by-name/cache	/cache	ext4	noatime,nosuid,nodev,nomblk_io_submit,errors=panic	wait,check
-/dev/block/platform/15570000.ufs/by-name/userdata	/data	ext4	noatime,nosuid,nodev,nomblk_io_submit,discard,noauto_da_alloc,errors=panic    wait,check,encryptable=/cache/metadata
+/dev/block/platform/15570000.ufs/by-name/userdata       /data   ext4    noatime,nosuid,nodev,nomblk_io_submit,discard,noauto_da_alloc,errors=panic    wait,check,encryptable=/cache/metadata
 /dev/block/platform/15570000.ufs/by-name/efs   /efs   ext4    rw     wait,check
 /dev/block/platform/15570000.ufs/by-name/mnv   /mnv   ext4    ro,noload     wait
 /dev/block/platform/15570000.ufs/by-name/custom	/custom     ext4    ro,noload,errors=panic  wait
@@ -13,6 +13,6 @@
 /dev/block/platform/15570000.ufs/by-name/bootimg	/boot	emmc	defaults	recoveryonly
 
 # VOLD
-/devices/15560000.dwmmc2/mmc_host/mmc0*		auto		vfat	default	voldmanaged=sdcard1:auto,noemulatedsd
-/devices/15400000.usb/15400000.dwc3/xhci-hcd*	auto		vfat	default	voldmanaged=usb1:auto,noemulatedsd
+/devices/15560000.dwmmc2/mmc_host/mmc0*		auto		auto	nosuid,nodev voldmanaged=sdcard1:auto,encryptable=userdata,noemulatedsd
+/devices/15400000.usb/15400000.dwc3/xhci-hcd*	auto		auto	nosuid,nodev voldmanaged=usb:auto
 #/devices/15510000.usb				auto		vfat	default	voldmanaged=usb2:auto

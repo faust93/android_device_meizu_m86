@@ -1,0 +1,63 @@
+From 7881f715ce826fa087ea0f48742097acd79321df Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 14 Jul 2016 22:25:08 +0300
+Subject: [PATCH] Swipe for recents [2/2]
+
+---
+ res/values-ru/rr_strings.xml | 3 +++
+ res/values/rr_strings.xml    | 4 ++++
+ res/xml/gesture_anywhere.xml | 9 ++++++++-
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/res/values-ru/rr_strings.xml b/res/values-ru/rr_strings.xml
+index 8834d7e..dea2951 100644
+--- a/res/values-ru/rr_strings.xml
++++ b/res/values-ru/rr_strings.xml
+@@ -1208,6 +1208,9 @@
+   <!-- Three-fingers-swipe to screenshot -->
+   <string name="three_finger_gesture">Жест тремя пальцами</string>
+   <string name="three_finger_gesture_summary">Проведите тремя пальцами для создания скриншота</string>
++  <!-- Swipe bottom right up for recents -->
++  <string name="recents_finger_gesture">Свайп вызова недавних приложений</string>
++  <string name="recents_finger_gesture_summary">Свайп одним пальцем вверх из нижнего правого угла для вызова недавних</string>
+   <!-- Lockscreen Colors -->
+   <string name="lockscreen_colors">Цвета экрана блокировки</string>
+   <string name="lockscreen_phone_icon_color">Ярлык в нижнем левом углу</string>
+diff --git a/res/values/rr_strings.xml b/res/values/rr_strings.xml
+index 1b48a8d..de0314f 100644
+--- a/res/values/rr_strings.xml
++++ b/res/values/rr_strings.xml
+@@ -1321,6 +1321,10 @@
+ 	<!-- Three-fingers-swipe to screenshot -->
+ 	<string name="three_finger_gesture">Three finger gesture</string>
+ 	<string name="three_finger_gesture_summary">Swipe three finger to screenshot</string>
++
++        <!-- Swipe bottom right up for recents -->
++        <string name="recents_finger_gesture">Recents finger gesture</string>
++        <string name="recents_finger_gesture_summary">Swipe finger up from bottom-right for recent apps</string>
+ 	
+ 	<!-- Lockscreen Colors -->
+ 	<string name="lockscreen_colors">Lockscreen Colors</string>
+diff --git a/res/xml/gesture_anywhere.xml b/res/xml/gesture_anywhere.xml
+index fe45e13..e936f76 100644
+--- a/res/xml/gesture_anywhere.xml
++++ b/res/xml/gesture_anywhere.xml
+@@ -24,7 +24,14 @@
+         android:key="three_finger_gesture"
+         android:title="@string/three_finger_gesture"
+         android:summary="@string/three_finger_gesture_summary"
+-        android:defaultValue="false" />
++        android:defaultValue="true" />
++
++     <!-- Bottom-right swipe up to recents -->
++     <com.android.settings.cyanogenmod.SystemSettingSwitchPreference
++        android:key="recents_finger_gesture"
++        android:title="@string/recents_finger_gesture"
++        android:summary="@string/recents_finger_gesture_summary"
++        android:defaultValue="true" />
+ 
+     <SwitchPreference
+         android:key="gesture_anywhere_enabled"
+-- 
+1.9.3 (Apple Git-50)
+

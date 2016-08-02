@@ -50,9 +50,9 @@ public class m86RIL extends RIL implements CommandsInterface {
 
     private AudioManager mAudioManager;
 
-    private int isWbAmrEnabled = 0;
+    private int isWbAmrEnabled = 1;
 
-    private boolean DBG = false;
+    private boolean DBG = true;
 
     public m86RIL(Context context, int preferredNetworkType,
             int cdmaSubscription, Integer instanceId) {
@@ -201,6 +201,10 @@ public class m86RIL extends RIL implements CommandsInterface {
                     if (error == 0 || p.dataAvail() > 0) {
                         try {switch (tr.mRequest) {
                             /* Get those we're interested in */
+                            case RIL_REQUEST_DATA_REGISTRATION_STATE:
+                                rr = tr;
+                                break;
+                            /* Get those we're interested in */
                             case RIL_REQUEST_GET_WBAMR_CAPABILITY:
                                 rr = tr;
                                 break;
@@ -238,6 +242,7 @@ public class m86RIL extends RIL implements CommandsInterface {
 
         if (error == 0 || p.dataAvail() > 0) {
             switch (rr.mRequest) {
+                case RIL_REQUEST_DATA_REGISTRATION_STATE: ret =  dataRegState(p); break;
                 case RIL_REQUEST_GET_WBAMR_CAPABILITY: ret = getWbAmrSupport(p); isWbAmrEnabled = (int)ret; break;
                 case RIL_REQUEST_SET_WBAMR_CAPABILITY: ret = setWbAmr(isWbAmrEnabled); break;
                 default:
@@ -254,6 +259,26 @@ public class m86RIL extends RIL implements CommandsInterface {
             rr.mResult.sendToTarget();
         }
         return rr;
+    }
+
+    private Object
+    dataRegState(Parcel p) {
+        int num;
+        String response[];
+
+        response = p.readStringArray();
+
+        /* DANGER WILL ROBINSON
+         * In some cases from Vodaphone we are receiving a RAT of 102
+         * while in tunnels of the metro.  Lets Assume that if we
+         * receive 102 we actually want a RAT of 2 for EDGE service */
+        if (response.length > 4 &&
+            response[0].equals("1") &&
+            response[3].equals("102")) {
+
+            response[3] = "2";
+        }
+        return response;
     }
 
     private Object

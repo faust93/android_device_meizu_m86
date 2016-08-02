@@ -1,0 +1,31 @@
+From ff8b91488b868b227c550f3ee9d841ce5b509f77 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 2 Aug 2016 17:36:05 +0300
+Subject: [PATCH] Trying to fix absolute vol
+
+Change-Id: Ie5479b10002ce962fae672f4f1846e01cb3955da
+---
+ btif/src/btif_rc.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/btif/src/btif_rc.c b/btif/src/btif_rc.c
+index 4a83c26..9b4445b 100644
+--- a/btif/src/btif_rc.c
++++ b/btif/src/btif_rc.c
+@@ -488,11 +488,13 @@ void handle_rc_features(int index)
+         {
+             rc_features |= BTRC_FEAT_BROWSE;
+         }
++#if (AVRC_ADV_CTRL_INCLUDED == TRUE)
+         if ( (btif_rc_cb[index].rc_features & BTA_AV_FEAT_ADV_CTRL) &&
+             (btif_rc_cb[index].rc_features & BTA_AV_FEAT_RCTG))
+         {
+            rc_features |= BTRC_FEAT_ABSOLUTE_VOLUME;
+         }
++#endif
+         if (btif_rc_cb[index].rc_features & BTA_AV_FEAT_METADATA)
+         {
+             rc_features |= BTRC_FEAT_METADATA;
+-- 
+1.9.3 (Apple Git-50)
+

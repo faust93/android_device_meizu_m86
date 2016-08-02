@@ -1,0 +1,86 @@
+From 133580217bdc32c1bfb6d731cb43e87525ee9b49 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 29 Dec 2015 13:48:53 +0300
+Subject: [PATCH] No SD encryption
+
+Change-Id: I7d9d0487c8fc7025cc0384fcd8d86cd6e7de9804
+---
+ Disk.cpp          | 12 ++++++++++--
+ PrivateVolume.cpp |  9 ++++++++-
+ 2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/Disk.cpp b/Disk.cpp
+index 4678364..70163d9 100644
+--- a/Disk.cpp
++++ b/Disk.cpp
+@@ -35,6 +35,7 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/mount.h>
++#include "cutils/properties.h"
+ 
+ using android::base::ReadFileToString;
+ using android::base::WriteStringToFile;
+@@ -155,15 +156,22 @@ void Disk::createPublicVolume(dev_t device,
+ 
+ void Disk::createPrivateVolume(dev_t device, const std::string& partGuid) {
+     std::string normalizedGuid;
++    char p[PROPERTY_VALUE_MAX];
++
+     if (NormalizeHex(partGuid, normalizedGuid)) {
+         LOG(WARNING) << "Invalid GUID " << partGuid;
+         return;
+     }
+ 
+     std::string keyRaw;
+-    if (!ReadFileToString(BuildKeyPath(normalizedGuid), &keyRaw)) {
++
++    property_get("vold.no_sd_adopt_encryption", p, "0");
++
++    if (*p == '0'){
++     if (!ReadFileToString(BuildKeyPath(normalizedGuid), &keyRaw)) {
+         PLOG(ERROR) << "Failed to load key for GUID " << normalizedGuid;
+-        return;
++         return;
++     }
+     }
+ 
+     LOG(DEBUG) << "Found key for GUID " << normalizedGuid;
+diff --git a/PrivateVolume.cpp b/PrivateVolume.cpp
+index 18100b6..b910bf4 100644
+--- a/PrivateVolume.cpp
++++ b/PrivateVolume.cpp
+@@ -35,6 +35,7 @@
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/param.h>
++#include "cutils/properties.h"
+ 
+ using android::base::StringPrintf;
+ 
+@@ -65,6 +66,12 @@ status_t PrivateVolume::doCreate() {
+         return -EIO;
+     }
+ 
++    char p[PROPERTY_VALUE_MAX];
++    property_get("vold.no_sd_adopt_encryption", p, "0");
++
++    if(*p == '1'){
++        mDmDevPath = mRawDevPath;
++    } else {
+     // Recover from stale vold by tearing down any old mappings
+     cryptfs_revert_ext_volume(getId().c_str());
+ 
+@@ -78,8 +85,8 @@ status_t PrivateVolume::doCreate() {
+     if (res != 0) {
+         PLOG(ERROR) << getId() << " failed to setup cryptfs";
+         return -EIO;
++     }
+     }
+-
+     return OK;
+ }
+ 
+-- 
+1.9.3 (Apple Git-50)
+

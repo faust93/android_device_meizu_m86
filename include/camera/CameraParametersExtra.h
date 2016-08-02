@@ -44,7 +44,9 @@
     const char CameraParameters::KEY_SUPPORTED_PHASE_AF[] = "phase-af-values"; \
     const char CameraParameters::KEY_PHASE_AF[] = "phase-af"; \
     const char CameraParameters::KEY_SUPPORTED_RT_HDR[] = "rt-hdr-values"; \
-    const char CameraParameters::KEY_RT_HDR[] = "rt-hdr";
+    const char CameraParameters::KEY_RT_HDR[] = "rt-hdr"; \
+    const char CameraParameters::KEY_ISO_MODE[] = "iso"; \
+    const char CameraParameters::KEY_SUPPORTED_ISO_MODES[] = "iso-values";
 
 #define CAMERA_PARAMETERS_EXTRA_H \
     static const char PIXEL_FORMAT_YUV420SP_NV21[]; \
@@ -76,4 +78,6 @@
     static const char KEY_SUPPORTED_PHASE_AF[]; \
     static const char KEY_PHASE_AF[]; \
     static const char KEY_SUPPORTED_RT_HDR[]; \
-    static const char KEY_RT_HDR[];
+    static const char KEY_RT_HDR[]; \
+    static const char KEY_SUPPORTED_ISO_MODES[];\
+    static const char KEY_ISO_MODE[];

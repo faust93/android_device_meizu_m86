@@ -45,6 +45,7 @@ public class CMActionsSettings {
     public static final String TOUCHSCREEN_YDOWN_GESTURE_KEY = "touchscreen_gesture_ydown";
 
     public static final String FPC_GESTURE_TAP_KEY = "fpc_gesture_tap";
+    public static final String FPC_GESTURE_DTP_KEY = "fpc_gesture_dtp";
     public static final String FPC_GESTURE_LEFT_GESTURE_KEY = "fpc_gesture_left";
     public static final String FPC_GESTURE_RIGHT_KEY = "fpc_gesture_right";
 
@@ -53,6 +54,8 @@ public class CMActionsSettings {
 
     // Proc nodes
     public static final String TOUCHSCREEN_GESTURE_MODE_NODE = "/sys/devices/13660000.hsi2c/i2c-4/4-0049/gesture_control";
+
+    public static final String TOUCHSCREEN_DTP_MODE_NODE = "/sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/dtp_interval";
 
     // Key Masks
     public static final int KEY_MASK_DTP_CONTROL = 0x200;
@@ -64,14 +67,14 @@ public class CMActionsSettings {
     public static final int KEY_MASK_GESTURE_GTR = 0x2000000;
 
     public static final int KEY_MASK_GESTURE_CONTROL = 0x300;
+    public static final int KEY_MASK_GESTURE_V = 0x1000000;
     public static final int KEY_MASK_GESTURE_C = 0x2000000;
     public static final int KEY_MASK_GESTURE_E = 0x4000000;
-    public static final int KEY_MASK_GESTURE_S = 0x14000000;
-    public static final int KEY_MASK_GESTURE_V = 0x1000000;
     public static final int KEY_MASK_GESTURE_W = 0x8000000;
+    public static final int KEY_MASK_GESTURE_M = 0x10000000;
+    public static final int KEY_MASK_GESTURE_S = 0x20000000;
     public static final int KEY_MASK_GESTURE_Z = 0x40000000;
     public static final int KEY_MASK_GESTURE_O = 0x80000000;
-    public static final int KEY_MASK_GESTURE_M = 0x10000000;
 
     public static final int DISABLE_ALL_MASK = 0x100;
     public static final int ENABLE_ALL_MASK = 0x1000100;
@@ -89,6 +92,7 @@ public class CMActionsSettings {
     private static boolean mIsGesture_YDOWN_Enabled;
     private static boolean mIsGesture_LTR_Enabled;
     private static boolean mIsGesture_GTR_Enabled;
+    private static boolean mIsFpc_DTP_Enabled;
 
     private final Context mContext;
 
@@ -128,6 +132,8 @@ public class CMActionsSettings {
                     } else if (TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK.equals(key)) {
                         //CMSettings.System.putInt(getContentResolver(),CMSettings.System.TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK, value ? 1 : 0);
                         final boolean val  = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
+                    } else if (FPC_GESTURE_DTP_KEY.equals(key)) {
+                        mIsFpc_DTP_Enabled = sharedPreferences.getBoolean(FPC_GESTURE_DTP_KEY, false);
                     } else {
                         updated = false;
                     }
@@ -157,6 +163,7 @@ public class CMActionsSettings {
         mIsGesture_YDOWN_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_YDOWN_GESTURE_KEY, false);
         mIsGesture_LTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_LTR_GESTURE_KEY, false);
         mIsGesture_GTR_Enabled = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
+        mIsFpc_DTP_Enabled = sharedPreferences.getBoolean(FPC_GESTURE_DTP_KEY, false);
 
         updateGestureMode();
     }
@@ -167,6 +174,13 @@ public class CMActionsSettings {
        if enabled toggle the appropriate bit with ^ XOR operator */
     public static void updateGestureMode() {
         int gesture_mode = 0;
+        int dtp_value = 18; // default 18 msec
+
+        FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, DISABLE_ALL_MASK);
+
+        if(!mIsFpc_DTP_Enabled) // if double tap is disabled - set timeout to 0 msec
+            dtp_value = 0;
+        FileUtils.writeLine(TOUCHSCREEN_DTP_MODE_NODE, Integer.toString(dtp_value));
 
         if (mIsGestureEnabled) {
             FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, ENABLE_ALL_MASK);
@@ -200,11 +214,8 @@ public class CMActionsSettings {
                     gesture_mode = (gesture_mode ^ KEY_MASK_GESTURE_M);
             if (((gesture_mode & KEY_MASK_GESTURE_Z) == 1) != mIsGesture_Z_Enabled)
                     gesture_mode = (gesture_mode ^ KEY_MASK_GESTURE_Z);
-        } else {
-            gesture_mode = DISABLE_ALL_MASK;
-        }
         Log.d(TAG, "finished gesture mode: " + gesture_mode);
         FileUtils.writeAsByte(TOUCHSCREEN_GESTURE_MODE_NODE, gesture_mode);
+	}
     }
-
 }

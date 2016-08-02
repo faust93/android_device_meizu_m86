@@ -1,4 +1,4 @@
-app/mcRegistry/020a0000000000000000000000000000.drbin
+./app/mcRegistry/020a0000000000000000000000000000.drbin
 app/mcRegistry/04010000000000000000000000000000.tlbin
 app/mcRegistry/04020000000000000000000000000000.tlbin
 app/mcRegistry/07020000000000000000000000000000.tlbin
@@ -132,7 +132,6 @@ lib/soundfx/libbundlewrapper.so
 lib/soundfx/libdownmix.so
 lib/soundfx/libequalizer.so
 lib/soundfx/libldnhncr.so
-lib/soundfx/libreverbwrapper.so
 lib64/extend/libCodec.ac3.so
 lib64/extend/libCodec.adpcmdec.so
 lib64/extend/libCodec.lpcm.so
@@ -215,7 +214,6 @@ lib64/soundfx/libbundlewrapper.so
 lib64/soundfx/libdownmix.so
 lib64/soundfx/libequalizer.so
 lib64/soundfx/libldnhncr.so
-lib64/soundfx/libreverbwrapper.so
 vendor/etc/dirac_types.xml
 vendor/etc/diracmobile.config
 vendor/firmware/Project.hex

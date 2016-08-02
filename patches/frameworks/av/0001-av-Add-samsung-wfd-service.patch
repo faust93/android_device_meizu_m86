@@ -1,0 +1,547 @@
+From 4d605c46597dbf1768ce805a1679591c98ea988b Mon Sep 17 00:00:00 2001
+From: tobigun <hennymcc@yahoo.de>
+Date: Mon, 26 Oct 2015 01:17:48 +0100
+Subject: [PATCH] av: Add samsung wfd service
+
+Change-Id: I5bec41c27678f537f1b2c7207d8e93d188a28784
+---
+ include/media/IWFDService.h           |  70 ++++++++++++++
+ include/media/WFDService.h            |  60 ++++++++++++
+ include/media/WFDServiceListener.h    |  52 +++++++++++
+ media/libmedia/Android.mk             |   6 ++
+ media/libmedia/IWFDService.cpp        | 166 ++++++++++++++++++++++++++++++++++
+ media/libmedia/WFDService.cpp         |  75 +++++++++++++++
+ media/libmedia/WFDServiceListener.cpp |  46 ++++++++++
+ 7 files changed, 475 insertions(+)
+ create mode 100644 include/media/IWFDService.h
+ create mode 100644 include/media/WFDService.h
+ create mode 100644 include/media/WFDServiceListener.h
+ create mode 100644 media/libmedia/IWFDService.cpp
+ create mode 100644 media/libmedia/WFDService.cpp
+ create mode 100644 media/libmedia/WFDServiceListener.cpp
+
+diff --git a/include/media/IWFDService.h b/include/media/IWFDService.h
+new file mode 100644
+index 0000000..bd29a57
+--- /dev/null
++++ b/include/media/IWFDService.h
+@@ -0,0 +1,70 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_IWFDSERVICE_H
++#define ANDROID_IWFDSERVICE_H
++
++#include <binder/IInterface.h>
++#include <media/stagefright/foundation/ABase.h>
++
++namespace android {
++
++#define WFD_ENCODER_EXT1_UNLOAD         (1)
++#define WFD_ENCODER_EXT1_LOAD_NORMAL    (2)
++#define WFD_ENCODER_EXT1_LOAD_SECURE    (3)
++
++#define WFD_ENCODER_CMD                 (1 << 0)
++
++struct IWFDServiceListener : public IInterface {
++    DECLARE_META_INTERFACE(WFDServiceListener);
++
++    // When sendCommand of WFDService is called,
++    // notify will be called on WFDListener which registered on WFDService.
++    virtual void notify(int msg, int ext1, int ext2) = 0;
++    virtual int getCommandType() = 0;
++};
++
++struct IWFDService : public IInterface {
++    DECLARE_META_INTERFACE(WFDService);
++
++    // add the WFDListener to WFDService.
++    virtual status_t addWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener) = 0;
++
++    // remove the WFDListener on WFDService.
++    virtual status_t removeWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener) = 0;
++
++    // send command to WFDListener.
++    // sendCommand is blocking call.
++    virtual status_t sendCommand(int commandType, int ext1, int ext2) = 0;
++};
++
++struct BnWFDServiceListener : public BnInterface<IWFDServiceListener> {
++    virtual status_t onTransact(
++            uint32_t code, const Parcel &data, Parcel *reply,
++            uint32_t flags = 0);
++};
++
++struct BnWFDService : public BnInterface<IWFDService> {
++    virtual status_t onTransact(
++            uint32_t code, const Parcel &data, Parcel *reply,
++            uint32_t flags = 0);
++};
++
++}  // namespace android
++
++#endif // ANDROID_IWFDSERVICE_H
+diff --git a/include/media/WFDService.h b/include/media/WFDService.h
+new file mode 100644
+index 0000000..3ac97ae
+--- /dev/null
++++ b/include/media/WFDService.h
+@@ -0,0 +1,60 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_WFD_SERVICE_H_
++#define ANDROID_WFD_SERVICE_H_
++
++#include <utils/Errors.h>
++#include <sys/types.h>
++#include <cutils/log.h>
++#include <binder/IServiceManager.h>
++#include <utils/StrongPointer.h>
++#include <utils/Mutex.h>
++
++#include <media/IWFDService.h>
++
++namespace android {
++
++class WFDService
++    : public BnWFDService {
++
++public:
++    static void instantiate();
++
++    // add the WFDListener to WFDService.
++    virtual status_t addWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener);
++
++    // remove the WFDListener on WFDService.
++    virtual status_t removeWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener);
++
++    // send command to WFDListener.
++    // sendCommand is blocking call.
++    // When sendCommand of WFDService is called,
++    // notify will be called in WFDListener which registered on WFDService.
++    virtual status_t sendCommand(int commandType, int ext1, int ext2);
++
++private:
++    Vector<sp<IWFDServiceListener> > mWFDListeners;
++    Mutex mLock;
++
++    WFDService();
++    virtual ~WFDService();
++};
++
++}
++#endif
+diff --git a/include/media/WFDServiceListener.h b/include/media/WFDServiceListener.h
+new file mode 100644
+index 0000000..cc80549
+--- /dev/null
++++ b/include/media/WFDServiceListener.h
+@@ -0,0 +1,52 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_WFD_SERVICE_LISTENER_H_
++#define ANDROID_WFD_SERVICE_LISTENER_H_
++
++#include <utils/Errors.h>
++#include <sys/types.h>
++#include <cutils/log.h>
++#include <binder/IServiceManager.h>
++#include <utils/StrongPointer.h>
++#include <media/stagefright/foundation/AMessage.h>
++#include <media/IWFDService.h>
++
++namespace android {
++
++typedef void (*NotifyFunc)(void *me, int commandType, int ext1, int ext2);
++
++class WFDServiceListener
++    : public BnWFDServiceListener {
++
++public:
++    WFDServiceListener(void *me, NotifyFunc notifyFunc, int commandType);
++
++    // When sendCommand of WFDService is called,
++    // notify will be called in WFDListener which registered on WFDService.
++    virtual void notify(int commandType, int ext1, int ext2);
++    virtual int getCommandType();
++
++private:
++    void *mCookie;
++    NotifyFunc mNotifyFunc;
++    int mCommandType;
++
++    virtual ~WFDServiceListener();
++};
++
++}
++#endif
+diff --git a/media/libmedia/Android.mk b/media/libmedia/Android.mk
+index 74e4eb1..a34f731 100644
+--- a/media/libmedia/Android.mk
++++ b/media/libmedia/Android.mk
+@@ -69,6 +69,12 @@ LOCAL_SRC_FILES:= \
+     StringArray.cpp \
+     AudioPolicy.cpp
+ 
++ifeq ($(BOARD_USES_WFD_SERVICE),true)
++LOCAL_SRC_FILES += \
++    IWFDService.cpp \
++    WFDService.cpp \
++    WFDServiceListener.cpp
++endif
+ 
+ #QTI Resampler
+ ifeq ($(call is-vendor-board-platform,QCOM), true)
+diff --git a/media/libmedia/IWFDService.cpp b/media/libmedia/IWFDService.cpp
+new file mode 100644
+index 0000000..923c8f6
+--- /dev/null
++++ b/media/libmedia/IWFDService.cpp
+@@ -0,0 +1,166 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++//#define LOG_NDEBUG 0
++#define LOG_TAG "IWFDService"
++#include <utils/Log.h>
++
++#include <binder/Parcel.h>
++#include <media/IWFDService.h>
++#include <media/stagefright/MediaErrors.h>
++#include <media/stagefright/foundation/ADebug.h>
++
++namespace android {
++
++enum {
++    WFD_LISTENER_NOTIFY = IBinder::FIRST_CALL_TRANSACTION,
++    WFD_LISTENER_GET_COMMAND_TYPE,
++    WFD_ADD_LISTENER,
++    WFD_REMOVE_LISTENER,
++    WFD_SEND_COMMAND,
++};
++
++struct BpWFDServiceListener : public BpInterface<IWFDServiceListener> {
++    BpWFDServiceListener(const sp<IBinder> &impl)
++        : BpInterface<IWFDServiceListener>(impl) {
++    }
++
++    virtual void notify(int commandType, int ext1, int ext2) {
++        Parcel data, reply;
++        data.writeInterfaceToken(IWFDServiceListener::getInterfaceDescriptor());
++        data.writeInt32(commandType);
++        data.writeInt32(ext1);
++        data.writeInt32(ext2);
++        remote()->transact(WFD_LISTENER_NOTIFY, data, &reply);
++    }
++
++    virtual int getCommandType() {
++        Parcel data, reply;
++        data.writeInterfaceToken(IWFDServiceListener::getInterfaceDescriptor());
++        remote()->transact(WFD_LISTENER_GET_COMMAND_TYPE, data, &reply);
++        return reply.readInt32();
++    }
++};
++
++IMPLEMENT_META_INTERFACE(WFDServiceListener, "android.hardware.IWFDServiceListener");
++
++struct BpWFDService : public BpInterface<IWFDService> {
++    BpWFDService(const sp<IBinder> &impl)
++        : BpInterface<IWFDService>(impl) {
++    }
++
++    virtual status_t addWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener) {
++        Parcel data, reply;
++        data.writeInterfaceToken(BpWFDService::getInterfaceDescriptor());
++        data.writeStrongBinder(IInterface::asBinder(listener));
++        remote()->transact(WFD_ADD_LISTENER, data, &reply);
++        return reply.readInt32();
++    }
++
++    virtual status_t removeWFDServiceListener(
++                        const sp<IWFDServiceListener> &listener) {
++        Parcel data, reply;
++        data.writeInterfaceToken(BpWFDService::getInterfaceDescriptor());
++        data.writeStrongBinder(IInterface::asBinder(listener));
++        remote()->transact(WFD_REMOVE_LISTENER, data, &reply);
++        return reply.readInt32();
++    }
++
++    virtual status_t sendCommand(int commandType, int ext1, int ext2) {
++        Parcel data, reply;
++        data.writeInterfaceToken(BpWFDService::getInterfaceDescriptor());
++        data.writeInt32(commandType);
++        data.writeInt32(ext1);
++        data.writeInt32(ext2);
++        remote()->transact(WFD_SEND_COMMAND, data, &reply);
++        return reply.readInt32();
++    }
++};
++
++IMPLEMENT_META_INTERFACE(WFDService, "android.hardware.IWFDService");
++
++status_t BnWFDServiceListener::onTransact(
++        uint32_t code, const Parcel &data, Parcel *reply, uint32_t flags) {
++    switch (code) {
++        case WFD_LISTENER_NOTIFY:
++        {
++            CHECK_INTERFACE(IWFDServiceListener, data, reply);
++
++            int commandType = data.readInt32();
++            int ext1 = data.readInt32();
++            int ext2 = data.readInt32();
++
++            notify(commandType, ext1, ext2);
++
++            return OK;
++        }
++
++        case WFD_LISTENER_GET_COMMAND_TYPE:
++        {
++            CHECK_INTERFACE(IWFDServiceListener, data, reply);
++
++            reply->writeInt32(getCommandType());
++            return OK;
++        }
++
++        default:
++            return BBinder::onTransact(code, data, reply, flags);
++    }
++}
++
++status_t BnWFDService::onTransact(
++        uint32_t code, const Parcel &data, Parcel *reply, uint32_t flags) {
++    switch (code) {
++        case WFD_ADD_LISTENER:
++        {
++            CHECK_INTERFACE(IWFDService, data, reply);
++
++            sp<IWFDServiceListener> listener =
++                interface_cast<IWFDServiceListener>(data.readStrongBinder());
++
++            reply->writeInt32(addWFDServiceListener(listener));
++            return OK;
++        }
++
++        case WFD_REMOVE_LISTENER:
++        {
++            CHECK_INTERFACE(IWFDService, data, reply);
++
++            sp<IWFDServiceListener> listener =
++                interface_cast<IWFDServiceListener>(data.readStrongBinder());
++
++            reply->writeInt32(removeWFDServiceListener(listener));
++            return OK;
++        }
++
++        case WFD_SEND_COMMAND:
++        {
++            CHECK_INTERFACE(IWFDService, data, reply);
++
++            int commandType = data.readInt32();
++            int ext1 = data.readInt32();
++            int ext2 = data.readInt32();
++            reply->writeInt32(sendCommand(commandType, ext1, ext2));
++            return OK;
++        }
++
++        default:
++            return BBinder::onTransact(code, data, reply, flags);
++    }
++}
++
++}  // namespace android
+diff --git a/media/libmedia/WFDService.cpp b/media/libmedia/WFDService.cpp
+new file mode 100644
+index 0000000..22709fe
+--- /dev/null
++++ b/media/libmedia/WFDService.cpp
+@@ -0,0 +1,75 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#define LOG_NDEBUG 0
++#define LOG_TAG "WFDService"
++
++#include <utils/Log.h>
++#include <media/WFDService.h>
++
++namespace android {
++
++void WFDService::instantiate()
++{
++    sp<IServiceManager> sm = defaultServiceManager();
++    if (sm->checkService(String16("media.wifi_display")) == NULL) {
++        sm->addService(String16("media.wifi_display"), new WFDService());
++    }
++}
++
++WFDService::WFDService()
++{
++
++}
++
++WFDService::~WFDService()
++{
++
++}
++
++status_t WFDService::addWFDServiceListener(
++    const sp<IWFDServiceListener> &listener)
++{
++    Mutex::Autolock lock(&mLock);
++    mWFDListeners.push(listener);
++    return OK;
++}
++
++status_t WFDService::removeWFDServiceListener(
++    const sp<IWFDServiceListener> &listener)
++{
++    Mutex::Autolock lock(&mLock);
++    for (unsigned int i = 0; i < mWFDListeners.size(); i++) {
++        sp<IWFDServiceListener> tempListener = mWFDListeners.itemAt(i);
++        if (listener == tempListener)
++            mWFDListeners.removeAt(i);
++    }
++    return OK;
++}
++
++status_t WFDService::sendCommand(
++    int commandType, int ext1, int ext2)
++{
++    Mutex::Autolock lock(&mLock);
++    for (unsigned int i = 0; i < mWFDListeners.size(); i++) {
++        sp<IWFDServiceListener> listener = mWFDListeners.itemAt(i);
++        if (listener->getCommandType() | commandType) {
++            listener->notify(commandType, ext1, ext2);
++        }
++    }
++    return OK;
++}
++
++}
+diff --git a/media/libmedia/WFDServiceListener.cpp b/media/libmedia/WFDServiceListener.cpp
+new file mode 100644
+index 0000000..6d02ec1
+--- /dev/null
++++ b/media/libmedia/WFDServiceListener.cpp
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#define LOG_NDEBUG 0
++#define LOG_TAG "WFDServiceListener"
++
++#include <utils/Log.h>
++#include <media/WFDServiceListener.h>
++
++namespace android {
++
++WFDServiceListener::WFDServiceListener(void *me, NotifyFunc notifyFunc, int commandType)
++{
++    mCookie = me;
++    mNotifyFunc = notifyFunc;
++    mCommandType = commandType;
++}
++
++WFDServiceListener::~WFDServiceListener()
++{
++
++}
++
++void WFDServiceListener::notify(int commandType, int ext1, int ext2)
++{
++    (*mNotifyFunc)(mCookie, commandType, ext1, ext2);
++}
++
++int WFDServiceListener::getCommandType()
++{
++    return mCommandType;
++}
++
++}
+-- 
+1.9.1
+

@@ -44,7 +44,8 @@
 
     <string name="fpc_gesture_title">Жесты кнопки сенсора</string>
     <string name="fpc_gesture_tap_summary">Одиночный тап для возврата</string>
-    <string name="fpc_gesture_left_summary">Свайп влево для вызова меню</string>
+    <string name="fpc_gesture_dtp_summary">Двойной тап для вызова меню</string>
+    <string name="fpc_gesture_left_summary">Свайп влево для вызова рабочего стола</string>
     <string name="fpc_gesture_right_summary">Свайп вправо для вызова недавних приложений</string>
 
     <!-- haptic feedback  -->

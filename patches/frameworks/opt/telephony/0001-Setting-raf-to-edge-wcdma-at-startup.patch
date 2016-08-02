@@ -1,0 +1,49 @@
+From 05dd75cd10bad8a70c115109c35c591f5dce19ad Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 2 Aug 2016 17:34:41 +0300
+Subject: [PATCH] Setting raf to edge/wcdma at startup
+
+Change-Id: I11b1fe4996e7468798a85075e0d6f2652a3ee0da
+---
+ src/java/com/android/internal/telephony/PhoneBase.java | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/java/com/android/internal/telephony/PhoneBase.java b/src/java/com/android/internal/telephony/PhoneBase.java
+index dc790d7..0952a94 100644
+--- a/src/java/com/android/internal/telephony/PhoneBase.java
++++ b/src/java/com/android/internal/telephony/PhoneBase.java
+@@ -94,7 +94,7 @@ import org.codeaurora.QtiVideoCallConstants;
+ 
+ public abstract class PhoneBase extends Handler implements Phone {
+     private static final String LOG_TAG = "PhoneBase";
+-    private static final boolean DBG = true;
++    private static final boolean DBG = false;
+ 
+     private boolean mImsIntentReceiverRegistered = false;
+     private BroadcastReceiver mImsIntentReceiver = new BroadcastReceiver() {
+@@ -243,6 +243,7 @@ public abstract class PhoneBase extends Handler implements Phone {
+     int mCallRingDelay;
+     public boolean mIsTheCurrentActivePhone = true;
+     boolean mIsVoiceCapable = true;
++    boolean coldStart = true;
+ 
+     // Variable to cache the video capability. When RAT changes, we lose this info and are unable
+     // to recover from the state. We cache it and notify listeners when they register.
+@@ -1779,7 +1780,13 @@ public abstract class PhoneBase extends Handler implements Phone {
+                 + " rafFromType = " + rafFromType
+                 + " filteredType = " + filteredType);
+ 
+-        mCi.setPreferredNetworkType(filteredType, response);
++        String netstat = SystemProperties.get("gsm.network.type","Unknown,Unknown");
++        if ("Unknown,Unknown".equals(netstat) && coldStart) {
++                coldStart = false;
++                mCi.setPreferredNetworkType(1, response);
++        } else {
++                mCi.setPreferredNetworkType(networkType, response);
++        }
+     }
+ 
+     @Override
+-- 
+1.9.3 (Apple Git-50)
+

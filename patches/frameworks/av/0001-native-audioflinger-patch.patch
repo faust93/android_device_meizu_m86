@@ -1,0 +1,158 @@
+From 4a4eec6aeabd67e98a691bd620b2d3a78dfc6eab Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 20 Jul 2016 14:57:37 +0300
+Subject: [PATCH] native audioflinger patch
+
+---
+ services/audioflinger/AudioFlinger.cpp | 25 +++++++++++++++++++++++++
+ services/audioflinger/Threads.cpp      | 18 +++++++++++++++++-
+ services/audioflinger/Threads.h        |  2 ++
+ 3 files changed, 44 insertions(+), 1 deletion(-)
+
+diff --git a/services/audioflinger/AudioFlinger.cpp b/services/audioflinger/AudioFlinger.cpp
+index 23215dd..e1172c4 100644
+--- a/services/audioflinger/AudioFlinger.cpp
++++ b/services/audioflinger/AudioFlinger.cpp
+@@ -971,6 +971,12 @@ status_t AudioFlinger::setStreamVolume(audio_stream_type_t stream, float value,
+     ALOG_ASSERT(stream != AUDIO_STREAM_PATCH, "attempt to change AUDIO_STREAM_PATCH volume");
+ 
+     AutoMutex lock(mLock);
++
++    audio_hw_device_t *dev = mPrimaryHardwareDev->hwDevice();
++    mHardwareStatus = AUDIO_HW_SET_MASTER_VOLUME;
++    dev->set_headphone_volume(dev, 1);
++    mHardwareStatus = AUDIO_HW_IDLE;
++
+     PlaybackThread *thread = NULL;
+     if (output != AUDIO_IO_HANDLE_NONE) {
+         thread = checkPlaybackThread_l(output);
+@@ -1069,6 +1075,25 @@ status_t AudioFlinger::setParameters(audio_io_handle_t ioHandle, const String8&
+         return PERMISSION_DENIED;
+     }
+ 
++    AudioParameter param = AudioParameter(keyValuePairs);
++    String8 value_str;
++
++    ALOGD("F93D KVPairs %s", keyValuePairs.string() );
++
++    if(param.get(String8("hifi_state"), value_str) == NO_ERROR)
++       {
++        PlaybackThread *thread = primaryPlaybackThread_l();
++        thread->setParameters(keyValuePairs);
++        return NO_ERROR;
++        }
++
++    if(param.get(String8("sampling_rate"), value_str) == NO_ERROR)
++       {
++        PlaybackThread *thread = primaryPlaybackThread_l();
++        thread->setParameters(keyValuePairs);
++        return NO_ERROR;
++       }
++
+     // AUDIO_IO_HANDLE_NONE means the parameters are global to the audio hardware interface
+     if (ioHandle == AUDIO_IO_HANDLE_NONE) {
+         Mutex::Autolock _l(mLock);
+diff --git a/services/audioflinger/Threads.cpp b/services/audioflinger/Threads.cpp
+index e1e4980..2961dce 100644
+--- a/services/audioflinger/Threads.cpp
++++ b/services/audioflinger/Threads.cpp
+@@ -1537,6 +1537,7 @@ AudioFlinger::PlaybackThread::PlaybackThread(const sp<AudioFlinger>& audioFlinge
+ AudioFlinger::PlaybackThread::~PlaybackThread()
+ {
+     mAudioFlinger->unregisterWriter(mNBLogWriter);
++    delete [] mResampleBuffer;
+     free(mSinkBuffer);
+     free(mMixerBuffer);
+     free(mEffectBuffer);
+@@ -2243,6 +2244,8 @@ void AudioFlinger::PlaybackThread::readOutputParameters_l()
+     // mSinkBuffer is the sink buffer.  Size is always multiple-of-16 frames.
+     // Originally this was int16_t[] array, need to remove legacy implications.
+     free(mSinkBuffer);
++    delete [] mResampleBuffer;
++    mResampleBuffer = new int32_t[8192];
+     mSinkBuffer = NULL;
+     // For sink buffer size, we use the frame size from the downstream sink to avoid problems
+     // with non PCM formats for compressed music, e.g. AAC, and Offload threads.
+@@ -2465,7 +2468,13 @@ ssize_t AudioFlinger::PlaybackThread::threadLoop_write()
+                         (pipe->maxFrames() * 7) / 8 : mNormalFrameCount * 2);
+             }
+         }
+-        ssize_t framesWritten = mNormalSink->write((char *)mSinkBuffer + offset, count);
++        ssize_t framesWritten;
++        if(mFormat == 5) {
++            memcpy_to_q8_23_from_float_with_clamp((int32_t *)mResampleBuffer, (float *)mSinkBuffer + offset, count*sizeof(float)*2);
++            framesWritten = mNormalSink->write((char *)mResampleBuffer + offset, count);
++        } else {
++            framesWritten = mNormalSink->write((char *)mSinkBuffer + offset, count);
++        }
+         ATRACE_END();
+         if (framesWritten > 0) {
+             bytesWritten = framesWritten * mFrameSize;
+@@ -3391,9 +3400,11 @@ AudioFlinger::MixerThread::MixerThread(const sp<AudioFlinger>& audioFlinger, Aud
+             // change our Sink format to accept our intermediate precision
+             mFormat = fastMixerFormat;
+             free(mSinkBuffer);
++            delete [] mResampleBuffer;
+             mFrameSize = mChannelCount * audio_bytes_per_sample(mFormat);
+             const size_t sinkBufferSize = mNormalFrameCount * mFrameSize;
+             (void)posix_memalign(&mSinkBuffer, 32, sinkBufferSize);
++            mResampleBuffer = new int32_t[8192];
+         }
+ 
+         // create a MonoPipe to connect our submix to FastMixer
+@@ -3720,6 +3731,7 @@ void AudioFlinger::MixerThread::threadLoop_sleepTime()
+             memset(mMixerBuffer, 0, mMixerBufferSize);
+         } else {
+             memset(mSinkBuffer, 0, mSinkBufferSize);
++            memset(mResampleBuffer, 0, 8192);
+         }
+         mSleepTimeUs = 0;
+         ALOGV_IF(mBytesWritten == 0 && (mMixerStatus == MIXER_TRACKS_ENABLED),
+@@ -4301,6 +4313,7 @@ track_is_ready: ;
+         }
+         // FIXME as a performance optimization, should remember previous zero status
+         memset(mSinkBuffer, 0, mNormalFrameCount * mFrameSize);
++        memset(mResampleBuffer, 0, 8192);
+     }
+ 
+     // if any fast tracks, then status is ready
+@@ -4836,6 +4849,7 @@ void AudioFlinger::DirectOutputThread::threadLoop_sleepTime()
+         }
+     } else if (mBytesWritten != 0 && audio_is_linear_pcm(mFormat)) {
+         memset(mSinkBuffer, 0, mFrameCount * mFrameSize);
++        memset(mResampleBuffer, 0, 8192);
+         mSleepTimeUs = 0;
+     }
+ }
+@@ -5397,6 +5411,7 @@ void AudioFlinger::DuplicatingThread::threadLoop_mix()
+             memset(mEffectBuffer, 0, mEffectBufferSize);
+         } else {
+             memset(mSinkBuffer, 0, mSinkBufferSize);
++            memset(mResampleBuffer, 0, 8192);
+         }
+     }
+     mSleepTimeUs = 0;
+@@ -5420,6 +5435,7 @@ void AudioFlinger::DuplicatingThread::threadLoop_sleepTime()
+                 memset(mMixerBuffer, 0, mMixerBufferSize);
+             } else {
+                 memset(mSinkBuffer, 0, mSinkBufferSize);
++                memset(mResampleBuffer, 0, 8192);
+             }
+         } else {
+             // flush remaining overflow buffers in output tracks
+diff --git a/services/audioflinger/Threads.h b/services/audioflinger/Threads.h
+index 48ff77d..0925529 100644
+--- a/services/audioflinger/Threads.h
++++ b/services/audioflinger/Threads.h
+@@ -642,6 +642,8 @@ protected:
+ 
+     void*                           mSinkBuffer;         // frame size aligned sink buffer
+ 
++    int32_t* 			    mResampleBuffer;
++
+     // TODO:
+     // Rearrange the buffer info into a struct/class with
+     // clear, copy, construction, destruction methods.
+-- 
+1.9.3 (Apple Git-50)
+

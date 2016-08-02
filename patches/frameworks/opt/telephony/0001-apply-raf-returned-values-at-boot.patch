@@ -1,0 +1,31 @@
+From 1ac9c74efad3cb636fe9618b55abb47bd938842c Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 15 Jul 2016 21:14:32 +0300
+Subject: [PATCH] apply raf returned values at boot
+
+---
+ src/java/com/android/internal/telephony/PhoneBase.java | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/PhoneBase.java b/src/java/com/android/internal/telephony/PhoneBase.java
+index dc790d7..1dc7644 100644
+--- a/src/java/com/android/internal/telephony/PhoneBase.java
++++ b/src/java/com/android/internal/telephony/PhoneBase.java
+@@ -1779,7 +1779,13 @@ public abstract class PhoneBase extends Handler implements Phone {
+                 + " rafFromType = " + rafFromType
+                 + " filteredType = " + filteredType);
+ 
+-        mCi.setPreferredNetworkType(filteredType, response);
++        String booted = SystemProperties.get("sys.boot_completed");
++        if (!TextUtils.isEmpty(booted)) {
++                Rlog.d(LOG_TAG, "System booted. Using real networkType: " + networkType);
++                mCi.setPreferredNetworkType(networkType, response);
++        } else {
++                mCi.setPreferredNetworkType(filteredType, response);
++        }
+     }
+ 
+     @Override
+-- 
+1.9.3 (Apple Git-50)
+

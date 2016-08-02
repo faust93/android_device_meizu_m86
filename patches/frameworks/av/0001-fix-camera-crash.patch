@@ -1,0 +1,26 @@
+From b02343cf807caa4c1a51b86d3014933a469d8d96 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 11 Jul 2016 19:41:25 +0300
+Subject: [PATCH] fix camera crash
+
+---
+ services/camera/libcameraservice/device1/CameraHardwareInterface.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/services/camera/libcameraservice/device1/CameraHardwareInterface.h b/services/camera/libcameraservice/device1/CameraHardwareInterface.h
+index 35947a9..060356c 100644
+--- a/services/camera/libcameraservice/device1/CameraHardwareInterface.h
++++ b/services/camera/libcameraservice/device1/CameraHardwareInterface.h
+@@ -122,6 +122,9 @@ public:
+     {
+         ALOGV("%s(%s) buf %p", __FUNCTION__, mName.string(), buf.get());
+ 
++	if(buf.get()==0)
++	    return INVALID_OPERATION;
++
+         if (mDevice->ops->set_preview_window) {
+             mPreviewWindow = buf;
+             mHalPreviewWindow.user = this;
+-- 
+1.9.3 (Apple Git-50)
+

@@ -28,6 +28,11 @@
             android:key="fpc_gesture_right"
             android:title="@string/fpc_gesture_right_summary" />
 
+    <SwitchPreference
+            android:key="fpc_gesture_dtp"
+            android:title="@string/fpc_gesture_dtp_summary"
+            android:enabled="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

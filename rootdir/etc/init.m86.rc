@@ -2,36 +2,14 @@ import init.m86.usb.rc
 
 on init
 
-    # See storage config details at http://source.android.com/tech/storage/
-    mkdir /mnt/shell/emulated 0700 shell shell
-    mkdir /storage/emulated 0555 root root
-    mkdir /storage/sdcard 0000 root root
-    mkdir /storage/sdcard1 0700 root root
-    mkdir /storage/usb1 0000 root root
-    mkdir /mnt/media_rw/usb1 0700 media_rw media_rw
-    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
-    mkdir /mnt/cdrom 0555 root root
+    export LD_SHIM_LIBS "/system/lib64/hw/hwcomposer.exynos5.so|libshim_media.so:/system/lib/hw/audio.primary.m86.so|/system/lib/libshim_media.so:/system/lib/libexynoscamera.so|/system/lib/libshim_media.so:/system/bin/gpsd|libgps_shim.so"
 
     # Directory for mount custom partition
     mkdir /custom 0555 root root
 
-    export EXTERNAL_STORAGE /storage/emulated/legacy
-    export SECONDARY_STORAGE /storage/sdcard1
-    export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
-    export EMULATED_STORAGE_TARGET /storage/emulated
-    export MC_AUTH_TOKEN_PATH /data/app/mcRegistry
+    symlink /sdcard /mnt/sdcard
+    symlink /sdcard /storage/sdcard0
 
-    # Support legacy paths
-    symlink /storage/emulated/legacy /sdcard
-    symlink /storage/emulated/legacy /mnt/sdcard
-    symlink /storage/emulated/legacy /storage/sdcard
-    symlink /mnt/shell/emulated/0 /storage/emulated/legacy
-    symlink /mnt/shell/emulated/0 /storage/emulated/0
-    symlink /storage/sdcard1 /mnt/ext_sd
-    symlink /storage/sdcard1 /external_sd
-    symlink /storage/sdcard1 /extSdCard
-    symlink /data/app /factory
-    
 on post-fs-data
     mkdir /data/media 0770 media_rw media_rw
 
@@ -193,6 +171,7 @@ on boot
     mkdir /data/smartmx 777 system system
     setprop ro.nfc.platform nxppn547
 
+    
     #tmd27713
     chown system system /sys/class/input/input0/device/enable_als
     chmod 0600 /sys/class/input/input0/device/enable_als
@@ -311,6 +290,7 @@ on boot
     chown system system /sys/class/meizu/tp/gesture_control
     chown system system /sys/class/meizu/tp/gesture_data
     chown system system /sys/class/meizu/tp/glove_control
+    chmod 0666 /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/dtp_interval
 
 #Permissions for led
     chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/led_pattern
@@ -549,16 +529,11 @@ on boot
     setprop ril.context.net.volte_available 1
     # Aricent Integration [END]
 
-service fs_mount /init.mount.sh
-    user root
-    oneshot
-    disabled
-
 on fs
     mkdir /efs 0771 radio system
     mkdir /mnv 0771 radio system
 
-    mount_all /fstab.m86
+    mount_all fstab.m86
 
     chown radio system /efs
     mkdir /efs/nv_data 0771 radio system
@@ -567,7 +542,7 @@ on fs
     setprop ro.crypto.fuse_sdcard true
 
 # Boost Block I/O Performance
-    write /sys/block/sda/queue/read_ahead_kb 512
+    write /sys/block/sda/queue/read_ahead_kb 1024
     write /sys/block/sda/queue/rq_affinity  2
     write /sys/block/sda/queue/iosched/slice_idle 0
 
@@ -600,16 +575,6 @@ service mobicore /system/bin/mcDriverDaemon -r /system/app/mcRegistry/020a000000
     user system
     group system
     class main
-
-# virtual sdcard daemon running as media_rw (1023)
-service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
-    class late_start
-service fuse_usb1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/usb1 /storage/usb1
-    class late_start
-    disabled
-service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
-    class late_start
-    disabled
 
 # Set watchdog timer to 30 seconds and pet it every 10 seconds to get a 20 second margin
 #service watchdogd /sbin/watchdogd 10 20
@@ -667,13 +632,20 @@ service wlan_write_otp system/bin/86_OTP.sh
     disabled
     oneshot
 
+service modem_switch /system/bin/modem_switch.sh
+    class main
+    user root
+    group root
+    disabled
+    oneshot
+
 # Panic info dump
 service record_panic /system/bin/record_panic_msg
     class main
     user root
     group radio cache inet misc audio sdcard_rw log sdcard_r
     oneshot
-
+    
 service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
     class main
     disabled
@@ -765,7 +737,6 @@ service ril-daemon /system/bin/rild_exynos
     socket rild2-debug stream 660 radio system
     user root
     group radio cache inet misc audio log
-    seclabel u:r:rild:s0
     onrestart restart cpboot-daemon
 
 # Modem boot daemon
@@ -781,7 +752,7 @@ service DM-daemon /system/bin/dmd
     socket diag_stream stream 660 radio system
     user root
     group system
-#    seclabel u:r:dmd:s0
+    seclabel u:r:dmd:s0
 
 # VC daemon
 service VC-daemon /system/bin/vcd
@@ -789,7 +760,7 @@ service VC-daemon /system/bin/vcd
     socket app_stream stream 660 radio system
     user root
     group system
-#    seclabel u:r:vcd:s0
+    seclabel u:r:vcd:s0
 
 # SCE daemon
 service SCE-daemon /system/bin/sced
@@ -797,7 +768,7 @@ service SCE-daemon /system/bin/sced
     socket logdump stream 660 radio system
     user root
     group system
-#    seclabel u:r:sced:s0
+    seclabel u:r:sced:s0
 
 ## Aricent Integration [START] ##
 # Aricent Setkey based IPSec daemon
@@ -828,6 +799,9 @@ on property:persist.radio.aplog=0
     #stop ro_log
     stop logkit
 #@}
+
+on property:sys.boot_completed=1
+    start modem_switch
 
 #FLYME:fanjun@SHELL.HapticFeedback.Feature {@
 on init

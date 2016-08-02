@@ -19,6 +19,7 @@
 
 #include <cutils/log.h>
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
@@ -229,8 +230,6 @@ static int open_lights(const struct hw_module_t* module, char const* name,
 {
     int (*set_light)(struct light_device_t* dev,
             struct light_state_t const* state);
-
-    ALOGD("BZZ lights\n");
 
     if (0 == strcmp(LIGHT_ID_BACKLIGHT, name))
         set_light = set_light_backlight;
