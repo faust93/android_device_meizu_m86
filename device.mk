@@ -66,9 +66,8 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.android.nfc_extras.xml \
     frameworks/native/data/etc/com.nxp.mifare.xml:system/etc/permissions/com.nxp.mifare.xml \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:system/etc/permissions/android.hardware.audio.low_latency.xml \
-    frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml
-
-#    frameworks/native/data/etc/cyanogenmod.hardware.fingerprint.xml:system/etc/permissions/cyanogenmod.hardware.fingerprint.xml \
+    frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml \
+    frameworks/native/data/etc/android.hardware.fingerprint.xml:system/etc/permissions/android.hardware.fingerprint.xml
 
 # Audio
 PRODUCT_COPY_FILES += \
@@ -94,9 +93,6 @@ PRODUCT_PACKAGES += \
     libshim_media \
     libgps_shim
 
-# Fingerprint
-#PRODUCT_PACKAGES += \
-#    fingerprint.exynos5
 
 # Bluetooth
 PRODUCT_COPY_FILES += \
@@ -187,7 +183,10 @@ PRODUCT_PACKAGES += \
 
 # Fingerprint
 PRODUCT_PACKAGES += \
-    fingerprintd
+    fingerprintd \
+    libglib \
+    libfprint \
+    fingerprint.m86
 
 # immvibe
 PRODUCT_PACKAGES += \
@@ -228,6 +227,12 @@ PRODUCTY_COPY_FILES += \
     device/meizu/m86/twrp.fstab:recovery/root/etc/twrp.fstab \
     device/meizu/m86/recovery.fstab:recovery/root/etc/recovery.fstab \
     device/meizu/m86/rootdir/fstab.m86:recovery/root/fstab.m86
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/dtb_cm:dtb_cm
+
+# Releasetools
+TARGET_RELEASETOOLS_EXTENSIONS := $(LOCAL_PATH)/releasetools
 
 # System properties
 -include $(LOCAL_PATH)/system_prop.mk

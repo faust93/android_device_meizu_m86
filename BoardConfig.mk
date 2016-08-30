@@ -171,5 +171,10 @@ BOARD_BLUEDROID_VENDOR_CONF := $(M86_PATH)/bluetooth/libbt_vndcfg.txt
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_BCM := true
 
+# SELinux
+BOARD_SEPOLICY_DIRS := \
+	device/meizu/m86/sepolicy
+
 # inherit from the proprietary version
 -include vendor/meizu/m86/BoardConfigVendor.mk
+

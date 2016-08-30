@@ -292,6 +292,26 @@ on boot
     chown system system /sys/class/meizu/tp/glove_control
     chmod 0666 /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/dtp_interval
 
+# Fingerprint
+    chown system system /dev/fpc1020
+    chmod 0770 /dev/fpc1020
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/adc_gain
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/adc_shift
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_col_groups
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_col_start
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_count
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_mode
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_row_count
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_row_start
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/capture_settings_mux
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/enable_navi
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/force_reset
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/gain_shift
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/input_mode
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/orientation
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/pixel_ctrl
+    chown system system /sys/devices/14d70000.spi/spi_master/spi4/spi4.0/setup/pxl_ctrl
+
 #Permissions for led
     chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/led_pattern
     chown system system /sys/devices/gpioi2c0.14/i2c-12/12-0030/leds/m86_led/brightness
@@ -811,6 +831,11 @@ on init
     mkdir /dev/pipes 0771 system system
     export VIBE_PIPE_PATH /dev/pipes
 
+# fingerprint daemon
+service fingerprintd /system/bin/fingerprintd
+    class late_start
+    user system
+
 # TouchSense Player Service -- now minimally working without blob!
 service openimmvibed /system/bin/openimmvibed
     class main
@@ -825,3 +850,4 @@ service immvibed /system/bin/immvibed -p 99 -u 1000
     group root
     oneshot
 #@}
+
