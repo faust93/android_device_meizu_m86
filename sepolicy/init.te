@@ -1,0 +1,17 @@
+# Mount debugfs on /sys/kernel/debug.
+allow init debugfs:dir mounton;
+
+# /dev/block/mmcblk0p[0-9]
+allow init emmcblk_device:blk_file rw_file_perms;
+
+allow init block_device:lnk_file { setattr };
+allow init tmpfs:lnk_file create_file_perms;
+
+# /data
+allow init sdcardd_exec:file r_file_perms;
+
+# sysfs iio:device[0-9]
+allow init sysfs:lnk_file setattr;
+
+# read/chown mDNIE symlinks
+allow init sysfs_mdnie_writable:lnk_file { read setattr };

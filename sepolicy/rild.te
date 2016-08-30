@@ -1,0 +1,36 @@
+# Allow additiional efs access
+allow rild bin_nv_data_efs_file:file create_file_perms;
+allow rild imei_efs_file:dir r_dir_perms;
+allow rild imei_efs_file:file r_file_perms;
+allow rild app_efs_file:dir r_dir_perms;
+allow rild app_efs_file:file r_file_perms;
+
+# /dev/mbin0
+allow rild block_device:dir r_dir_perms;
+allow rild emmcblk_device:blk_file r_file_perms;
+
+# /dev/umts_boot0, /dev/umts_ipc0
+allow rild mif_device:chr_file rw_file_perms;
+
+# /sys/devices/virtual/misc/multipdp/waketime
+allow rild sysfs_multipdp_writable:file rw_file_perms;
+
+# /proc/sys/net/ipv6/conf/*/accept_ra_defrtr
+allow rild proc_net:file rw_file_perms;
+
+allow rild gpsd:dir r_dir_perms;
+allow rild gpsd:file r_file_perms;
+
+# rild reads /proc/pid/cmdline of mediaserver
+allow rild mediaserver:dir { open read search getattr };
+allow rild mediaserver:file { open read getattr };
+
+# /data/misc/radio/*
+allow rild radio_data_file:dir rw_dir_perms;
+allow rild radio_data_file:file create_file_perms;
+
+# sdcard/SDET_PLMN/input/MNCMCC.txt
+allow rild storage_file:dir { r_dir_perms };
+allow rild storage_file:lnk_file { r_file_perms };
+allow rild mnt_user_file:dir { r_dir_perms };
+allow rild mnt_user_file:lnk_file { r_file_perms };

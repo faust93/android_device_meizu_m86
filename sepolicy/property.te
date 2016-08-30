@@ -1,0 +1,5 @@
+# Modemloader
+type modemloader_prop, property_type;
+
+# CP-Boot Daemon
+type cpboot-daemon_prop, property_type;

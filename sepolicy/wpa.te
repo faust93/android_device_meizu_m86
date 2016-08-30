@@ -1,0 +1,9 @@
+# /dev/rfkill
+allow wpa rfkill_device:chr_file r_file_perms;
+
+# /efs
+allow wpa efs_file:dir r_dir_perms;
+
+# /efs/wifi
+allow wpa wifi_efs_file:dir r_dir_perms;
+allow wpa wifi_efs_file:file r_file_perms;

@@ -1,0 +1,2 @@
+# /dev/block/mmcblk0p3
+allow fsck emmcblk_device:blk_file rw_file_perms;

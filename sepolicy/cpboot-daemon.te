@@ -1,0 +1,42 @@
+# modem daemon sec label
+type cpboot-daemon, domain;
+type cpboot-daemon_exec, exec_type, file_type;
+
+net_domain(cpboot-daemon)
+init_daemon_domain(cpboot-daemon)
+wakelock_use(cpboot-daemon)
+unix_socket_connect(cpboot-daemon, property, init)
+
+allow cpboot-daemon self:capability { dac_override setuid setgid };
+
+# FIXME neverallow rule
+# allow cpboot-daemon self:capability mknod;
+allow cpboot-daemon kernel:system syslog_read;
+allow cpboot-daemon cgroup:dir create_dir_perms;
+
+# /dev/log/*
+allow cpboot-daemon log_device:dir r_dir_perms;
+allow cpboot-daemon log_device:chr_file rw_file_perms;
+# /dev/kmsg (write to kernel log)
+allow cpboot-daemon kmsg_device:chr_file rw_file_perms;
+
+# /dev/umts_boot0
+allow cpboot-daemon mif_device:chr_file rw_file_perms;
+# /dev/mbin0
+allow cpboot-daemon emmcblk_device:blk_file r_file_perms;
+# /dev/block/mmcblk0p13
+allow cpboot-daemon block_device:dir r_dir_perms;
+
+# /dev/mipi-lli/lli_control
+allow cpboot-daemon sysfs_mipi_writable:file rw_file_perms;
+
+# /efs
+allow cpboot-daemon efs_file:dir r_dir_perms;
+
+# /efs/nv_data.bin
+allow cpboot-daemon bin_nv_data_efs_file:file rw_file_perms;
+
+# set properties on boot
+set_prop(cpboot-daemon, cpboot-daemon_prop)
+set_prop(cpboot-daemon, radio_prop)
+set_prop(cpboot-daemon, system_prop)

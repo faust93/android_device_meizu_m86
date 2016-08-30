@@ -1,0 +1,103 @@
+##########################
+# Devices
+#
+/dev/mali[0-9]*              u:object_r:gpu_device:s0
+
+/dev/seiren                  u:object_r:seiren_device:s0
+
+/dev/ttySAC3                 u:object_r:bluetooth_device:s0
+
+/dev/s5p-smem                u:object_r:secmem_device:s0
+/dev/mobicore                u:object_r:tee_device:s0
+/dev/mobicore-user           u:object_r:tee_device:s0
+
+/dev/v4l-subdev[0-9]*        u:object_r:video_device:s0
+/dev/media[0-3]*             u:object_r:camera_device:s0
+/dev/m2m1shot_jpeg           u:object_r:camera_device:s0
+
+/dev/mtp_usb*                u:object_r:mtp_device:s0
+
+/dev/__cbd_msg_              u:object_r:mif_device:s0
+/dev/umts.*                  u:object_r:mif_device:s0
+/dev/ehci_power              u:object_r:mif_device:s0
+/dev/mipi-lli/lli_control    u:object_r:mif_device:s0
+
+/dev/ttySAC[0-9]*            u:object_r:gps_device:s0
+
+/dev/block/mmcblk0p[0-9]*    u:object_r:emmcblk_device:s0
+
+/dev/rfkill                  u:object_r:rfkill_device:s0
+
+####################################
+# efs files
+/efs/FactoryApp(/.*)?        u:object_r:app_efs_file:s0
+/efs/FactoryApp/baro_delta   u:object_r:baro_delta_factoryapp_efs_file:s0
+/efs/FactoryApp/factorymode  u:object_r:factorymode_factoryapp_efs_file:s0
+/efs/FactoryApp/fdata        u:object_r:radio_factoryapp_efs_file:s0
+/efs/FactoryApp/hist_nv      u:object_r:radio_factoryapp_efs_file:s0
+/efs/FactoryApp/test_nv      u:object_r:radio_factoryapp_efs_file:s0
+
+/efs/bluetooth(/.*)?         u:object_r:bluetooth_efs_file:s0
+/efs/drm(/.*)?               u:object_r:drm_efs_file:s0
+/efs/gyro_cal_data           u:object_r:sensor_efs_file:s0
+/efs/h2k.dat                 u:object_r:cpk_efs_file:s0
+/efs/imei(/.*)?              u:object_r:imei_efs_file:s0
+/efs/nv_data.bin(.*)         u:object_r:bin_nv_data_efs_file:s0
+/efs/prov(/.*)?              u:object_r:prov_efs_file:s0
+/efs/prov_data(/.*)?         u:object_r:prov_efs_file:s0
+/efs/wifi(/.*)?              u:object_r:wifi_efs_file:s0
+/efs/wv.keys                 u:object_r:cpk_efs_file:s0
+
+####################################
+# data files
+/data/.cid.info              u:object_r:wifi_data_file:s0
+/data/.wifiver.info          u:object_r:wifi_data_file:s0
+
+/data/misc/radio(/.*)?       u:object_r:radio_data_file:s0
+
+# gps
+/data/system/gps/\.flp\.interface\.pipe\.to_gpsd     u:object_r:gps_data_file:s0
+/data/system/gps/\.gps\.interface\.pipe\.to_gpsd     u:object_r:gps_data_file:s0
+/data/system/gps/\.gps\.interface\.pipe\.to_jni      u:object_r:gps_data_file:s0
+/data/system/gps/\.gpsd\.lock                        u:object_r:gps_data_file:s0
+/data/system/gps/gldata\.sto                         u:object_r:gps_data_file:s0
+/data/system/gps/alt\.dat                            u:object_r:gps_data_file:s0
+/data/system/gps/lto2\.dat                           u:object_r:gps_data_file:s0
+/data/system/gps/ltoStatus\.txt                      u:object_r:gps_data_file:s0
+
+/data/gps/ctrlpipe                                   u:object_r:gps_data_file:s0
+/data/gps/.gpslogd.pipe                              u:object_r:gps_data_file:s0
+/data/gps/nmeapipe                                   u:object_r:gps_data_file:s0
+
+####################################
+# sysfs files
+/sys/class/power_supply/battery/music -- u:object_r:sysfs_writable:s0
+/sys/class/devfreq/exynos5-busfreq-mif(/.*)? -- u:object_r:sysfs_writable:s0
+/sys/class/lcd(/.*)?         -- u:object_r:sysfs_writable:s0
+
+# bluetooth
+/sys/devices/bluetooth.[0-9]*/rfkill/rfkill0/state  u:object_r:sysfs_bluetooth_writable:s0
+/sys/devices/bluetooth.[0-9]*/rfkill/rfkill0/type   u:object_r:sysfs_bluetooth_writable:s0
+
+# cbd
+/sys/devices/10f24000.mipi-lli/lli_control  u:object_r:sysfs_mipi_writable:s0
+
+# rild
+/sys/devices/virtual/misc/multipdp(/.*)     u:object_r:sysfs_multipdp_writable:s0
+
+# mDNIe
+/sys/devices/[0-9]*.decon_fb/lcd/panel/mdnie/mode       u:object_r:sysfs_mdnie_writable:s0
+/sys/devices/[0-9]*.decon_fb/lcd/panel/mdnie/scenario   u:object_r:sysfs_mdnie_writable:s0
+
+####################################
+# deamons
+#
+
+/system/bin/mcDriverDaemon   -- u:object_r:tee_exec:s0
+/system/bin/macloader        -- u:object_r:macloader_exec:s0
+/system/bin/modemloader      -- u:object_r:modemloader_exec:s0
+/system/bin/sensorhubservice -- u:object_r:sensorhubservice_exec:s0
+/system/bin/wifiloader       -- u:object_r:wifiloader_exec:s0
+
+/system/bin/cbd              -- u:object_r:cpboot-daemon_exec:s0
+/system/bin/gpsd             -- u:object_r:gpsd_exec:s0

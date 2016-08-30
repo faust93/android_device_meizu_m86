@@ -1,0 +1,10 @@
+#### modemloader
+#
+type modemloader, domain;
+type modemloader_exec, exec_type, file_type;
+
+init_daemon_domain(modemloader)
+
+allow modemloader proc:file r_file_perms;
+
+set_prop(modemloader, modemloader_prop)
