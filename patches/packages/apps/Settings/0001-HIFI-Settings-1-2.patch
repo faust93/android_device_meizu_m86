@@ -1,7 +1,7 @@
-From 0ed6ae6ea76f1dff5d240c35ed2d949e00882d57 Mon Sep 17 00:00:00 2001
+From 6331910937f7f975291c16f112fc7c3f045cfff0 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Thu, 14 Jul 2016 20:56:42 +0300
-Subject: [PATCH] HIFI Settings [1/2]
+Date: Tue, 9 Aug 2016 13:32:58 +0300
+Subject: [PATCH] HIFI settings[1/2]
 
 ---
  AndroidManifest.xml                                |  14 ++
@@ -18,10 +18,10 @@ Subject: [PATCH] HIFI Settings [1/2]
  create mode 100644 src/com/android/settings/hifi/HifiSoundSettings.java
 
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 2ab3b3e..ecacbd6 100755
+index 7b78a0f..3b6e2f8 100755
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -3181,6 +3181,20 @@
+@@ -3194,6 +3194,20 @@
              </intent-filter>
          </activity>
  
@@ -43,7 +43,7 @@ index 2ab3b3e..ecacbd6 100755
  </manifest>
  
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 6680e0c..4250616 100644
+index c929867..9fe67a4 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -7063,4 +7063,15 @@
@@ -132,10 +132,10 @@ index 0000000..b8af46e
 +
 +</PreferenceScreen>
 diff --git a/res/xml/sounds.xml b/res/xml/sounds.xml
-index 8b7dd46..33b25d3 100644
+index a0e0ff7..9e4e362 100644
 --- a/res/xml/sounds.xml
 +++ b/res/xml/sounds.xml
-@@ -106,6 +106,13 @@
+@@ -100,6 +100,13 @@
                  android:title="@string/other_sound_settings"
                  android:persistent="false"
                  android:fragment="com.android.settings.notification.OtherSoundSettings" />
@@ -150,20 +150,20 @@ index 8b7dd46..33b25d3 100644
  
      <PreferenceCategory
 diff --git a/src/com/android/settings/Settings.java b/src/com/android/settings/Settings.java
-index 8317660..ce39cdb 100644
+index 60484ef..f063b9d 100644
 --- a/src/com/android/settings/Settings.java
 +++ b/src/com/android/settings/Settings.java
-@@ -143,4 +143,5 @@ public class Settings extends SettingsActivity {
+@@ -144,4 +144,5 @@ public class Settings extends SettingsActivity {
      public static class WeatherProviderServicesActivity extends SettingsActivity { /* empty */ }
      public static class AmbientDisplaySettingsActivity extends SettingsActivity { /* empty */ }
      public static class FloatingWindowActivity extends SettingsActivity { /* empty */ }
 +    public static class HifiSoundSettingsActivity extends SettingsActivity { /* empty */ }
  }
 diff --git a/src/com/android/settings/SettingsActivity.java b/src/com/android/settings/SettingsActivity.java
-index cea17e8..bae18b0 100644
+index 94450ca..9d44261 100644
 --- a/src/com/android/settings/SettingsActivity.java
 +++ b/src/com/android/settings/SettingsActivity.java
-@@ -148,6 +148,7 @@ import com.android.settings.wifi.AdvancedWifiSettings;
+@@ -149,6 +149,7 @@ import com.android.settings.wifi.AdvancedWifiSettings;
  import com.android.settings.wifi.SavedAccessPointsWifiSettings;
  import com.android.settings.wifi.WifiSettings;
  import com.android.settings.wifi.p2p.WifiP2pSettings;
@@ -171,12 +171,12 @@ index cea17e8..bae18b0 100644
  
  
  import cyanogenmod.app.CMContextConstants;
-@@ -409,7 +410,9 @@ public class SettingsActivity extends Activity
-             FlingSettings.class.getName(),
+@@ -412,7 +413,9 @@ public class SettingsActivity extends Activity
              SmartbarSettings.class.getName(),
              PulseSettings.class.getName(),
--            WeatherServiceSettings.class.getName()
-+            WeatherServiceSettings.class.getName(),
+             WeatherServiceSettings.class.getName(),
+-	    Halo.class.getName()
++	    Halo.class.getName(),
 +            HifiSoundSettings.class.getName()
 +
      };
