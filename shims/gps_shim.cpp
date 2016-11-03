@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <gui/SensorManager.h>
+#include "SensorEventQueue.h"
 
 namespace android {
 extern "C" {
@@ -24,22 +25,21 @@ extern "C" {
 	    return malloc(num);
 	}
 
+	long (*SSL_CTX_ctrl)(void *ctx, int cmd, long larg, void *parg);
+
 	SensorManager* _ZN7android9SingletonINS_13SensorManagerEE9sInstanceE = NULL;
 
 	Mutex _ZN7android9SingletonINS_13SensorManagerEE5sLockE(Mutex::PRIVATE);
 
 	void* _ZN7android13SensorManagerC1ERKNS_8String16E(void* obj, const String16& opPackageName);
+
 	void* _ZN7android13SensorManagerC1Ev(void* obj) {
 	    return _ZN7android13SensorManagerC1ERKNS_8String16E(obj, String16());
 	}
-
 	sp<SensorEventQueue> _ZN7android13SensorManager16createEventQueueENS_7String8Ei(void* obj, String8 packageName, int mode);
 	sp<SensorEventQueue> _ZN7android13SensorManager16createEventQueueEv(void* obj) {
-    	String8 name("");
-        return _ZN7android13SensorManager16createEventQueueENS_7String8Ei(obj, name, 0);
+            String8 name("");
+            return _ZN7android13SensorManager16createEventQueueENS_7String8Ei(obj, name, 0);
 	}
-
-
+    }
 }
-}
-

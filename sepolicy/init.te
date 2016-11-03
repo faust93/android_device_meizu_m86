@@ -15,3 +15,4 @@ allow init sysfs:lnk_file setattr;
 
 # read/chown mDNIE symlinks
 allow init sysfs_mdnie_writable:lnk_file { read setattr };
+

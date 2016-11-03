@@ -15,3 +15,9 @@ type seiren_device, dev_type;
 
 # /dev/s5p-smem
 type secmem_device, dev_type;
+
+# /dev/i2c-7
+type dac_device, dev_type;
+
+# /dev/fpc1020
+type fingerprint_device, dev_type;

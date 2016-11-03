@@ -1,0 +1,42 @@
+From 3395bd4bb3f145107782efb91aaa878ccf35db69 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 28 Oct 2016 14:17:23 +0300
+Subject: [PATCH] network selection fix
+
+Change-Id: I2814956d3f318f696e27e038f0ed026481a704ed
+---
+ src/java/com/android/internal/telephony/Phone.java | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/Phone.java b/src/java/com/android/internal/telephony/Phone.java
+index 0341d3a..bf026b1 100644
+--- a/src/java/com/android/internal/telephony/Phone.java
++++ b/src/java/com/android/internal/telephony/Phone.java
+@@ -1856,6 +1856,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
+                 || rafFromType == RadioAccessFamily.RAF_UNKNOWN) {
+             Rlog.d(LOG_TAG, "setPreferredNetworkType: Abort, unknown RAF: "
+                     + modemRaf + " " + rafFromType);
++/*
+             if (response != null) {
+                 CommandException ex;
+ 
+@@ -1864,6 +1865,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
+                 response.sendToTarget();
+             }
+             return;
++*/
+         }
+ 
+         int filteredRaf = (rafFromType & modemRaf);
+@@ -1874,7 +1876,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
+                 + " rafFromType = " + rafFromType
+                 + " filteredType = " + filteredType);
+ 
+-        mCi.setPreferredNetworkType(filteredType, response);
++        mCi.setPreferredNetworkType(networkType, response);
+     }
+ 
+     /**
+-- 
+1.9.3 (Apple Git-50)
+

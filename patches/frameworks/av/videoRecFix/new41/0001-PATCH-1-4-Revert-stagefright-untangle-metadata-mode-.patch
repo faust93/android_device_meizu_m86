@@ -1,0 +1,597 @@
+From eb984f3564a820bf389f459fa8e07f7b8d63676e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 27 Oct 2016 23:14:49 +0300
+Subject: [PATCH] [PATCH 1/4] Revert "stagefright: untangle metadata-mode
+ handling"
+
+Change-Id: I151edbb83aa5975875c2fd5ea019b61638d99b7d
+---
+ cmds/stagefright/Android.mk                        |  6 +--
+ include/media/IOMX.h                               |  7 ++-
+ include/media/stagefright/CameraSource.h           |  7 ++-
+ include/media/stagefright/SurfaceMediaSource.h     | 11 ++---
+ media/libmedia/IOMX.cpp                            |  6 +--
+ media/libmediaplayerservice/Android.mk             |  1 -
+ .../libmediaplayerservice/StagefrightRecorder.cpp  | 12 ++---
+ media/libmediaplayerservice/StagefrightRecorder.h  |  4 +-
+ media/libstagefright/ACodec.cpp                    | 57 +++++++++-------------
+ media/libstagefright/CameraSource.cpp              | 14 ++----
+ media/libstagefright/MediaCodecSource.cpp          |  4 ++
+ media/libstagefright/SurfaceMediaSource.cpp        | 33 ++++++++-----
+ media/libstagefright/omx/OMXNodeInstance.cpp       | 23 ++-------
+ media/libstagefright/tests/Android.mk              |  1 -
+ media/libstagefright/wifi-display/Android.mk       |  1 -
+ .../wifi-display/source/PlaybackSession.cpp        |  5 +-
+ 16 files changed, 79 insertions(+), 113 deletions(-)
+
+diff --git a/cmds/stagefright/Android.mk b/cmds/stagefright/Android.mk
+index 9e15a81..e5fbba0 100644
+--- a/cmds/stagefright/Android.mk
++++ b/cmds/stagefright/Android.mk
+@@ -39,8 +39,7 @@ LOCAL_SHARED_LIBRARIES := \
+ 
+ LOCAL_C_INCLUDES:= \
+ 	frameworks/av/media/libstagefright \
+-	$(TOP)/frameworks/native/include/media/openmax \
+-	$(TOP)/frameworks/native/include/media/hardware
++	$(TOP)/frameworks/native/include/media/openmax
+ 
+ LOCAL_CFLAGS += -Wno-multichar -Werror -Wall
+ LOCAL_CLANG := true
+@@ -64,8 +63,7 @@ LOCAL_SHARED_LIBRARIES := \
+ 
+ LOCAL_C_INCLUDES:= \
+ 	frameworks/av/media/libstagefright \
+-	$(TOP)/frameworks/native/include/media/openmax \
+-	$(TOP)/frameworks/native/include/media/hardware
++	$(TOP)/frameworks/native/include/media/openmax
+ 
+ LOCAL_CFLAGS += -Wno-multichar -Werror -Wall
+ LOCAL_CLANG := true
+diff --git a/include/media/IOMX.h b/include/media/IOMX.h
+index 1c39b9c..dd6fc8c 100644
+--- a/include/media/IOMX.h
++++ b/include/media/IOMX.h
+@@ -278,18 +278,17 @@ struct CodecProfileLevel {
+     OMX_U32 mLevel;
+ };
+ 
+-inline static const char *asString(MetadataBufferType i, const char *def = "??") {
++}  // namespace android
++
++inline static const char *asString(android::MetadataBufferType i, const char *def = "??") {
+     using namespace android;
+     switch (i) {
+         case kMetadataBufferTypeCameraSource:   return "CameraSource";
+         case kMetadataBufferTypeGrallocSource:  return "GrallocSource";
+         case kMetadataBufferTypeANWBuffer:      return "ANWBuffer";
+-        case kMetadataBufferTypeNativeHandleSource: return "NativeHandleSource";
+         case kMetadataBufferTypeInvalid:        return "Invalid";
+         default:                                return def;
+     }
+ }
+ 
+-}  // namespace android
+-
+ #endif  // ANDROID_IOMX_H_
+diff --git a/include/media/stagefright/CameraSource.h b/include/media/stagefright/CameraSource.h
+index c2e75a6..399f363 100644
+--- a/include/media/stagefright/CameraSource.h
++++ b/include/media/stagefright/CameraSource.h
+@@ -28,7 +28,6 @@
+ #include <utils/List.h>
+ #include <utils/RefBase.h>
+ #include <utils/String16.h>
+-#include <MetadataBufferType.h>
+ 
+ namespace android {
+ 
+@@ -119,11 +118,11 @@ public:
+      * Tell whether this camera source stores meta data or real YUV
+      * frame data in video buffers.
+      *
+-     * @return a valid type if meta data is stored in the video
+-     *      buffers; kMetadataBufferTypeInvalid if real YUV data is stored in
++     * @return true if meta data is stored in the video
++     *      buffers; false if real YUV data is stored in
+      *      the video buffers.
+      */
+-    MetadataBufferType metaDataStoredInVideoBuffers() const;
++    bool isMetaDataStoredInVideoBuffers() const;
+ 
+     virtual void signalBufferReturned(MediaBuffer* buffer);
+ 
+diff --git a/include/media/stagefright/SurfaceMediaSource.h b/include/media/stagefright/SurfaceMediaSource.h
+index 1657a38..2177c00 100644
+--- a/include/media/stagefright/SurfaceMediaSource.h
++++ b/include/media/stagefright/SurfaceMediaSource.h
+@@ -25,8 +25,6 @@
+ #include <media/stagefright/MediaSource.h>
+ #include <media/stagefright/MediaBuffer.h>
+ 
+-#include <media/hardware/MetadataBufferType.h>
+-
+ #include "foundation/ABase.h"
+ 
+ namespace android {
+@@ -111,9 +109,9 @@ public:
+     void dump(String8& result, const char* prefix, char* buffer,
+                                                     size_t SIZE) const;
+ 
+-    // metaDataStoredInVideoBuffers tells the encoder what kind of metadata
+-    // is passed through the buffers. Currently, it is set to ANWBuffer
+-    MetadataBufferType metaDataStoredInVideoBuffers() const;
++    // isMetaDataStoredInVideoBuffers tells the encoder whether we will
++    // pass metadata through the buffers. Currently, it is force set to true
++    bool isMetaDataStoredInVideoBuffers() const;
+ 
+     sp<IGraphicBufferProducer> getProducer() const { return mProducer; }
+ 
+@@ -236,9 +234,6 @@ private:
+ 
+     Condition mMediaBuffersAvailableCondition;
+ 
+-    // Allocate and return a new MediaBuffer and pass the ANW buffer as metadata into it.
+-    void passMetadataBuffer_l(MediaBuffer **buffer, ANativeWindowBuffer *bufferHandle) const;
+-
+     // Avoid copying and equating and default constructor
+     DISALLOW_EVIL_CONSTRUCTORS(SurfaceMediaSource);
+ };
+diff --git a/media/libmedia/IOMX.cpp b/media/libmedia/IOMX.cpp
+index 3f7831e..cfc337a 100644
+--- a/media/libmedia/IOMX.cpp
++++ b/media/libmedia/IOMX.cpp
+@@ -438,9 +438,7 @@ public:
+         data.writeInterfaceToken(IOMX::getInterfaceDescriptor());
+         data.writeInt32((int32_t)node);
+         data.writeInt32(port_index);
+-        data.writeInt32((int32_t)enable);
+-        data.writeInt32(type == NULL ? kMetadataBufferTypeANWBuffer : *type);
+-
++        data.writeInt32((uint32_t)enable);
+         remote()->transact(STORE_META_DATA_IN_BUFFERS, data, &reply);
+ 
+         // read type even storeMetaDataInBuffers failed
+@@ -1046,7 +1044,7 @@ status_t BnOMX::onTransact(
+             OMX_U32 port_index = data.readInt32();
+             OMX_BOOL enable = (OMX_BOOL)data.readInt32();
+ 
+-            MetadataBufferType type = (MetadataBufferType)data.readInt32();
++            MetadataBufferType type = kMetadataBufferTypeInvalid;
+             status_t err = storeMetaDataInBuffers(node, port_index, enable, &type);
+ 
+             reply->writeInt32(type);
+diff --git a/media/libmediaplayerservice/Android.mk b/media/libmediaplayerservice/Android.mk
+index b175453..163ff22 100644
+--- a/media/libmediaplayerservice/Android.mk
++++ b/media/libmediaplayerservice/Android.mk
+@@ -54,7 +54,6 @@ LOCAL_C_INCLUDES :=                                                 \
+     $(TOP)/frameworks/av/include/media                              \
+     $(TOP)/frameworks/av/include/camera                             \
+     $(TOP)/frameworks/native/include/media/openmax                  \
+-    $(TOP)/frameworks/native/include/media/hardware                 \
+     $(TOP)/external/tremolo/Tremolo                                 \
+     libcore/include                                                 \
+     $(TOP)/frameworks/av/media/libavextensions                      \
+diff --git a/media/libmediaplayerservice/StagefrightRecorder.cpp b/media/libmediaplayerservice/StagefrightRecorder.cpp
+index d7bb876..0df70f4 100644
+--- a/media/libmediaplayerservice/StagefrightRecorder.cpp
++++ b/media/libmediaplayerservice/StagefrightRecorder.cpp
+@@ -1523,8 +1523,8 @@ status_t StagefrightRecorder::setupCameraSource(
+ 
+     CHECK(mFrameRate != -1);
+ 
+-    mMetaDataStoredInVideoBuffers =
+-        (*cameraSource)->metaDataStoredInVideoBuffers();
++    mIsMetaDataStoredInVideoBuffers =
++        (*cameraSource)->isMetaDataStoredInVideoBuffers();
+ 
+     return OK;
+ }
+@@ -1651,11 +1651,11 @@ status_t StagefrightRecorder::setupVideoEncoder(
+         format->setInt32("android._prefer-b-frames", preferBFrames);
+     }
+ 
+-    if (mMetaDataStoredInVideoBuffers != kMetadataBufferTypeInvalid) {
+-        format->setInt32("android._input-metadata-buffer-type", mMetaDataStoredInVideoBuffers);
++    uint32_t flags = 0;
++    if (mIsMetaDataStoredInVideoBuffers) {
++        flags |= MediaCodecSource::FLAG_USE_METADATA_INPUT;
+     }
+ 
+-    uint32_t flags = 0;
+     if (cameraSource == NULL) {
+         flags |= MediaCodecSource::FLAG_USE_SURFACE_INPUT;
+     } else {
+@@ -1974,7 +1974,7 @@ status_t StagefrightRecorder::reset() {
+     mCaptureFps = 0.0f;
+     mTimeBetweenCaptureUs = -1;
+     mCameraSourceTimeLapse = NULL;
+-    mMetaDataStoredInVideoBuffers = kMetadataBufferTypeInvalid;
++    mIsMetaDataStoredInVideoBuffers = false;
+     mEncoderProfiles = MediaProfiles::getInstance();
+     mRotationDegrees = 0;
+     mLatitudex10000 = -3600000;
+diff --git a/media/libmediaplayerservice/StagefrightRecorder.h b/media/libmediaplayerservice/StagefrightRecorder.h
+index 87f9462..779bd58 100644
+--- a/media/libmediaplayerservice/StagefrightRecorder.h
++++ b/media/libmediaplayerservice/StagefrightRecorder.h
+@@ -24,8 +24,6 @@
+ #include <media/stagefright/MediaSource.h>
+ #include <system/audio.h>
+ 
+-#include <MetadataBufferType.h>
+-
+ namespace android {
+ 
+ class Camera;
+@@ -124,7 +122,7 @@ protected:
+ 
+     String8 mParams;
+ 
+-    MetadataBufferType mMetaDataStoredInVideoBuffers;
++    bool mIsMetaDataStoredInVideoBuffers;
+     MediaProfiles *mEncoderProfiles;
+ 
+     int64_t mPauseStartTimeUs;
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index e935d04..47f1e9c 100644
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -816,10 +816,10 @@ status_t ACodec::allocateBuffersOnPort(OMX_U32 portIndex) {
+             MetadataBufferType type =
+                 portIndex == kPortIndexOutput ? mOutputMetadataType : mInputMetadataType;
+             size_t bufSize = def.nBufferSize;
+-            if (type == kMetadataBufferTypeANWBuffer) {
++            if (type == kMetadataBufferTypeGrallocSource) {
++                bufSize = sizeof(VideoGrallocMetadata);
++            } else if (type == kMetadataBufferTypeANWBuffer) {
+                 bufSize = sizeof(VideoNativeMetadata);
+-            } else if (type == kMetadataBufferTypeNativeHandleSource) {
+-                bufSize = sizeof(VideoNativeHandleMetadata);
+             }
+ 
+             // If using gralloc or native source input metadata buffers, allocate largest
+@@ -827,7 +827,7 @@ status_t ACodec::allocateBuffersOnPort(OMX_U32 portIndex) {
+             // may require gralloc source. For camera source, allocate at least enough
+             // size for native metadata buffers.
+             size_t allottedSize = bufSize;
+-            if (portIndex == kPortIndexInput && type == kMetadataBufferTypeANWBuffer) {
++            if (portIndex == kPortIndexInput && type >= kMetadataBufferTypeGrallocSource) {
+                 bufSize = max(sizeof(VideoGrallocMetadata), sizeof(VideoNativeMetadata));
+             } else if (portIndex == kPortIndexInput && type == kMetadataBufferTypeCameraSource) {
+                 bufSize = max(bufSize, sizeof(VideoNativeMetadata));
+@@ -1826,20 +1826,19 @@ status_t ACodec::configureCodec(
+ 
+     int32_t storeMeta;
+     if (encoder
+-            && msg->findInt32("android._input-metadata-buffer-type", &storeMeta)
+-            && storeMeta != kMetadataBufferTypeInvalid) {
+-        mInputMetadataType = (MetadataBufferType)storeMeta;
+-        err = mOMX->storeMetaDataInBuffers(
+-                mNode, kPortIndexInput, OMX_TRUE, &mInputMetadataType);
++            && msg->findInt32("store-metadata-in-buffers", &storeMeta)
++            && storeMeta != 0) {
++        err = mOMX->storeMetaDataInBuffers(mNode, kPortIndexInput, OMX_TRUE, &mInputMetadataType);
+         if (err != OK) {
+             ALOGE("[%s] storeMetaDataInBuffers (input) failed w/ err %d",
+                     mComponentName.c_str(), err);
+ 
+             return err;
+-        } else if (storeMeta == kMetadataBufferTypeANWBuffer
+-                && mInputMetadataType == kMetadataBufferTypeGrallocSource) {
+-            // IOMX translates ANWBuffers to gralloc source already.
+-            mInputMetadataType = (MetadataBufferType)storeMeta;
++        }
++        // For this specific case we could be using camera source even if storeMetaDataInBuffers
++        // returns Gralloc source. Pretend that we are; this will force us to use nBufferSize.
++        if (mInputMetadataType == kMetadataBufferTypeGrallocSource) {
++            mInputMetadataType = kMetadataBufferTypeCameraSource;
+         }
+ 
+         uint32_t usageBits;
+@@ -1885,10 +1884,9 @@ status_t ACodec::configureCodec(
+     mIsVideo = video;
+     if (encoder && video) {
+         OMX_BOOL enable = (OMX_BOOL) (prependSPSPPS
+-            && msg->findInt32("android._store-metadata-in-buffers-output", &storeMeta)
++            && msg->findInt32("store-metadata-in-buffers-output", &storeMeta)
+             && storeMeta != 0);
+ 
+-        mOutputMetadataType = kMetadataBufferTypeNativeHandleSource;
+         err = mOMX->storeMetaDataInBuffers(mNode, kPortIndexOutput, enable, &mOutputMetadataType);
+         if (err != OK) {
+             ALOGE("[%s] storeMetaDataInBuffers (output) failed w/ err %d",
+@@ -2017,7 +2015,6 @@ status_t ACodec::configureCodec(
+             }
+ 
+             // Always try to enable dynamic output buffers on native surface
+-            mOutputMetadataType = kMetadataBufferTypeANWBuffer;
+             err = mOMX->storeMetaDataInBuffers(
+                     mNode, kPortIndexOutput, OMX_TRUE, &mOutputMetadataType);
+             if (err != OK) {
+@@ -6396,15 +6393,18 @@ bool ACodec::BaseState::onOMXFillBufferDone(
+ 
+             if (mCodec->usingMetadataOnEncoderOutput()) {
+                 native_handle_t *handle = NULL;
+-                VideoNativeHandleMetadata &nativeMeta =
+-                    *(VideoNativeHandleMetadata *)info->mData->data();
+-                if (info->mData->size() >= sizeof(nativeMeta)
+-                        && nativeMeta.eType == kMetadataBufferTypeNativeHandleSource) {
++                VideoGrallocMetadata &grallocMeta = *(VideoGrallocMetadata *)info->mData->data();
++                VideoNativeMetadata &nativeMeta = *(VideoNativeMetadata *)info->mData->data();
++                if (info->mData->size() >= sizeof(grallocMeta)
++                        && grallocMeta.eType == kMetadataBufferTypeGrallocSource) {
++                    handle = (native_handle_t *)(uintptr_t)grallocMeta.pHandle;
++                } else if (info->mData->size() >= sizeof(nativeMeta)
++                        && nativeMeta.eType == kMetadataBufferTypeANWBuffer) {
+ #ifdef OMX_ANDROID_COMPILE_AS_32BIT_ON_64BIT_PLATFORMS
+-                    // handle is only valid on 32-bit/mediaserver process
++                    // ANativeWindowBuffer is only valid on 32-bit/mediaserver process
+                     handle = NULL;
+ #else
+-                    handle = (native_handle_t *)nativeMeta.pHandle;
++                    handle = (native_handle_t *)nativeMeta.pBuffer->handle;
+ #endif
+                 }
+                 info->mData->meta()->setPointer("handle", handle);
+@@ -7176,14 +7176,8 @@ void ACodec::LoadedState::onCreateInputSurface(
+ 
+     sp<IGraphicBufferProducer> bufferProducer;
+     if (err == OK) {
+-        mCodec->mInputMetadataType = kMetadataBufferTypeANWBuffer;
+         err = mCodec->mOMX->createInputSurface(
+-                mCodec->mNode, kPortIndexInput, dataSpace, &bufferProducer,
+-                &mCodec->mInputMetadataType);
+-        // framework uses ANW buffers internally instead of gralloc handles
+-        if (mCodec->mInputMetadataType == kMetadataBufferTypeGrallocSource) {
+-            mCodec->mInputMetadataType = kMetadataBufferTypeANWBuffer;
+-        }
++                mCodec->mNode, kPortIndexInput, dataSpace, &bufferProducer, &mCodec->mInputMetadataType);
+     }
+ 
+     if (err == OK) {
+@@ -7222,14 +7216,9 @@ void ACodec::LoadedState::onSetInputSurface(
+     notify->setMessage("output-format", mCodec->mOutputFormat);
+ 
+     if (err == OK) {
+-        mCodec->mInputMetadataType = kMetadataBufferTypeANWBuffer;
+         err = mCodec->mOMX->setInputSurface(
+                 mCodec->mNode, kPortIndexInput, surface->getBufferConsumer(),
+                 &mCodec->mInputMetadataType);
+-        // framework uses ANW buffers internally instead of gralloc handles
+-        if (mCodec->mInputMetadataType == kMetadataBufferTypeGrallocSource) {
+-            mCodec->mInputMetadataType = kMetadataBufferTypeANWBuffer;
+-        }
+     }
+ 
+     if (err == OK) {
+diff --git a/media/libstagefright/CameraSource.cpp b/media/libstagefright/CameraSource.cpp
+index 68b258d..e1a637c 100644
+--- a/media/libstagefright/CameraSource.cpp
++++ b/media/libstagefright/CameraSource.cpp
+@@ -1272,19 +1272,13 @@ void CameraSource::processBufferQueueFrame(BufferItem& buffer) {
+     mFrameAvailableCondition.signal();
+ }
+ 
+-MetadataBufferType CameraSource::metaDataStoredInVideoBuffers() const {
+-    ALOGV("metaDataStoredInVideoBuffers");
++bool CameraSource::isMetaDataStoredInVideoBuffers() const {
++    ALOGV("isMetaDataStoredInVideoBuffers");
+ 
+     // Output buffers will contain metadata if camera sends us buffer in metadata mode or via
+     // buffer queue.
+-    switch (mVideoBufferMode) {
+-        case hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA:
+-            return kMetadataBufferTypeNativeHandleSource;
+-        case hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE:
+-            return kMetadataBufferTypeANWBuffer;
+-        default:
+-            return kMetadataBufferTypeInvalid;
+-    }
++    return (mVideoBufferMode == hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA ||
++            mVideoBufferMode == hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE);
+ }
+ 
+ CameraSource::ProxyListener::ProxyListener(const sp<CameraSource>& source) {
+diff --git a/media/libstagefright/MediaCodecSource.cpp b/media/libstagefright/MediaCodecSource.cpp
+index 5e81c51..6b4fccd 100755
+--- a/media/libstagefright/MediaCodecSource.cpp
++++ b/media/libstagefright/MediaCodecSource.cpp
+@@ -466,6 +466,10 @@ status_t MediaCodecSource::initEncoder() {
+     mCodecLooper->setName("codec_looper");
+     mCodecLooper->start();
+ 
++    if (mFlags & FLAG_USE_METADATA_INPUT) {
++        mOutputFormat->setInt32("store-metadata-in-buffers", 1);
++    }
++
+     if (mFlags & FLAG_USE_SURFACE_INPUT) {
+         mOutputFormat->setInt32("create-input-buffers-suspended", 1);
+     }
+diff --git a/media/libstagefright/SurfaceMediaSource.cpp b/media/libstagefright/SurfaceMediaSource.cpp
+index 4f1ef30..709c92c 100644
+--- a/media/libstagefright/SurfaceMediaSource.cpp
++++ b/media/libstagefright/SurfaceMediaSource.cpp
+@@ -23,7 +23,6 @@
+ #include <media/stagefright/MediaDefs.h>
+ #include <media/stagefright/MetaData.h>
+ #include <OMX_IVCommon.h>
+-#include <media/hardware/HardwareAPI.h>
+ #include <media/hardware/MetadataBufferType.h>
+ 
+ #include <ui/GraphicBuffer.h>
+@@ -127,9 +126,9 @@ status_t SurfaceMediaSource::setFrameRate(int32_t fps)
+     return OK;
+ }
+ 
+-MetadataBufferType SurfaceMediaSource::metaDataStoredInVideoBuffers() const {
++bool SurfaceMediaSource::isMetaDataStoredInVideoBuffers() const {
+     ALOGV("isMetaDataStoredInVideoBuffers");
+-    return kMetadataBufferTypeANWBuffer;
++    return true;
+ }
+ 
+ int32_t SurfaceMediaSource::getFrameRate( ) const {
+@@ -251,19 +250,29 @@ sp<MetaData> SurfaceMediaSource::getFormat()
+ }
+ 
+ // Pass the data to the MediaBuffer. Pass in only the metadata
++// The metadata passed consists of two parts:
++// 1. First, there is an integer indicating that it is a GRAlloc
++// source (kMetadataBufferTypeGrallocSource)
++// 2. This is followed by the buffer_handle_t that is a handle to the
++// GRalloc buffer. The encoder needs to interpret this GRalloc handle
++// and encode the frames.
++// --------------------------------------------------------------
++// |  kMetadataBufferTypeGrallocSource | sizeof(buffer_handle_t) |
++// --------------------------------------------------------------
+ // Note: Call only when you have the lock
+-void SurfaceMediaSource::passMetadataBuffer_l(MediaBuffer **buffer,
+-        ANativeWindowBuffer *bufferHandle) const {
+-    *buffer = new MediaBuffer(sizeof(VideoNativeMetadata));
+-    VideoNativeMetadata *data = (VideoNativeMetadata *)(*buffer)->data();
++static void passMetadataBuffer(MediaBuffer **buffer,
++        buffer_handle_t bufferHandle) {
++    *buffer = new MediaBuffer(4 + sizeof(buffer_handle_t));
++    char *data = (char *)(*buffer)->data();
+     if (data == NULL) {
+         ALOGE("Cannot allocate memory for metadata buffer!");
+         return;
+     }
+-    data->eType = metaDataStoredInVideoBuffers();
+-    data->pBuffer = bufferHandle;
+-    data->nFenceFd = -1;
+-    ALOGV("handle = %p, offset = %zu, length = %zu",
++    OMX_U32 type = kMetadataBufferTypeGrallocSource;
++    memcpy(data, &type, 4);
++    memcpy(data + 4, &bufferHandle, sizeof(buffer_handle_t));
++
++    ALOGV("handle = %p, , offset = %zu, length = %zu",
+             bufferHandle, (*buffer)->range_length(), (*buffer)->range_offset());
+ }
+ 
+@@ -352,7 +361,7 @@ status_t SurfaceMediaSource::read(
+     mNumFramesEncoded++;
+     // Pass the data to the MediaBuffer. Pass in only the metadata
+ 
+-    passMetadataBuffer_l(buffer, mSlots[mCurrentSlot].mGraphicBuffer->getNativeBuffer());
++    passMetadataBuffer(buffer, mSlots[mCurrentSlot].mGraphicBuffer->handle);
+ 
+     (*buffer)->setObserver(this);
+     (*buffer)->add_ref();
+diff --git a/media/libstagefright/omx/OMXNodeInstance.cpp b/media/libstagefright/omx/OMXNodeInstance.cpp
+index ddc0d32..f60bb9e 100644
+--- a/media/libstagefright/omx/OMXNodeInstance.cpp
++++ b/media/libstagefright/omx/OMXNodeInstance.cpp
+@@ -540,9 +540,6 @@ status_t OMXNodeInstance::storeMetaDataInBuffers_l(
+         OMX_U32 portIndex, OMX_BOOL enable, MetadataBufferType *type) {
+     if (portIndex != kPortIndexInput && portIndex != kPortIndexOutput) {
+         android_errorWriteLog(0x534e4554, "26324358");
+-        if (type != NULL) {
+-            *type = kMetadataBufferTypeInvalid;
+-        }
+         return BAD_VALUE;
+     }
+ 
+@@ -553,32 +550,26 @@ status_t OMXNodeInstance::storeMetaDataInBuffers_l(
+     OMX_STRING nativeBufferName = const_cast<OMX_STRING>(
+             "OMX.google.android.index.storeANWBufferInMetadata");
+     MetadataBufferType negotiatedType;
+-    MetadataBufferType requestedType = type != NULL ? *type : kMetadataBufferTypeANWBuffer;
+ 
+     StoreMetaDataInBuffersParams params;
+     InitOMXParams(&params);
+     params.nPortIndex = portIndex;
+     params.bStoreMetaData = enable;
+ 
+-    OMX_ERRORTYPE err =
+-        requestedType == kMetadataBufferTypeANWBuffer
+-                ? OMX_GetExtensionIndex(mHandle, nativeBufferName, &index)
+-                : OMX_ErrorUnsupportedIndex;
++    OMX_ERRORTYPE err = OMX_GetExtensionIndex(mHandle, nativeBufferName, &index);
+     OMX_ERRORTYPE xerr = err;
+     if (err == OMX_ErrorNone) {
+         err = OMX_SetParameter(mHandle, index, &params);
+         if (err == OMX_ErrorNone) {
+             name = nativeBufferName; // set name for debugging
+-            negotiatedType = requestedType;
++            negotiatedType = kMetadataBufferTypeANWBuffer;
+         }
+     }
+     if (err != OMX_ErrorNone) {
+         err = OMX_GetExtensionIndex(mHandle, name, &index);
+         xerr = err;
+         if (err == OMX_ErrorNone) {
+-            negotiatedType =
+-                requestedType == kMetadataBufferTypeANWBuffer
+-                        ? kMetadataBufferTypeGrallocSource : requestedType;
++            negotiatedType = kMetadataBufferTypeGrallocSource;
+             err = OMX_SetParameter(mHandle, index, &params);
+         }
+     }
+@@ -600,9 +591,8 @@ status_t OMXNodeInstance::storeMetaDataInBuffers_l(
+         }
+         mMetadataType[portIndex] = negotiatedType;
+     }
+-    CLOG_CONFIG(storeMetaDataInBuffers, "%s:%u %srequested %s:%d negotiated %s:%d",
+-            portString(portIndex), portIndex, enable ? "" : "UN",
+-            asString(requestedType), requestedType, asString(negotiatedType), negotiatedType);
++    CLOG_CONFIG(storeMetaDataInBuffers, "%s:%u negotiated %s:%d",
++            portString(portIndex), portIndex, asString(negotiatedType), negotiatedType);
+ 
+     if (type != NULL) {
+         *type = negotiatedType;
+@@ -958,9 +948,6 @@ status_t OMXNodeInstance::createGraphicBufferSource(
+     }
+ 
+     // Input buffers will hold meta-data (ANativeWindowBuffer references).
+-    if (type != NULL) {
+-        *type = kMetadataBufferTypeANWBuffer;
+-    }
+     err = storeMetaDataInBuffers_l(portIndex, OMX_TRUE, type);
+     if (err != OK) {
+         return err;
+diff --git a/media/libstagefright/tests/Android.mk b/media/libstagefright/tests/Android.mk
+index d1c9d36..111e6c5 100644
+--- a/media/libstagefright/tests/Android.mk
++++ b/media/libstagefright/tests/Android.mk
+@@ -30,7 +30,6 @@ LOCAL_C_INCLUDES := \
+ 	frameworks/av/media/libstagefright \
+ 	frameworks/av/media/libstagefright/include \
+ 	$(TOP)/frameworks/native/include/media/openmax \
+-	$(TOP)/frameworks/native/include/media/hardware \
+ 
+ LOCAL_CFLAGS += -Werror -Wall
+ LOCAL_CLANG := true
+diff --git a/media/libstagefright/wifi-display/Android.mk b/media/libstagefright/wifi-display/Android.mk
+index ae4ac90..5bd6e5c 100644
+--- a/media/libstagefright/wifi-display/Android.mk
++++ b/media/libstagefright/wifi-display/Android.mk
+@@ -17,7 +17,6 @@ LOCAL_SRC_FILES:= \
+ LOCAL_C_INCLUDES:= \
+         $(TOP)/frameworks/av/media/libstagefright \
+         $(TOP)/frameworks/native/include/media/openmax \
+-        $(TOP)/frameworks/native/include/media/hardware \
+         $(TOP)/frameworks/av/media/libstagefright/mpeg2ts \
+ 
+ LOCAL_SHARED_LIBRARIES:= \
+diff --git a/media/libstagefright/wifi-display/source/PlaybackSession.cpp b/media/libstagefright/wifi-display/source/PlaybackSession.cpp
+index 3587cb9..3ecb52b 100644
+--- a/media/libstagefright/wifi-display/source/PlaybackSession.cpp
++++ b/media/libstagefright/wifi-display/source/PlaybackSession.cpp
+@@ -948,9 +948,8 @@ status_t WifiDisplaySource::PlaybackSession::addSource(
+ 
+     if (isVideo) {
+         format->setString("mime", MEDIA_MIMETYPE_VIDEO_AVC);
+-        format->setInt32(
+-                "android._input-metadata-buffer-type", kMetadataBufferTypeANWBuffer);
+-        format->setInt32("android._store-metadata-in-buffers-output", (mHDCP != NULL)
++        format->setInt32("store-metadata-in-buffers", true);
++        format->setInt32("store-metadata-in-buffers-output", (mHDCP != NULL)
+                 && (mHDCP->getCaps() & HDCPModule::HDCP_CAPS_ENCRYPT_NATIVE));
+         format->setInt32(
+                 "color-format", OMX_COLOR_FormatAndroidOpaque);
+-- 
+1.9.3 (Apple Git-50)
+

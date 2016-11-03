@@ -1,0 +1,43 @@
+From d6a16ee5ab64a49197848b28a8312d0567627b0c Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 28 Oct 2016 13:45:03 +0300
+Subject: [PATCH] disable ipmanager
+
+Change-Id: I4221a47d79bf9fa31d3b481838a32b4be9cf533c
+---
+ services/net/java/android/net/ip/IpManager.java | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/services/net/java/android/net/ip/IpManager.java b/services/net/java/android/net/ip/IpManager.java
+index d0ab606..980d398 100644
+--- a/services/net/java/android/net/ip/IpManager.java
++++ b/services/net/java/android/net/ip/IpManager.java
+@@ -325,7 +325,7 @@ public class IpManager extends StateMachine {
+ 
+         /* package */ boolean mEnableIPv4 = true;
+         /* package */ boolean mEnableIPv6 = true;
+-        /* package */ boolean mUsingIpReachabilityMonitor = true;
++        /* package */ boolean mUsingIpReachabilityMonitor = false;
+         /* package */ int mRequestedPreDhcpActionMs;
+         /* package */ StaticIpConfiguration mStaticIpConfig;
+         /* package */ ApfCapabilities mApfCapabilities;
+@@ -1075,7 +1075,7 @@ public class IpManager extends StateMachine {
+                     return;
+                 }
+             }
+-
++/*
+             if (mConfiguration.mUsingIpReachabilityMonitor) {
+                 mIpReachabilityMonitor = new IpReachabilityMonitor(
+                         mContext,
+@@ -1088,6 +1088,7 @@ public class IpManager extends StateMachine {
+                         },
+                         mAvoidBadWifiTracker);
+             }
++*/
+         }
+ 
+         @Override
+-- 
+1.9.3 (Apple Git-50)
+

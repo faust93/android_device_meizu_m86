@@ -136,6 +136,8 @@ enum fp_enroll_result {
 int fp_enroll_finger_img(struct fp_dev *dev, struct fp_print_data **print_data,
 	struct fp_img **img);
 
+void fp_enroll_reset(struct fp_dev *dev);
+
 /** \ingroup dev
  * Performs an enroll stage. See \ref enrolling for an explanation of enroll
  * stages. This function is just a shortcut to calling fp_enroll_finger_img()

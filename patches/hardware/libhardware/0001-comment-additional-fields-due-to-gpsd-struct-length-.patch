@@ -1,0 +1,30 @@
+From e3bc9a03fd92dfcfcac84ae12d5147225bf4c1ea Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 11 Oct 2016 16:19:06 +0300
+Subject: [PATCH] comment additional fields due to gpsd struct length checking
+ exception
+
+Change-Id: I86486115745d95deb7ecc32462b0b2b1db74404f
+---
+ include/hardware/gps.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/hardware/gps.h b/include/hardware/gps.h
+index acf601b..f6d9456 100644
+--- a/include/hardware/gps.h
++++ b/include/hardware/gps.h
+@@ -667,9 +667,9 @@ typedef struct {
+     /** Cell id in 2G. Utran Cell id in 3G. Cell Global Id EUTRA in LTE. */
+     uint32_t cid;
+     /** Tracking Area Code in LTE. */
+-    uint16_t tac;
++    //uint16_t tac;
+     /** Physical Cell id in LTE (not used in 2G and 3G) */
+-    uint16_t pcid;
++    //uint16_t pcid;
+ } AGpsRefLocationCellID;
+ 
+ typedef struct {
+-- 
+1.9.3 (Apple Git-50)
+

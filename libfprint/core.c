@@ -931,6 +931,17 @@ API_EXPORTED int fp_enroll_finger_img(struct fp_dev *dev,
 	return ret;
 }
 
+/* reset enroll stages */
+API_EXPORTED void fp_enroll_reset(struct fp_dev *dev)
+{
+	struct fp_driver *drv = dev->drv;
+	struct fp_img_dev *imgdev = dev->priv;
+
+	dev->__enroll_stage = -1;
+	imgdev->enroll_stage = 0;
+	imgdev->action = IMG_ACTION_NONE;
+}
+
 /** \ingroup dev
  * Performs a new scan and verify it against a previously enrolled print.
  * If the device is an imaging device, it can also return the image from

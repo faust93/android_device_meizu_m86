@@ -33,6 +33,11 @@
     extern int _ZN7android5Fence4waitEi(int);
     int _ZN7android5Fence4waitEj(unsigned int timeout);
 
+    extern ssize_t _ZN7android13SensorManager13getSensorListEPPKPKNS_6SensorE(void*, void*);
+
+    extern void _ZN7android13GraphicBufferC1EjjijNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE(
+                uint32_t inWidth, uint32_t inHeight, int inFormat, uint32_t inUsage, void **requestorName);
+
 //data exports we must provide for camera library to be happy
 
     /*
@@ -93,6 +98,14 @@ void _ZN7android13SensorManagerC1Ev(void *sensorMgr)
     _ZN7android8String16D1Ev(&string);
 }
 
+extern void _ZN7android13GraphicBufferC1Ejjij(uint32_t inWidth, uint32_t inHeight, int inFormat, uint32_t inUsage) {
+
+  void *string;
+  _ZN7android8String16C1EPKc(&string, "<unknown>");
+  _ZN7android13GraphicBufferC1EjjijNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE(
+      inWidth, inHeight, inFormat, inUsage, &string);
+}
+
 /*
  * FUNCTION: android::SensorManager::createEventQueue(void)
  * USE:      INTERPOSE: create an event queue to receive events
@@ -149,4 +162,8 @@ pid_t androidGetTid()
 
 extern void set_value() {
     ALOGI("set_value");
+}
+
+ssize_t _ZNK7android13SensorManager13getSensorListEPPKPKNS_6SensorE(void* thiz, void* list) {
+    return _ZN7android13SensorManager13getSensorListEPPKPKNS_6SensorE(thiz, list);
 }

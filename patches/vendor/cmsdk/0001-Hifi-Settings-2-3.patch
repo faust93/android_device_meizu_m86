@@ -1,0 +1,107 @@
+From 1b032330d1862e03c7a6ca0ae54f222b0e46ed5c Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sat, 15 Oct 2016 20:50:13 +0300
+Subject: [PATCH] Hifi Settings [2/3]
+
+Change-Id: Ib33589299d59860588f304bb0aa9fff809e3da89
+---
+ api/cm_current.txt                                 |  2 ++
+ host/migration/src/CMSettings.java                 | 13 ++++++++++++
+ sdk/src/java/cyanogenmod/providers/CMSettings.java | 23 ++++++++++++++++++++++
+ 3 files changed, 38 insertions(+)
+
+diff --git a/api/cm_current.txt b/api/cm_current.txt
+index 17e0d86..5bd6d40 100644
+--- a/api/cm_current.txt
++++ b/api/cm_current.txt
+@@ -1070,6 +1070,8 @@ package cyanogenmod.providers {
+     field public static final java.lang.String ASSIST_WAKE_SCREEN = "assist_wake_screen";
+     field public static final java.lang.String BACK_WAKE_SCREEN = "back_wake_screen";
+     field public static final java.lang.String BATTERY_LIGHT_ENABLED = "battery_light_enabled";
++    field public static final java.lang.String HIFI_ENABLE = "hifi_enable";
++    field public static final java.lang.String HIFI_MODE = "hifi_mode";
+     field public static final java.lang.String BATTERY_LIGHT_FULL_COLOR = "battery_light_full_color";
+     field public static final java.lang.String BATTERY_LIGHT_LOW_COLOR = "battery_light_low_color";
+     field public static final java.lang.String BATTERY_LIGHT_MEDIUM_COLOR = "battery_light_medium_color";
+diff --git a/host/migration/src/CMSettings.java b/host/migration/src/CMSettings.java
+index 98e3194..a4c869d 100644
+--- a/host/migration/src/CMSettings.java
++++ b/host/migration/src/CMSettings.java
+@@ -101,6 +101,17 @@ public final class CMSettings {
+         public static final String STATUS_BAR_SHOW_BATTERY_PERCENT = "status_bar_show_battery_percent";
+         // endregion
+ 
++         /**
++         * DAC Settings
++         * @hide
++         */
++        public static final String HIFI_ENABLE = "hifi_enable";
++         /**
++         * DAC Settings
++         * @hide
++         */
++        public static final String HIFI_MODE = "hifi_mode";
++
+         /**
+          * Whether the phone ringtone should be played in an increasing manner
+          * @hide
+@@ -669,6 +680,8 @@ public final class CMSettings {
+                 CMSettings.System.CAMERA_LAUNCH,
+                 CMSettings.System.STYLUS_ICON_ENABLED,
+                 CMSettings.System.SWAP_VOLUME_KEYS_ON_ROTATION,
++                CMSettings.System.HIFI_ENABLE,
++                CMSettings.System.HIFI_MODE,
+                 CMSettings.System.BATTERY_LIGHT_ENABLED,
+                 CMSettings.System.BATTERY_LIGHT_PULSE,
+                 CMSettings.System.BATTERY_LIGHT_LOW_COLOR,
+diff --git a/sdk/src/java/cyanogenmod/providers/CMSettings.java b/sdk/src/java/cyanogenmod/providers/CMSettings.java
+index 2868b3a..b25c301 100644
+--- a/sdk/src/java/cyanogenmod/providers/CMSettings.java
++++ b/sdk/src/java/cyanogenmod/providers/CMSettings.java
+@@ -1175,6 +1175,24 @@ public final class CMSettings {
+         public static final Validator SWAP_VOLUME_KEYS_ON_ROTATION_VALIDATOR =
+                 new InclusiveIntegerRangeValidator(0, 2);
+ 
++         /**
++         * DAC Settings
++         */
++        public static final String HIFI_ENABLE = "hifi_enable";
++
++        /** @hide */
++        public static final Validator HIFI_ENABLE_VALIDATOR =
++                new InclusiveIntegerRangeValidator(0, 1);
++
++         /**
++         * DAC Settings
++         */
++        public static final String HIFI_MODE = "hifi_mode";
++
++        /** @hide */
++        public static final Validator HIFI_MODE_VALIDATOR =
++                new InclusiveIntegerRangeValidator(0, 5);
++
+         /**
+          * Whether the battery light should be enabled (if hardware supports it)
+          * The value is boolean (1 or 0).
+@@ -1896,6 +1914,8 @@ public final class CMSettings {
+                 CMSettings.System.CAMERA_LAUNCH,
+                 CMSettings.System.STYLUS_ICON_ENABLED,
+                 CMSettings.System.SWAP_VOLUME_KEYS_ON_ROTATION,
++                CMSettings.System.HIFI_ENABLE,
++                CMSettings.System.HIFI_MODE,
+                 CMSettings.System.BATTERY_LIGHT_ENABLED,
+                 CMSettings.System.BATTERY_LIGHT_PULSE,
+                 CMSettings.System.BATTERY_LIGHT_LOW_COLOR,
+@@ -2127,6 +2147,9 @@ public final class CMSettings {
+                     DISPLAY_PICTURE_ADJUSTMENT_VALIDATOR);
+             VALIDATORS.put(__MAGICAL_TEST_PASSING_ENABLER,
+                     __MAGICAL_TEST_PASSING_ENABLER_VALIDATOR);
++            VALIDATORS.put(HIFI_ENABLE, HIFI_ENABLE_VALIDATOR);
++            VALIDATORS.put(HIFI_MODE, HIFI_MODE_VALIDATOR);
++
+         };
+         // endregion
+     }
+-- 
+1.9.3 (Apple Git-50)
+

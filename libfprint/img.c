@@ -371,11 +371,13 @@ int fpi_img_to_print_data(struct fp_img_dev *imgdev, struct fp_img *img,
 	item = fpi_print_data_item_new(sizeof(struct xyt_struct));
 	print->type = PRINT_DATA_NBIS_MINUTIAE;
 	minutiae_to_xyt(img->minutiae, img->width, img->height, item->data);
+
 	if(img->minutiae->num < MIN_ACCEPTABLE_MINUTIAE) {
 	    fp_dbg("not enough minutiae, %d/%d", img->minutiae->num, MIN_ACCEPTABLE_MINUTIAE);
 	    g_free(item);
 	    return -1;
 	}
+
 	print->prints = g_slist_prepend(print->prints, item);
 	fp_dbg("prints length: %d", g_slist_length(print->prints));
 	return 0;

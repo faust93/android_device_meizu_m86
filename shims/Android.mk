@@ -33,10 +33,12 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 include $(BUILD_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES := gps_shim.cpp
-LOCAL_SHARED_LIBRARIES := libbinder libgui libutils
-LOCAL_MODULE := libgps_shim
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-include $(BUILD_SHARED_LIBRARY)
+# Disabled for now. clang gives error on this so using gcc precombiled blob
+#include $(CLEAR_VARS)
+#LOCAL_CFLAGS := -Wno-return-type-c-linkage
+#LOCAL_SRC_FILES := gps_shim.cpp
+#LOCAL_SHARED_LIBRARIES := libbinder libgui libutils
+#LOCAL_MODULE := libgps_shim
+#LOCAL_MODULE_TAGS := optional
+#LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+#include $(BUILD_SHARED_LIBRARY)

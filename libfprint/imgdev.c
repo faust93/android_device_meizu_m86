@@ -173,7 +173,12 @@ int img_dev_enroll(struct fp_dev *dev, gboolean initial, int stage,
 	struct fp_img_dev *imgdev = dev->priv;
 	int r;
 
-	r = fpi_imgdev_capture(imgdev, 1, &img);
+	if(initial == TRUE) {
+		fp_dbg("First enroll. Allocating data.");
+		*ret = fpi_print_data_new(imgdev->dev);
+	}
+
+	r = fpi_imgdev_capture(imgdev, 0, &img);
 
 	/* If we got an image, standardize it and return it even if the scan
 	 * quality was too low for processing. */
@@ -183,11 +188,6 @@ int img_dev_enroll(struct fp_dev *dev, gboolean initial, int stage,
 		*_img = img;
 	if (r)
 		return r;
-	
-	if(!*ret && initial == TRUE) {
-		fp_dbg("First enroll. Allocating data.");
-		*ret = fpi_print_data_new(imgdev->dev);
-	}
 
 	r = fpi_img_to_print_data(imgdev, img, *ret);
 	if (r < 0)

@@ -27,7 +27,6 @@ on post-fs-data
     mkdir /data/misc/dhcp 0770 dhcp dhcp
     mkdir /data/misc/wifi 0770 wifi wifi
     mkdir /data/misc/wifi/sockets 0770 wifi wifi
-    chown dhcp system /data/misc/dhcp
 
     # for calibration data persistence
     mkdir /data/calibration
@@ -41,10 +40,10 @@ on post-fs-data
 
 #for GPS
     chown gps system /dev/ttySAC1
-    chmod 0600 /dev/ttySAC1
-    chown system system /sys/class/misc/gps/device/pwr
+    chmod 0660 /dev/ttySAC1
+    chown gps system /sys/class/misc/gps/device/pwr
     chmod 0770 /sys/class/misc/gps/device/pwr
-    mkdir /data/gps 0770 system system
+    mkdir /data/gps 0770 gps system
 
 on boot
     mount debugfs /sys/kernel/debug /sys/kernel/debug
@@ -329,19 +328,19 @@ on boot
     chmod 0660 /sys/class/meizu/tp/margin_control_test
 
     # Permission for dis effect
-    chmod 0660 /sys/devices/13930000.decon_fb/scr
+    chmod 0666 /sys/devices/13930000.decon_fb/scr
     chown system shell /sys/devices/13930000.decon_fb/scr
-    chmod 0660 /sys/devices/13930000.decon_fb/cont
+    chmod 0666 /sys/devices/13930000.decon_fb/cont
     chown system shell /sys/devices/13930000.decon_fb/cont
-    chmod 0660 /sys/devices/13930000.decon_fb/hue
+    chmod 0666 /sys/devices/13930000.decon_fb/hue
     chown system shell /sys/devices/13930000.decon_fb/hue
-    chmod 0660 /sys/devices/13930000.decon_fb/sat
+    chmod 0666 /sys/devices/13930000.decon_fb/sat
     chown system shell /sys/devices/13930000.decon_fb/sat
-    chmod 0440 /sys/devices/13930000.decon_fb/con_reg
+    chmod 0444 /sys/devices/13930000.decon_fb/con_reg
     chown system shell /sys/devices/13930000.decon_fb/con_reg
-    chmod 0660 /sys/devices/13930000.decon_fb/ctrl_reg
+    chmod 0666 /sys/devices/13930000.decon_fb/ctrl_reg
     chown system shell /sys/devices/13930000.decon_fb/ctrl_reg
-    chmod 0220 /sys/devices/13930000.decon_fb/bri
+    chmod 0222 /sys/devices/13930000.decon_fb/bri
     chown system shell /sys/devices/13930000.decon_fb/bri
 
     # files
@@ -590,6 +589,8 @@ on fs
 # Permission for DRM Key
     chmod 0644 /factory/wv.keys
 
+    start adbd
+
 # MobiCore startup
 service mobicore /system/bin/mcDriverDaemon -r /system/app/mcRegistry/020a0000000000000000000000000000.drbin -r /system/app/mcRegistry/FFFFFFFFD00000000000000000000016.tlbin -r /system/app/mcRegistry/04020000000000000000000000000000.tlbin -r /system/app/mcRegistry/07020000000000000000000000000000.tlbin
     user system
@@ -602,12 +603,12 @@ service mobicore /system/bin/mcDriverDaemon -r /system/app/mcRegistry/020a000000
 #    seclabel u:r:watchdogd:s0
 
 # BRCM GPS
-service gpsd /system/bin/gpsd /system/etc/gpsconfig.xml
-    class main
+service gpsd /system/bin/gpsd -c /system/etc/gpsconfig.xml
+    class late_start
     socket gps seqpacket 0660 gps system
     socket rilgps.socket seqpacket 0660 gps system
     user gps
-    group system inet sdcard_rw
+    group system wakelock sdcard_rw inet root radio wifi
 
 # for wifi related...
 #service p2p_supplicant /system/bin/wpa_supplicant \
@@ -630,6 +631,7 @@ service p2p_supplicant /system/bin/wpa_supplicant \
     class main
     socket wpa_wlan0 dgram 660 wifi wifi
     disabled
+    group system wakelock
     oneshot
 
 service wpa_supplicant /system/bin/wpa_supplicant \
@@ -643,16 +645,10 @@ service wpa_supplicant /system/bin/wpa_supplicant \
     class main
     socket wpa_wlan0 dgram 660 wifi wifi
     disabled
+    group system wakelock
     oneshot
 
 service wlan_write_otp system/bin/86_OTP.sh
-    class main
-    user root
-    group root
-    disabled
-    oneshot
-
-service modem_switch /system/bin/modem_switch.sh
     class main
     user root
     group root
@@ -665,48 +661,12 @@ service record_panic /system/bin/record_panic_msg
     user root
     group radio cache inet misc audio sdcard_rw log sdcard_r
     oneshot
-    
-service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
-    class main
-    disabled
-    oneshot
 
-service dhcpcd_bt-pan /system/bin/dhcpcd -ABKL
-    class main
-    disabled
-    oneshot
-
-service dhcpcd_p2p /system/bin/dhcpcd -aABKL
-    class main
-    disabled
-    oneshot
-
-service dhcpcd_eth0 /system/bin/dhcpcd -ABDKL
-    class main
-    disabled
-    oneshot
-
-service iprenew_wlan0 /system/bin/dhcpcd -n
-    class main
-    disabled
-    oneshot
-
-service iprenew_p2p /system/bin/dhcpcd -n
-    class main
-    disabled
-    oneshot
-
-service iprenew_eth0 /system/bin/dhcpcd -n
-    class main
-    disabled
-    oneshot
-# wifi related --
-
-service dis_effect /system/bin/dis_effect
-    class main
-    user system
-    group system
-    oneshot
+#service dis_effect /system/bin/dis_effect
+#    class main
+#    user system
+#    group system
+#    oneshot
 
  #ad reg op sock
 service ad_daemon /system/bin/ad_daemon
@@ -743,7 +703,7 @@ on property:sys.make_bakdir=1
     chown radio system /mnv
     mkdir /mnv/bak 0771 radio system
 
-on property:sys.rild_reset=1 
+on property:sys.rild_reset=1
     stop ril-daemon
     setprop sys.rild_reset 0
     start ril-daemon
@@ -819,9 +779,6 @@ on property:persist.radio.aplog=0
     #stop ro_log
     stop logkit
 #@}
-
-on property:sys.boot_completed=1
-    start modem_switch
 
 #FLYME:fanjun@SHELL.HapticFeedback.Feature {@
 on init

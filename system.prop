@@ -7,7 +7,15 @@ exynos.telephony.feature=true
 persist.radio.multisim.config=dsds
 persist.radio.apm_sim_not_pwdn=1
 ro.com.android.mobiledata=true
-ro.telephony.default_network=1,9
-#ro.telephony.ril.config=sim2gsmonly
 telephony.lteOnGsmDevice=1
 ro.ril.telephony.mqanelements=6
+ro.telephony.call_ring.delay=2000
+#
+ro.product.locale.region=CN
+ro.product.locale.language=zh
+#
+# Legacy omx decoder support
+media.stagefright.less-secure=true
+media.stagefright.legacyencoder=true
+#
+ro.sdcardfs.enable=true

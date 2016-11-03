@@ -1,0 +1,56 @@
+From b4764bc746fe5e1c09f7871af2756144bcc41b32 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 28 Oct 2016 22:11:57 +0300
+Subject: [PATCH] fix for missing _ZN7android13GraphicBufferC1Ejjij
+
+Change-Id: Id60cac3c734fb49bb3e411040a6d3360d9977550
+---
+ include/ui/GraphicBuffer.h |  4 ++++
+ libs/ui/GraphicBuffer.cpp  | 16 ++++++++++++++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/include/ui/GraphicBuffer.h b/include/ui/GraphicBuffer.h
+index 3e127a1..0376cb9 100644
+--- a/include/ui/GraphicBuffer.h
++++ b/include/ui/GraphicBuffer.h
+@@ -76,6 +76,10 @@ public:
+     GraphicBuffer(uint32_t inWidth, uint32_t inHeight, PixelFormat inFormat,
+             uint32_t inUsage, std::string requestorName = "<Unknown>");
+ 
++    // creates w * h buffer
++    GraphicBuffer(uint32_t inWidth, uint32_t inHeight, PixelFormat inFormat,
++            uint32_t inUsage);
++
+     // create a buffer from an existing handle
+     GraphicBuffer(uint32_t inWidth, uint32_t inHeight, PixelFormat inFormat,
+             uint32_t inUsage, uint32_t inStride, native_handle_t* inHandle,
+diff --git a/libs/ui/GraphicBuffer.cpp b/libs/ui/GraphicBuffer.cpp
+index df31d5f..bb1df7d 100644
+--- a/libs/ui/GraphicBuffer.cpp
++++ b/libs/ui/GraphicBuffer.cpp
+@@ -69,6 +69,22 @@ GraphicBuffer::GraphicBuffer(uint32_t inWidth, uint32_t inHeight,
+ }
+ 
+ GraphicBuffer::GraphicBuffer(uint32_t inWidth, uint32_t inHeight,
++        PixelFormat inFormat, uint32_t inUsage)
++    : BASE(), mOwner(ownData), mBufferMapper(GraphicBufferMapper::get()),
++      mInitCheck(NO_ERROR), mId(getUniqueId()), mGenerationNumber(0)
++{
++    width  =
++    height =
++    stride =
++    format =
++    usage  = 0;
++    handle = NULL;
++    std::string requestorName = "<unknown>";
++    mInitCheck = initSize(inWidth, inHeight, inFormat, inUsage,
++            std::move(requestorName));
++}
++
++GraphicBuffer::GraphicBuffer(uint32_t inWidth, uint32_t inHeight,
+         PixelFormat inFormat, uint32_t inUsage, uint32_t inStride,
+         native_handle_t* inHandle, bool keepOwnership)
+     : BASE(), mOwner(keepOwnership ? ownHandle : ownNone),
+-- 
+1.9.3 (Apple Git-50)
+

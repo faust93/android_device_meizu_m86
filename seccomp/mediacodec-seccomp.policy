@@ -1,0 +1,6 @@
+clock_gettime: 1
+connect: 1
+fcntl64: 1
+getdents64: 1
+socket: 1
+writev: 1

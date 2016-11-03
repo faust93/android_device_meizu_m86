@@ -1,0 +1,25 @@
+From 7fa9274aac4b499dca08700c52eeab22e6964d1c Mon Sep 17 00:00:00 2001
+From: Hamster Tian <haotia@gmail.com>
+Date: Sun, 2 Oct 2016 23:20:40 +0800
+Subject: [PATCH 3/4] Mark CameraService as media
+
+Change-Id: I34caa513a7d2e019002fafb0f7e8f89bcbf59c26
+---
+ services/camera/libcameraservice/CameraService.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/camera/libcameraservice/CameraService.cpp b/services/camera/libcameraservice/CameraService.cpp
+index e50bff9..602f27e 100644
+--- a/services/camera/libcameraservice/CameraService.cpp
++++ b/services/camera/libcameraservice/CameraService.cpp
+@@ -831,7 +831,7 @@ String8 CameraService::toString(std::set<userid_t> intSet) {
+ Status CameraService::initializeShimMetadata(int cameraId) {
+     int uid = getCallingUid();
+ 
+-    String16 internalPackageName("cameraserver");
++    String16 internalPackageName("media");
+     String8 id = String8::format("%d", cameraId);
+     Status ret = Status::ok();
+     sp<Client> tmp = nullptr;
+-- 
+2.1.4

@@ -1,0 +1,28 @@
+From 09dd10c49e0fcdec4ab05c9888f28a0cf5484069 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 11 Oct 2016 20:42:14 +0300
+Subject: [PATCH] disable some logging
+
+Change-Id: I7a2e3318f9213e89dc076fae0a89d357204b6b62
+---
+ services/audioflinger/Threads.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/services/audioflinger/Threads.cpp b/services/audioflinger/Threads.cpp
+index c7b6c07..e8822ec 100644
+--- a/services/audioflinger/Threads.cpp
++++ b/services/audioflinger/Threads.cpp
+@@ -3215,8 +3215,8 @@ bool AudioFlinger::PlaybackThread::threadLoop()
+                             if (diff > 0) {
+                                 // notify of throttle end on debug log
+                                 // but prevent spamming for bluetooth
+-                                ALOGD_IF(!audio_is_a2dp_out_device(outDevice()),
+-                                        "mixer(%p) throttle end: throttle time(%u)", this, diff);
++//                                ALOGD_IF(!audio_is_a2dp_out_device(outDevice()),
++//                                        "mixer(%p) throttle end: throttle time(%u)", this, diff);
+                                 mThreadThrottleEndMs = mThreadThrottleTimeMs;
+                             }
+                         }
+-- 
+1.9.3 (Apple Git-50)
+

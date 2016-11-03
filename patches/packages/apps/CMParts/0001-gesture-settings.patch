@@ -1,0 +1,48 @@
+From 6106b7acc5ab03b49b5fcac6c01e0966c6457304 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 12 Oct 2016 01:02:57 +0300
+Subject: [PATCH] gesture settings
+
+Change-Id: I94fb8392f5a56602f9d1cc760426a6a187c6633a
+---
+ res/values/strings.xml      | 3 +++
+ res/xml/button_settings.xml | 9 +++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 7b9ec25..bf06e50 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -214,6 +214,9 @@
+     <string name="disable_navkeys_title">Enable on-screen nav bar</string>
+     <string name="disable_navkeys_summary">Enable on-screen navigation bar and disable hardware buttons</string>
+ 
++    <!-- Gestures settings -->
++    <string name="gesture_settings_title">Screen and Sensor gestures</string>
++
+     <!-- Navigation Bar -->
+     <string name="navigation_bar_category">Navigation bar</string>
+     <string name="navigation_bar_title">Buttons and layout</string>
+diff --git a/res/xml/button_settings.xml b/res/xml/button_settings.xml
+index de9c062..ea519fd 100644
+--- a/res/xml/button_settings.xml
++++ b/res/xml/button_settings.xml
+@@ -24,6 +24,15 @@
+         android:summary="@string/disable_navkeys_summary"
+         android:defaultValue="false" />
+ 
++    <PreferenceScreen
++        android:key="device_gesture_settings"
++        android:title="@string/gesture_settings_title">
++        <intent 
++            android:action="com.cyanogenmod.action.LAUNCH_TOUCHSCREEN_GESTURE_SETTINGS"
++            android:targetPackage="com.cyanogenmod.settings.device"
++            android:targetClass="com.cyanogenmod.settings.device.TouchscreenGestureSettings" />
++    </PreferenceScreen>
++
+     <org.cyanogenmod.cmparts.input.ButtonBacklightBrightness
+         android:key="button_backlight"
+         android:title="@string/button_backlight_title"
+-- 
+1.9.3 (Apple Git-50)
+

@@ -5,6 +5,10 @@
 
 /dev/seiren                  u:object_r:seiren_device:s0
 
+/dev/i2c-7                   u:object_r:dac_device:s0
+
+/dev/fpc1020                 u:object_r:fingerprint_device:s0
+
 /dev/ttySAC3                 u:object_r:bluetooth_device:s0
 
 /dev/s5p-smem                u:object_r:secmem_device:s0
@@ -25,6 +29,9 @@
 /dev/ttySAC[0-9]*            u:object_r:gps_device:s0
 
 /dev/block/mmcblk0p[0-9]*    u:object_r:emmcblk_device:s0
+/dev/block/sda[0-9]*         u:object_r:emmcblk_device:s0
+/dev/block/sdb[0-9]*         u:object_r:emmcblk_device:s0
+/dev/block/sdc[0-9]*         u:object_r:emmcblk_device:s0
 
 /dev/rfkill                  u:object_r:rfkill_device:s0
 
@@ -42,7 +49,7 @@
 /efs/gyro_cal_data           u:object_r:sensor_efs_file:s0
 /efs/h2k.dat                 u:object_r:cpk_efs_file:s0
 /efs/imei(/.*)?              u:object_r:imei_efs_file:s0
-/efs/nv_data.bin(.*)         u:object_r:bin_nv_data_efs_file:s0
+/efs/nv_data/nv.*            u:object_r:bin_nv_data_efs_file:s0
 /efs/prov(/.*)?              u:object_r:prov_efs_file:s0
 /efs/prov_data(/.*)?         u:object_r:prov_efs_file:s0
 /efs/wifi(/.*)?              u:object_r:wifi_efs_file:s0
@@ -99,5 +106,14 @@
 /system/bin/sensorhubservice -- u:object_r:sensorhubservice_exec:s0
 /system/bin/wifiloader       -- u:object_r:wifiloader_exec:s0
 
-/system/bin/cbd              -- u:object_r:cpboot-daemon_exec:s0
+/system/bin/openimmvibed     -- u:object_r:openimmvibed_exec:s0
+/system/bin/record_panic_ms  -- u:object_r:record_panic_ms_exec:s0
+
+/sbin/cbd                    -- u:object_r:cpboot-daemon_exec:s0
 /system/bin/gpsd             -- u:object_r:gpsd_exec:s0
+
+/system/bin/rild_exynos      -- u:object_r:rild_exec:s0
+
+# libs
+/system/lib64/libfprint.so     -- u:object_r:fingerprintd_exec:s0
+/system/lib/libfprint.so       -- u:object_r:fingerprintd_exec:s0

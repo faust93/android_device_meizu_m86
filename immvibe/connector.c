@@ -47,9 +47,8 @@ int immvibe_conn_open(void)
 
 static int send_internal(int fd, const char *buf, size_t len)
 {
-	size_t remaining = len;
+	int remaining = len;
 
-	ALOGV("sending %u bytes to daemon", remaining);
 	while (remaining) {
 		ssize_t ret = send(fd, buf, remaining, 0);
 		if (ret < 0) {

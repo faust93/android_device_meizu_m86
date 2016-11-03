@@ -1,0 +1,8 @@
+#### record_panic_ms
+#
+type record_panic_ms, domain;
+type record_panic_ms_exec, exec_type, file_type;
+
+init_daemon_domain(record_panic_ms)
+
+allow record_panic_ms storage_file:lnk_file { write read };

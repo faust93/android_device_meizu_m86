@@ -1,0 +1,25 @@
+From 180e52c6843c3531b06ff9ae731b92663858121b Mon Sep 17 00:00:00 2001
+From: Hamster Tian <haotia@gmail.com>
+Date: Mon, 3 Oct 2016 11:53:47 +0800
+Subject: [PATCH 4/4] ACodec: Accept kMetadataBufferTypeCameraSource as buffer
+ type
+
+Change-Id: I205717b8160636369676fc28e7721737b5148543
+---
+ media/libstagefright/ACodec.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index eac5abb..4f9a8ae 100644
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -6019,6 +6019,7 @@ void ACodec::BaseState::onInputBufferFilled(const sp<AMessage> &msg) {
+ 
+                 status_t err2 = OK;
+                 switch (metaType) {
++                case kMetadataBufferTypeCameraSource:
+                 case kMetadataBufferTypeInvalid:
+                     break;
+ #ifndef OMX_ANDROID_COMPILE_AS_32BIT_ON_64BIT_PLATFORMS
+-- 
+2.1.4

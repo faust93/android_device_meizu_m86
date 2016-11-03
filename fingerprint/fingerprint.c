@@ -70,7 +70,7 @@ static int fingerprint_load_templates(struct fp_dev *fp_dev, char *db_path)
     struct fp_dscv_print **templates, *tpl;
     struct fp_print_data *fp_tpl_data = NULL;
 
-    if(fp_tpls != NULL && templates_enrolled > 0)
+    if(templates_enrolled > 0)
         fingerprint_free_templates();
 
     templates_enrolled = 0;
@@ -113,9 +113,8 @@ void *enroll_thread_loop()
     int r, status = 1;
 
     do {
-        sleep(1);
+        ALOGD("%s : Looking for Input", __func__);
         status = fp_enroll_finger(fp_dev, &enrolled_print);
-        ALOGD("%s : Got Input", __func__);
 
         switch(status) {
             case FP_ENROLL_FAIL:
@@ -186,6 +185,7 @@ void *enroll_thread_loop()
         pthread_mutex_unlock(&lock);
     } while ( status != FP_ENROLL_COMPLETE);
 
+    fp_enroll_reset(fp_dev);
     fp_print_data_free(enrolled_print);
 
     ALOGI("%s : finishing",__func__);
@@ -201,7 +201,7 @@ void *enroll_thread_loop()
 
 void *auth_thread_loop()
 {
-    ALOGD("%s", __func__);
+    ALOGD("%s tpls: %d auth_thr: %d", __func__, templates_enrolled, auth_thread_running);
     int match_idx = 0;
     int status = 1;
 
@@ -375,6 +375,12 @@ static int fingerprint_cancel(struct fingerprint_device __unused *dev)
     fp_dev_mode(fp_dev, 0);
 
     ALOGI("%s : -",__func__);
+
+    fingerprint_msg_t msg;
+    msg.type = FINGERPRINT_ERROR;
+    msg.data.error = FINGERPRINT_ERROR_CANCELED;
+    callback(&msg);
+
     return 0;
 }
 

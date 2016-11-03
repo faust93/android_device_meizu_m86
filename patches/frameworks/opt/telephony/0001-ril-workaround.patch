@@ -1,0 +1,54 @@
+From 863906133201efde32de2575c7fea603c5fc3a09 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 10 Oct 2016 16:24:29 +0300
+Subject: [PATCH] ril workaround
+
+Change-Id: I86757af628cd9442b302ee4d284553aafdd204f9
+---
+ src/java/com/android/internal/telephony/Phone.java        | 9 ++++++++-
+ src/java/com/android/internal/telephony/PhoneFactory.java | 2 ++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/Phone.java b/src/java/com/android/internal/telephony/Phone.java
+index dbea077..ac8a50d 100644
+--- a/src/java/com/android/internal/telephony/Phone.java
++++ b/src/java/com/android/internal/telephony/Phone.java
+@@ -234,6 +234,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
+     private int mCallRingContinueToken;
+     private int mCallRingDelay;
+     private boolean mIsVoiceCapable = true;
++    private boolean coldStart = true;
+ 
+     // Variable to cache the video capability. When RAT changes, we lose this info and are unable
+     // to recover from the state. We cache it and notify listeners when they register.
+@@ -1860,7 +1861,13 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
+                 + " rafFromType = " + rafFromType
+                 + " filteredType = " + filteredType);
+ 
+-        mCi.setPreferredNetworkType(filteredType, response);
++        String netstat = SystemProperties.get("gsm.network.type","Unknown,Unknown");
++        if ("Unknown,Unknown".equals(netstat) && coldStart) {
++                  coldStart = false;
++                  mCi.setPreferredNetworkType(1, response);
++          } else {
++                  mCi.setPreferredNetworkType(networkType, response);
++          }
+     }
+ 
+     /**
+diff --git a/src/java/com/android/internal/telephony/PhoneFactory.java b/src/java/com/android/internal/telephony/PhoneFactory.java
+index bf0e3fe..0048818 100644
+--- a/src/java/com/android/internal/telephony/PhoneFactory.java
++++ b/src/java/com/android/internal/telephony/PhoneFactory.java
+@@ -143,6 +143,8 @@ public class PhoneFactory {
+                     }
+                 }
+ 
++                preferredNetworkMode = 1;
++
+                 int cdmaSubscription = CdmaSubscriptionSourceManager.getDefault(context);
+                 Rlog.i(LOG_TAG, "Cdma Subscription set to " + cdmaSubscription);
+ 
+-- 
+1.9.3 (Apple Git-50)
+

@@ -43,10 +43,10 @@ static void *worker_thread_proc(void *arg)
 
 	while (1) {
 		ret = thread_queue_get(queue, NULL, &msg);
-
 		switch (msg.msgtype) {
 			case MSG_VIBRATE: {
-				int duration = (uintptr_t)msg.data;
+				int duration = (int)msg.data;
+				if(duration < 0) duration = 10;
 				uint8_t force = immvibe_api_get_force_userspace();
 				ALOGW("worker: vibrate(duration=%d, force=%d)", duration, force);
 
@@ -80,13 +80,13 @@ static void process_buf(const char *buf, int count __attribute__((unused)))
 
 	switch (buf[0]) {
 		case '+': {
-			int duration;
+                        ssize_t duration;
 			ret = sscanf(&buf[1], "%d$", &duration);
 			if (!ret) {
 				ALOGW("process_buf: malformed vibrate request");
 				return;
 			}
-			thread_queue_add(&work_queue, duration, MSG_VIBRATE);
+			thread_queue_add(&work_queue, (void *)duration, MSG_VIBRATE);
 			break;
 		}
 
@@ -175,7 +175,6 @@ static int process_client(int fd)
 
 	while (1) {
 		ssize_t count;
-
 		count = read(fd, buf, sizeof(buf));
 		if (count < 0) {
 			if (errno != EAGAIN) {

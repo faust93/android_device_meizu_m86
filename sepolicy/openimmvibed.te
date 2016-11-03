@@ -1,0 +1,9 @@
+#### openimmvibed
+#
+type openimmvibed, domain;
+type openimmvibed_exec, exec_type, file_type;
+
+init_daemon_domain(openimmvibed)
+
+allow openimmvibed device:sock_file create;
+allow openimmvibed property_socket:sock_file write;

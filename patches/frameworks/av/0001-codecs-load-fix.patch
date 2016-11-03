@@ -1,0 +1,26 @@
+From d310c2a5f1ac5defe4f3006c83bbebf9b11dd0d2 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 10 Oct 2016 16:25:25 +0300
+Subject: [PATCH] codecs load fix
+
+Change-Id: Ieec1e207b9dfc698bb450b3f94fc787a14a44fd1
+---
+ media/libmedia/MediaProfiles.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/media/libmedia/MediaProfiles.cpp b/media/libmedia/MediaProfiles.cpp
+index dd72c16..7aaaa39 100644
+--- a/media/libmedia/MediaProfiles.cpp
++++ b/media/libmedia/MediaProfiles.cpp
+@@ -274,7 +274,7 @@ MediaProfiles::createVideoEncoderCap(const char **atts)
+ 
+     const size_t nMappings = sizeof(sVideoEncoderNameMap)/sizeof(sVideoEncoderNameMap[0]);
+     const int codec = findTagForName(sVideoEncoderNameMap, nMappings, atts[1]);
+-    CHECK(codec != -1);
++//    CHECK(codec != -1);
+ 
+     MediaProfiles::VideoEncoderCap *cap =
+         new MediaProfiles::VideoEncoderCap(static_cast<video_encoder>(codec),
+-- 
+1.9.3 (Apple Git-50)
+

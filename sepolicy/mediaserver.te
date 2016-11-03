@@ -12,3 +12,10 @@ allow mediaserver efs_file:file r_file_perms;
 # Snap permissions
 allow mediaserver sensorservice_service:service_manager { find };
 allow mediaserver system_server:unix_stream_socket { read write };
+
+# /dev/i2c-7
+allow mediaserver dac_device:chr_file { read write ioctl open };
+
+# for 3rd party audio plugins
+# allow mediaserver unlabeled:file { read getattr open execute };
+
