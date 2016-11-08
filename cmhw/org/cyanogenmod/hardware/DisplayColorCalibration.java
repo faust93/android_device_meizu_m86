@@ -62,13 +62,21 @@ public class DisplayColorCalibration {
     }
 
     public static boolean setColors(String colors) {
+
         String r,g,b;
-//        Slog.e(TAG, "Colors: " + colors);
         String[] rgb = colors.split(" ");
-        r = String.format("%02x",Integer.parseInt(rgb[0]));
-        g = String.format("%02x",Integer.parseInt(rgb[1]));
-        b = String.format("%02x",Integer.parseInt(rgb[2]));
+
+        sCurColors[0] = Integer.parseInt(rgb[0]);
+        sCurColors[1] = Integer.parseInt(rgb[1]);
+        sCurColors[2] = Integer.parseInt(rgb[2]);
+
+        r = String.format("%02x",sCurColors[0]);
+        g = String.format("%02x",sCurColors[1]);
+        b = String.format("%02x",sCurColors[2]);
+
+//        Slog.e(TAG, "Colors: " + colors);
 //        Slog.e(TAG, "Colors RGB: " + r + g + b);
+
         FileUtils.writeLine(COLOR_FILE, "R " + r + "0000");
         FileUtils.writeLine(COLOR_FILE, "G " + "00" + g + "00");
         FileUtils.writeLine(COLOR_FILE, "B " + "0000" + b);
