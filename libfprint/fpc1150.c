@@ -35,6 +35,9 @@
 /* bozorth score matching threshold */
 #define BZ3_THRESHOLD 35
 
+/* amount of enroll stages for each template */
+#define ENROLL_STAGES 35
+
 /* raw sensor image 90ccw rotated */
 #define RAW_IMAGE_WIDTH		416
 #define RAW_IMAGE_HEIGTH	80
@@ -370,7 +373,7 @@ out:
 
 static gint dev_init(struct fp_img_dev *dev, unsigned long driver_data)
 {
-	dev->dev->nr_enroll_stages = 20;
+	dev->dev->nr_enroll_stages = ENROLL_STAGES;
 	return 0;
 }
 
