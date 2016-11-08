@@ -39,7 +39,7 @@ public class PictureAdjustment {
     private static final String SAT_FILE = "/sys/devices/13930000.decon_fb/sat";
     private static final String AD_FILE = "/sys/devices/13930000.decon_fb/ad";
 
-    private static HSIC hsic = new HSIC(0.0f, 0.0f, 0.0f, 255.0f, 0.0f);
+    private static HSIC hsic = new HSIC(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
     private static final int[] curColors = new int[] { 0, 0, 0, 0 };
 
@@ -91,7 +91,7 @@ public class PictureAdjustment {
         int h = (int)hsic.getHue();
         int s = (int)((byte)hsic.getSaturation() & 0x000000FF);
         int i = (int)hsic.getIntensity();
-        int c = (int)hsic.getContrast();
+        int c = 255 - (int)hsic.getContrast();
 
         String hue  = String.format("%x",h);
         String sat  = String.format("%x",s);
@@ -105,6 +105,11 @@ public class PictureAdjustment {
             FileUtils.writeLine(HUE_FILE, "R " + hue);
             FileUtils.writeLine(HUE_FILE, "G " + hue);
             FileUtils.writeLine(HUE_FILE, "B " + hue);
+
+            FileUtils.writeLine(HUE_FILE, "C " + hue);
+            FileUtils.writeLine(HUE_FILE, "M " + hue);
+            FileUtils.writeLine(HUE_FILE, "Y " + hue);
+
         }
         if(s != curColors[1]){
             curColors[1] = s;
