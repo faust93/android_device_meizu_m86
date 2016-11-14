@@ -42,9 +42,9 @@ public class DisplayModeControl {
     private static final String GAMMA_2 = "0,4,9,13,18,22,27,31,36,40,45,49,54,58,63,67,72,76,81,85,90,94,99,103,108,112,117,121,126,130,135,139,144,148,153,158,163,168,173,178,183,188,193,198,203,208,212,216,220,224,227,230,233,236,239,241,243,245,247,249,251,252,253,254,256,0,4,9,13,18,22,27,31,36,40,45,49,54,58,63,67,72,76,81,85,90,94,99,103,108,112,117,121,126,130,135,139,144,148,153,158,163,168,173,178,183,188,193,198,203,208,212,216,220,224,227,230,233,236,239,241,243,245,247,249,251,252,253,254,256,0,4,9,13,18,22,27,31,36,40,45,49,54,58,63,67,72,76,81,85,90,94,99,103,108,112,117,121,126,130,135,139,144,148,153,158,163,168,173,178,183,188,193,198,203,208,212,216,220,224,227,230,233,236,239,241,243,245,247,249,251,252,253,254,256,";
     private static final String GAMMA_3 = "0,2,3,5,6,8,10,12,14,16,18,21,24,27,30,33,37,41,46,50,55,61,66,72,78,84,91,98,104,111,118,125,132,139,146,152,159,166,172,178,184,190,196,201,206,211,215,219,222,226,229,232,234,237,239,241,243,245,247,248,250,251,253,254,255,0,2,3,5,6,8,10,12,14,16,18,21,24,27,30,33,37,41,46,50,55,61,66,72,78,84,91,98,104,111,118,125,132,139,146,152,159,166,172,178,184,190,196,201,206,211,215,219,222,226,229,232,234,237,239,241,243,245,247,248,250,251,253,254,255,0,2,3,5,6,8,10,12,14,16,18,21,24,27,30,33,37,41,46,50,55,61,66,72,78,84,91,98,104,111,118,125,132,139,146,152,159,166,172,178,184,190,196,201,206,211,215,219,222,226,229,232,234,237,239,241,243,245,247,248,250,251,253,254,255,";
 
-    private static int current_mode = 1;
+    private static int current_mode = 0;
 
-    private static final DisplayMode[] modes = new DisplayMode[3];
+    private static final DisplayMode[] modes = new DisplayMode[4];
 
     /*
      * All HAF classes should export this boolean.
@@ -52,9 +52,10 @@ public class DisplayModeControl {
      */
     public static boolean isSupported() {
 
-        modes[0] = new DisplayMode(0,"Low Gamma");
-        modes[1] = new DisplayMode(1,"Mid Gamma");
-        modes[2] = new DisplayMode(2,"High Saturated");
+        modes[0] = new DisplayMode(0,"Stock Gamma");
+        modes[1] = new DisplayMode(1,"Low Gamma");
+        modes[2] = new DisplayMode(2,"Mid Gamma");
+        modes[3] = new DisplayMode(3,"High Saturated");
 
         return true; 
     }
@@ -93,14 +94,21 @@ public class DisplayModeControl {
         String profile;
         current_mode = mode.id;
 
+        FileUtils.writeLine(DEFAULT_PATH, String.valueOf(current_mode));
+
+        if(current_mode == 0){
+            FileUtils.writeLine(CONT_FILE, "O 0");
+            return true;
+        }
+
         switch(current_mode) {
-            case 0:
+            case 1:
                 profile = GAMMA_1;
                 break;
-            case 1:
+            case 2:
                 profile = GAMMA_2;
                 break;
-            case 2:
+            case 3:
                 profile = GAMMA_3;
                 break;
             default:
@@ -108,7 +116,6 @@ public class DisplayModeControl {
                 break;
         }
 
-        FileUtils.writeLine(DEFAULT_PATH, String.valueOf(current_mode));
 
         FileUtils.writeLine(CONT_FILE, "O 1");
         FileUtils.writeLine(CONT_FILE, profile);
