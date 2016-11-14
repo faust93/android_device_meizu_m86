@@ -24,7 +24,7 @@
 #include <hardware/hardware.h>
 #include <hardware/fingerprint.h>
 #include <pthread.h>
-
+#include <endian.h>
 #include <stdlib.h>
 
 #include <stdbool.h>
@@ -33,11 +33,14 @@
 #include "fp_internal.h"
 
 #define MAX_TEMPLATES 5
+#define ENROLL_TIMEOUT 15
 
 int templates_enrolled = 0;
 unsigned char tpl_mask = 0;
 
 uint64_t challenge = 0;
+uint64_t auth_id = 12345;
+uint64_t operation = 0;
 bool auth_thread_running = false;
 
 pthread_t thread;
@@ -111,6 +114,7 @@ void *enroll_thread_loop()
     ALOGD("%s : print count is : %u", __func__, print_count);
 
     int r, status = 1;
+    int enroll_timeout = ENROLL_TIMEOUT;
 
     do {
         ALOGD("%s : Looking for Input", __func__);
@@ -153,11 +157,16 @@ void *enroll_thread_loop()
                 ALOGI("%s : Got print index : %d", __func__, print_index);
 
                 r = fp_print_data_save(enrolled_print, print_index, db_path);
-                if (r < 0)
+                if (r < 0) {
                     ALOGE("Data save failed, code %d\n", r);
-
-                uint32_t print_id = print_index; //fpc_get_print_id(print_index);
-                ALOGI("%s : Got print id : %lu", __func__,(unsigned long) print_id);
+                    fingerprint_msg_t msg;
+                    msg.type = FINGERPRINT_ERROR;
+                    msg.data.error = FINGERPRINT_ERROR_UNABLE_TO_PROCESS;
+                    callback(&msg);
+                    break;
+                }
+                uint32_t print_id = print_index;
+                ALOGI("%s : Got print id : %lu auth id: %lu", __func__,(unsigned long) print_id);
 
                 fingerprint_msg_t msg;
                 msg.type = FINGERPRINT_TEMPLATE_ENROLLING;
@@ -170,20 +179,22 @@ void *enroll_thread_loop()
 
                 fingerprint_load_templates(fp_dev, db_path);
 
-                // detach to prevent memory leak
-                pthread_detach(thread);
-
                 break;
             }
+        } else {
+                enroll_timeout--;
         }
 
         pthread_mutex_lock(&lock);
-        if (!auth_thread_running) {
+        if (!auth_thread_running || !enroll_timeout) {
             pthread_mutex_unlock(&lock);
             break;
         }
         pthread_mutex_unlock(&lock);
     } while ( status != FP_ENROLL_COMPLETE);
+
+    // detach to prevent memory leak
+    pthread_detach(thread);
 
     fp_enroll_reset(fp_dev);
     fp_print_data_free(enrolled_print);
@@ -230,12 +241,11 @@ void *auth_thread_loop()
                 ALOGI("%s : Got print id : %lu", __func__, print_id);
 
                 hw_auth_token_t hat = {0};
-                //fpc_get_hw_auth_obj(&hat, sizeof(hw_auth_token_t));
-                hat.version = 0;
-                hat.challenge = challenge;
+                hat.version = HW_AUTH_TOKEN_VERSION;
+                hat.challenge = operation;
                 hat.user_id = 0;
-                hat.authenticator_id = 1;    // secure authenticator ID
-                hat.authenticator_type = 1;  // hw_authenticator_type_t, in network order
+                hat.authenticator_id = auth_id;    // secure authenticator ID
+                hat.authenticator_type = htobe32(HW_AUTH_FINGERPRINT);  // hw_authenticator_type_t, in network order
                 hat.timestamp = time(NULL);           // in network order
                 hat.hmac[0] = 1;
 
@@ -291,7 +301,7 @@ static int fingerprint_close(hw_device_t *dev)
 
 static uint64_t fingerprint_pre_enroll(struct fingerprint_device __unused *dev)
 {
-    challenge = get_64bit_rand(); //fpc_load_auth_challange();
+    challenge = get_64bit_rand(); 
     ALOGI("%s : Challange is : %jd",__func__,challenge);
     return challenge;
 }
@@ -328,7 +338,10 @@ static int fingerprint_enroll(struct fingerprint_device __unused *dev,
     ALOGI("%s : hat->timestamp %lu",__func__,(unsigned long) hat->timestamp);
     ALOGI("%s : hat size %lu",__func__,(unsigned long) sizeof(hw_auth_token_t));
 
-    //fpc_verify_auth_challange((void*) hat, sizeof(hw_auth_token_t));
+    // from oppo 7r plus
+    if (hat->challenge != challenge && !(hat->authenticator_type & HW_AUTH_FINGERPRINT)) {
+            return -EPERM;
+    }
 
     pthread_mutex_lock(&lock);
     auth_thread_running = true;
@@ -346,7 +359,7 @@ static int fingerprint_enroll(struct fingerprint_device __unused *dev,
 
 static uint64_t fingerprint_get_auth_id(struct fingerprint_device __unused *dev)
 {
-    uint64_t id = 12345; //fpc_load_db_id();
+    uint64_t id = auth_id; //fpc_load_db_id();
     ALOGI("%s : ID : %jd",__func__,id );
     return id;
 }
@@ -436,13 +449,15 @@ static int fingerprint_enumerate(struct fingerprint_device *dev,
 }
 
 static int fingerprint_authenticate(struct fingerprint_device __unused *dev,
-                                    uint64_t __unused operation_id, __unused uint32_t gid)
+                                    uint64_t operation_id, __unused uint32_t gid)
 {
 
     if (auth_thread_running) {
         ALOGE("%s : Error, thread already running\n", __func__);
         return -1;
     }
+
+    operation = operation_id;
 
     ALOGD("%s set sensor to cap mode",__func__);
     fp_dev_mode(fp_dev, 1);
@@ -526,6 +541,9 @@ static int fingerprint_open(const hw_module_t* module, const char __unused *id,
     dev->authenticate = fingerprint_authenticate;
     dev->set_notify = set_notify_callback;
     dev->notify = NULL;
+
+    operation = 0;
+    challenge = get_64bit_rand();
 
     *device = (hw_device_t*) dev;
     return 0;
