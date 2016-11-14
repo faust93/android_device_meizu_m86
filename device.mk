@@ -265,6 +265,9 @@ PRODUCT_PACKAGES += \
     Camera2 \
     Gello
 
+PRODUCT_PACKAGES += \
+    MeizuDoze
+
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/dtb_cm:dtb_cm
 
