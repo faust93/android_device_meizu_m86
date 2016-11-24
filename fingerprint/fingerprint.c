@@ -216,8 +216,12 @@ void *auth_thread_loop()
     int match_idx = 0;
     int status = 1;
 
-    if(!templates_enrolled || auth_thread_running == false)
+    pthread_mutex_lock(&lock);
+    if(!templates_enrolled || auth_thread_running == false) {
+        pthread_mutex_unlock(&lock);
         goto out;
+    }
+    pthread_mutex_unlock(&lock);
 
     do {
         status = fp_identify_finger(fp_dev, fp_tpls, &match_idx);
@@ -293,6 +297,7 @@ out:
 
 static int fingerprint_close(hw_device_t *dev)
 {
+    ALOGD("%s +",__func__);
     fp_print_data_free(fp_data);
     fp_dev_close(fp_dev);
     fp_exit();
@@ -329,8 +334,6 @@ static int fingerprint_enroll(struct fingerprint_device __unused *dev,
         return -1;
     }
 
-    fp_dev_mode(fp_dev, 1);
-
     ALOGI("%s : hat->challange %lu",__func__,(unsigned long) hat->challenge);
     ALOGI("%s : hat->user_id %lu",__func__,(unsigned long) hat->user_id);
     ALOGI("%s : hat->authenticator_id %lu",__func__,(unsigned long) hat->authenticator_id);
@@ -352,6 +355,8 @@ static int fingerprint_enroll(struct fingerprint_device __unused *dev,
         auth_thread_running = false;
         return FINGERPRINT_ERROR;
     }
+
+    fp_dev_mode(fp_dev, 1);
 
     return 0;
 
@@ -378,14 +383,14 @@ static int fingerprint_cancel(struct fingerprint_device __unused *dev)
         return 0;
     }
 
+    fp_dev_mode(fp_dev, 0);
+
     pthread_mutex_lock(&lock);
     auth_thread_running = false;
     pthread_mutex_unlock(&lock);
 
     ALOGI("%s : join running thread",__func__);
     pthread_join(thread, NULL);
-
-    fp_dev_mode(fp_dev, 0);
 
     ALOGI("%s : -",__func__);
 
@@ -459,9 +464,6 @@ static int fingerprint_authenticate(struct fingerprint_device __unused *dev,
 
     operation = operation_id;
 
-    ALOGD("%s set sensor to cap mode",__func__);
-    fp_dev_mode(fp_dev, 1);
-
     pthread_mutex_lock(&lock);
     auth_thread_running = true;
     pthread_mutex_unlock(&lock);
@@ -471,6 +473,9 @@ static int fingerprint_authenticate(struct fingerprint_device __unused *dev,
         auth_thread_running = false;
         return FINGERPRINT_ERROR;
     }
+
+    ALOGD("%s set sensor to cap mode",__func__);
+    fp_dev_mode(fp_dev, 1);
 
     return 0;
 }
