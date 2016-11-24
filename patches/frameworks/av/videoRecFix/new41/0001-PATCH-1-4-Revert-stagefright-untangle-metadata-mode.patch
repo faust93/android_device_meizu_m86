@@ -1,10 +1,9 @@
-From eb984f3564a820bf389f459fa8e07f7b8d63676e Mon Sep 17 00:00:00 2001
+From 054191508916ff4c0e614637eabdfc65064e8fc5 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Thu, 27 Oct 2016 23:14:49 +0300
-Subject: [PATCH] [PATCH 1/4] Revert "stagefright: untangle metadata-mode
- handling"
+Date: Thu, 3 Nov 2016 16:01:14 +0300
+Subject: [PATCH] [PATCH 1/4] Revert stagefright: untangle metadata-mode
 
-Change-Id: I151edbb83aa5975875c2fd5ea019b61638d99b7d
+Change-Id: Ide05e4f04f3e6de220217c57d71856f8133fe8db
 ---
  cmds/stagefright/Android.mk                        |  6 +--
  include/media/IOMX.h                               |  7 ++-
@@ -15,14 +14,14 @@ Change-Id: I151edbb83aa5975875c2fd5ea019b61638d99b7d
  .../libmediaplayerservice/StagefrightRecorder.cpp  | 12 ++---
  media/libmediaplayerservice/StagefrightRecorder.h  |  4 +-
  media/libstagefright/ACodec.cpp                    | 57 +++++++++-------------
- media/libstagefright/CameraSource.cpp              | 14 ++----
+ media/libstagefright/CameraSource.cpp              | 16 ++----
  media/libstagefright/MediaCodecSource.cpp          |  4 ++
  media/libstagefright/SurfaceMediaSource.cpp        | 33 ++++++++-----
  media/libstagefright/omx/OMXNodeInstance.cpp       | 23 ++-------
  media/libstagefright/tests/Android.mk              |  1 -
  media/libstagefright/wifi-display/Android.mk       |  1 -
  .../wifi-display/source/PlaybackSession.cpp        |  5 +-
- 16 files changed, 79 insertions(+), 113 deletions(-)
+ 16 files changed, 79 insertions(+), 115 deletions(-)
 
 diff --git a/cmds/stagefright/Android.mk b/cmds/stagefright/Android.mk
 index 9e15a81..e5fbba0 100644
@@ -367,10 +366,10 @@ index e935d04..47f1e9c 100644
  
      if (err == OK) {
 diff --git a/media/libstagefright/CameraSource.cpp b/media/libstagefright/CameraSource.cpp
-index 68b258d..e1a637c 100644
+index d7798fa..e1a637c 100644
 --- a/media/libstagefright/CameraSource.cpp
 +++ b/media/libstagefright/CameraSource.cpp
-@@ -1272,19 +1272,13 @@ void CameraSource::processBufferQueueFrame(BufferItem& buffer) {
+@@ -1272,21 +1272,13 @@ void CameraSource::processBufferQueueFrame(BufferItem& buffer) {
      mFrameAvailableCondition.signal();
  }
  
@@ -382,8 +381,10 @@ index 68b258d..e1a637c 100644
      // Output buffers will contain metadata if camera sends us buffer in metadata mode or via
      // buffer queue.
 -    switch (mVideoBufferMode) {
+-#ifndef EXYNOS4_ENHANCEMENTS
 -        case hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA:
 -            return kMetadataBufferTypeNativeHandleSource;
+-#endif
 -        case hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE:
 -            return kMetadataBufferTypeANWBuffer;
 -        default:

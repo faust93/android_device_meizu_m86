@@ -1,9 +1,9 @@
-From dac96c6869f813e6ac7894304948821055bd6c8e Mon Sep 17 00:00:00 2001
+From f6008217a98ecd13ca99837e6b0044b9047c4c74 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Sat, 29 Oct 2016 18:44:27 +0300
-Subject: [PATCH] WakelockBlocker [2/2]
+Date: Mon, 21 Nov 2016 14:01:46 +0300
+Subject: [PATCH] WakeLockBlocker [2/2]
 
-Change-Id: I6345884f44f306e0dfa276d52c010f2d4d729d57
+Change-Id: I7d638075524931ec2afcc26db8a363dc3e6c7eb5
 ---
  AndroidManifest.xml                                |   2 +
  res/drawable-hdpi/ic_settings_wakelock_blocker.png | Bin 0 -> 4082 bytes
@@ -24,10 +24,10 @@ Change-Id: I6345884f44f306e0dfa276d52c010f2d4d729d57
  create mode 100644 src/com/android/settings/WakeLockBlocker.java
 
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 79227fa..7273596 100644
+index e821456..e905fc6 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -3295,5 +3295,7 @@
+@@ -3293,5 +3293,7 @@
              </intent-filter>
          </activity>
  
@@ -393,13 +393,13 @@ index 0000000..85e8022
 +
 +</LinearLayout>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 1e510d2..70c623e 100644
+index 384076e..16545a8 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -327,4 +327,15 @@
-     <string name="increasing_ring_volume_option_title">Increasing ring volume</string>
-     <string name="increasing_ring_min_volume_title">Start volume</string>
-     <string name="increasing_ring_ramp_up_time_title">Ramp-up time</string>
+@@ -372,4 +372,15 @@
+ 
+     <!-- CM Legal -->
+     <string name="cmlicense_title">CyanogenMod legal</string>
 +
 +    <!-- Wakelock blocker -->
 +    <string name="wakelock_blocker">Wakelock blocker</string>
@@ -413,10 +413,10 @@ index 1e510d2..70c623e 100644
 +
  </resources>
 diff --git a/res/xml/development_prefs.xml b/res/xml/development_prefs.xml
-index b5850db..d3ac39f 100644
+index 955861e..a795264 100644
 --- a/res/xml/development_prefs.xml
 +++ b/res/xml/development_prefs.xml
-@@ -45,6 +45,11 @@
+@@ -46,6 +46,11 @@
                  android:targetClass="com.android.development.Development" />
      </PreferenceScreen>
  
@@ -429,7 +429,7 @@ index b5850db..d3ac39f 100644
              android:key="bugreport"
              android:title="@*android:string/bugreport_title"
 diff --git a/src/com/android/settings/SettingsActivity.java b/src/com/android/settings/SettingsActivity.java
-index 313e7c0..34ae6c8 100644
+index 674da55..2df4580 100644
 --- a/src/com/android/settings/SettingsActivity.java
 +++ b/src/com/android/settings/SettingsActivity.java
 @@ -375,6 +375,7 @@ public class SettingsActivity extends SettingsDrawerActivity

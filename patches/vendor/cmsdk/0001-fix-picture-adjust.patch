@@ -1,0 +1,26 @@
+From c681942daf59b0c74ce62a81e4756f0cc58184d3 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 3 Nov 2016 15:20:35 +0300
+Subject: [PATCH] fix picture adjust
+
+Change-Id: I0aa74af35cd3050b78b0ef7c7b3226534007dbdd
+---
+ .../main/java/org/cyanogenmod/platform/internal/CMHardwareService.java  | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cm/lib/main/java/org/cyanogenmod/platform/internal/CMHardwareService.java b/cm/lib/main/java/org/cyanogenmod/platform/internal/CMHardwareService.java
+index bd9071b..431020f 100644
+--- a/cm/lib/main/java/org/cyanogenmod/platform/internal/CMHardwareService.java
++++ b/cm/lib/main/java/org/cyanogenmod/platform/internal/CMHardwareService.java
+@@ -855,7 +855,7 @@ public class CMHardwareService extends CMSystemService implements ThermalUpdateC
+         public float[] getPictureAdjustmentRanges() {
+             mContext.enforceCallingOrSelfPermission(
+                     cyanogenmod.platform.Manifest.permission.HARDWARE_ABSTRACTION_ACCESS, null);
+-            if (isSupported(CMHardwareManager.FEATURE_COLOR_BALANCE)) {
++            if (isSupported(CMHardwareManager.FEATURE_PICTURE_ADJUSTMENT)) {
+                 final List<Range<Float>> r = mCmHwImpl.getPictureAdjustmentRanges();
+                 return new float[] {
+                         r.get(0).getLower(), r.get(0).getUpper(),
+-- 
+1.9.3 (Apple Git-50)
+

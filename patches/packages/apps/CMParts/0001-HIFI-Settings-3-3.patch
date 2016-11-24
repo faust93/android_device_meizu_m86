@@ -1,27 +1,26 @@
-From ccd3313799fc84c589d140895bb2622f9306767e Mon Sep 17 00:00:00 2001
+From a535d5ea23264ea4761e38b52d7a96eb69b53e84 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Fri, 28 Oct 2016 14:30:28 +0300
-Subject: [PATCH] Hifi settings [3/3]
+Date: Tue, 15 Nov 2016 12:15:44 +0300
+Subject: [PATCH] HIFI Settings [3/3]
 
-Change-Id: I47c1f0aeae1dc75aba7f2223d22e415693e6c495
+Change-Id: If867bfba2d761e4fd8e4351f29f5aca11ed8c949
 ---
- res/values/strings.xml                             |  13 +
+ res/values/strings.xml                             |  12 +
  res/xml/hifi.xml                                   |  66 +++++
  res/xml/parts_catalog.xml                          |   5 +
  .../cmparts/meizu/HifiSoundSettings.java           | 271 +++++++++++++++++++++
- 4 files changed, 355 insertions(+)
+ 4 files changed, 354 insertions(+)
  create mode 100644 res/xml/hifi.xml
  create mode 100644 src/org/cyanogenmod/cmparts/meizu/HifiSoundSettings.java
 
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 3f8fdb4..c06a427 100644
+index 4624ec6..47e1ea4 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -561,4 +561,17 @@
-     <string name="expanded_desktop_style_hide_navigation">Hide navigation bar</string>
-     <string name="expanded_desktop_style_hide_both">Hide both</string>
-     <string name="expanded_desktop_nothing_to_show_text">Turn the switch off to customize your expanded desktop on a per-app basis</string>
-+
+@@ -532,6 +532,18 @@
+     <string name="status_bar_show_weather_title">Show weather</string>
+     <string name="status_bar_show_weather_summary">Display the current temperature on the status bar</string>
+ 
 +    <!-- Title and summary for HiFi settings -->
 +    <string name="hifi_sound_title">Hi-Fi settings</string>
 +    <string name="hifi_enabled">Hifi sound enabled</string>
@@ -34,7 +33,9 @@ index 3f8fdb4..c06a427 100644
 +    <string name="hifi_gain_high_title">High Gain</string>
 +    <string name="hifi_gain_line_title">LineOut</string>
 +
- </resources>
+     <!-- Power: Performance profiles -->
+     <string name="perf_profile_settings_title">Battery saver and performance</string>
+     <string name="perf_profile_settings_summary">Adjust power saving features and device performance</string>
 diff --git a/res/xml/hifi.xml b/res/xml/hifi.xml
 new file mode 100644
 index 0000000..0816ad2
@@ -108,19 +109,21 @@ index 0000000..0816ad2
 +
 +</PreferenceScreen>
 diff --git a/res/xml/parts_catalog.xml b/res/xml/parts_catalog.xml
-index 07329d9..12eea66 100644
+index cb58efd..4d6bf9e 100644
 --- a/res/xml/parts_catalog.xml
 +++ b/res/xml/parts_catalog.xml
-@@ -105,4 +105,9 @@
-           android:fragment="org.cyanogenmod.cmparts.applications.ExpandedDesktopSettings"
-           cm:xmlRes="@xml/expanded_desktop_prefs" />
+@@ -93,6 +93,11 @@
+           android:fragment="org.cyanogenmod.cmparts.weather.WeatherServiceSettings"
+           cm:xmlRes="@xml/weather_settings" />
  
 +    <part android:key="hifi"
 +          android:title="@string/hifi_sound_settings"
 +          android:fragment="org.cyanogenmod.cmparts.meizu.HifiSoundSettings"
 +          cm:xmlRes="@xml/hifi" />
 +
- </parts-catalog>
+     <part android:key="perf_profile_settings"
+           android:title="@string/perf_profile_settings_title"
+           android:summary="@string/perf_profile_settings_summary"
 diff --git a/src/org/cyanogenmod/cmparts/meizu/HifiSoundSettings.java b/src/org/cyanogenmod/cmparts/meizu/HifiSoundSettings.java
 new file mode 100644
 index 0000000..87fcef9

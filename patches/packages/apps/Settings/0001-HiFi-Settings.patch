@@ -1,20 +1,20 @@
-From 3a1b9d64f42a8f432bbb57450743f29f8fb33062 Mon Sep 17 00:00:00 2001
+From b6b140900fd3d558a53bc596c6c07557e70b1826 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Mon, 17 Oct 2016 12:52:20 +0300
-Subject: [PATCH] HIFI settings
+Date: Mon, 21 Nov 2016 13:32:09 +0300
+Subject: [PATCH] HiFi Settings
 
-Change-Id: I517a2d56f7168d8e361c1b4136807aed3b9c85b2
+Change-Id: I4ea2b9a20bea07d39b9761c2df00b0c3ba661d69
 ---
  res/xml/sound_settings.xml | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/res/xml/sound_settings.xml b/res/xml/sound_settings.xml
-index 5e978f6..6153b53 100644
+index 9ab8898..74ba1ce 100644
 --- a/res/xml/sound_settings.xml
 +++ b/res/xml/sound_settings.xml
-@@ -90,6 +90,9 @@
-                         android:targetClass="com.android.cellbroadcastreceiver.CellBroadcastSettings" />
-         </com.android.settingslib.RestrictedPreference>
+@@ -91,6 +91,9 @@
+                 android:persistent="false"
+                 android:ringtoneType="alarm" />
  
 +        <org.cyanogenmod.internal.cmparts.CMPartsPreference
 +                android:key="hifi" />
