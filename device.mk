@@ -91,7 +91,8 @@ PRODUCT_PACKAGES += \
     tinymix
 
 PRODUCT_PACKAGES += \
-    libstlport
+    libstlport \
+    libprotobuf-cpp-full
 
 # ril
 PRODUCT_PACKAGES += \
