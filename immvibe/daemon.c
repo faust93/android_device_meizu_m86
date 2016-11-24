@@ -286,12 +286,12 @@ int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 						break;
 					}
 
-					ret = set_nonblock(infd);
-					if (ret < 0) {
-						ALOGW("set_nonblock errno=%d, dropping connection", ret);
-						close(infd);
-						break;
-					}
+//					ret = set_nonblock(infd);
+//					if (ret < 0) {
+//						ALOGW("set_nonblock errno=%d, dropping connection", ret);
+//						close(infd);
+//						break;
+//					}
 
 					/*
 					 * there may be very early data filled in, if not processed
