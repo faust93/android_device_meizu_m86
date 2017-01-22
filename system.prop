@@ -7,9 +7,12 @@ exynos.telephony.feature=true
 persist.radio.multisim.config=dsds
 persist.radio.apm_sim_not_pwdn=1
 ro.com.android.mobiledata=true
+ro.telephony.default_network=9
 telephony.lteOnGsmDevice=1
 ro.ril.telephony.mqanelements=6
 ro.telephony.call_ring.delay=2000
+ro.telephony.ril.config=setPrefNwTypeOnUnsolConnected,simactivation
+#sim2gsmonly
 #
 ro.product.locale.region=CN
 ro.product.locale.language=zh
@@ -19,3 +22,13 @@ media.stagefright.less-secure=true
 media.stagefright.legacyencoder=true
 #
 ro.sdcardfs.enable=true
+#
+# Google Assistant
+ro.opa.eligible_device=true
+
+persist.sys.ui.hw=true
+#debug.hwc.force_gpu=0
+#debug.hwc.winupdate=1
+#debug.hwui.render_dirty_regions=true
+ro.hwui.disable_asset_atlas=true
+persist.sys.memopt.switch=1

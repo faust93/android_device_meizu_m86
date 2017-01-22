@@ -16,9 +16,6 @@
 
 $(call inherit-product, device/meizu/m86/full_m86.mk)
 
-# Enhanced NFC
-$(call inherit-product, vendor/cm/config/nfc_enhanced.mk)
-
 # Inherit common CM phone.
 $(call inherit-product, vendor/cm/config/common_full_phone.mk)
 

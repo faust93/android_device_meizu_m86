@@ -267,7 +267,8 @@ PRODUCT_PACKAGES += \
     Gello
 
 PRODUCT_PACKAGES += \
-    MeizuDoze
+    MeizuDoze \
+    masquerade
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/dtb_cm:dtb_cm
