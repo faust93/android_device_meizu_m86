@@ -1,4 +1,3 @@
-
 /system		ext4	/dev/block/platform/15570000.ufs/by-name/system         flags=display="System"
 /data		ext4	/dev/block/platform/15570000.ufs/by-name/userdata
 /cache		ext4	/dev/block/platform/15570000.ufs/by-name/cache          flags=display="Cache";backup=1
