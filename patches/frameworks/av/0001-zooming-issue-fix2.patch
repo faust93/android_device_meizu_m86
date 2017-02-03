@@ -1,0 +1,48 @@
+From d87efdf23eff7b583b92ea7326b1b59fff8fd7ef Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 18 Dec 2016 14:48:41 +0300
+Subject: [PATCH] zooming issue fix2
+
+Change-Id: Id40fbc14d8a96d27f17ec84cb646eef3bab49ce9
+---
+ media/libstagefright/ACodec.cpp | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index 41004f4..41bc320 100644
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -5131,10 +5131,28 @@ status_t ACodec::getPortFormat(OMX_U32 portIndex, sp<AMessage> &notify) {
+                         }
+ 
+                         if(mUsingNativeWindow != 0){
+-                            rect.nWidth = 1920;
+-                            rect.nHeight = 1080;
++                            switch(rect.nWidth){
++                                case 256:
++                                case 426:
++                                case 640:
++                                case 854:
++                                case 1280:
++                                case 1920: {
++                                    switch(rect.nHeight){
++                                        case 144:
++                                        case 240:
++                                        case 480:
++                                        case 720:
++                                        case 1080:
++                                            rect.nWidth = 1920;
++                                            rect.nHeight = 1080;
++                                    }
++                                }
++                            }
+                         }
+ 
++//                        ALOGE("KEK (%d, %d) %d",rect.nWidth,rect.nHeight,mUsingNativeWindow);
++
+                         notify->setRect(
+                                 "crop",
+                                 rect.nLeft,
+-- 
+1.9.3 (Apple Git-50)
+

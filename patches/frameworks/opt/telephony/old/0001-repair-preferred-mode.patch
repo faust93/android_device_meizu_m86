@@ -1,0 +1,42 @@
+From 8cf39f39ec699afcbfcd3c14d59e5cb61ffe0683 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 10 Jan 2017 21:02:25 +0300
+Subject: [PATCH] repair preferred mode
+
+Change-Id: I84592ec0cfe8751239332f9c179c663b49639ed5
+---
+ .../android/internal/telephony/SubscriptionInfoUpdater.java   | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/src/java/com/android/internal/telephony/SubscriptionInfoUpdater.java b/src/java/com/android/internal/telephony/SubscriptionInfoUpdater.java
+index 233ee65..7a56358 100644
+--- a/src/java/com/android/internal/telephony/SubscriptionInfoUpdater.java
++++ b/src/java/com/android/internal/telephony/SubscriptionInfoUpdater.java
+@@ -541,12 +541,6 @@ public class SubscriptionInfoUpdater extends Handler {
+             }
+         }
+ 
+-        // Get users NW type, let it override if its not the default NW mode (-1)
+-        int userNwType = SubscriptionController.getInstance().getUserNwMode(subId);
+-        if (userNwType != SubscriptionManager.DEFAULT_NW_MODE && userNwType != networkType) {
+-            networkType = userNwType;
+-        }
+-
+         if (needsSim2gsmOnly()) {
+             int networkType2 = Phone.NT_MODE_GSM_ONLY; // Hardcoded due to modem limitation
+             int slotId1 = SubscriptionManager.DEFAULT_SIM_SLOT_INDEX;
+@@ -570,9 +564,8 @@ public class SubscriptionInfoUpdater extends Handler {
+                             + networkType2 + ", slotId2: " + slotId2);
+                 }
+             }
+-            Message continuation = obtainMessage(EVENT_SET_PREFERRED_NW_MODE,
+-                    new SetPreferredNwModeMessage(slotId1, subId1, networkType));
+-            setPreferredNwModeForSlot(slotId2, subId2, networkType2, continuation);
++            setPreferredNwModeForSlot(slotId1, subId1, networkType, null);
++            setPreferredNwModeForSlot(slotId2, subId2, networkType2, null);
+         } else {
+             // Set the modem network mode
+             setPreferredNwModeForSlot(slotId, subId, networkType, null);
+-- 
+1.9.3 (Apple Git-50)
+

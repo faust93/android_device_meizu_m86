@@ -1,0 +1,115 @@
+From 7b59d49f79f7d9dd9aee94d660af66f01e19123a Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 20:58:24 +0300
+Subject: [PATCH] WakelockBlocker fix
+
+Change-Id: I5140a8ec1b880d5f315bc5183c2302f5b5369ca8
+---
+ .../android/server/power/PowerManagerService.java  | 53 ++++++++++++----------
+ 1 file changed, 28 insertions(+), 25 deletions(-)
+
+diff --git a/services/core/java/com/android/server/power/PowerManagerService.java b/services/core/java/com/android/server/power/PowerManagerService.java
+index 28e4c2c..8f1ea86 100644
+--- a/services/core/java/com/android/server/power/PowerManagerService.java
++++ b/services/core/java/com/android/server/power/PowerManagerService.java
+@@ -1184,16 +1184,16 @@ public final class PowerManagerService extends SystemService
+     }
+ 
+     protected void notifyWakeLockAcquiredLocked(WakeLock wakeLock) {
+-        if (mSystemReady) {
+-            if (!wakeLock.isBlocked()){
+-                mNotifier.onWakeLockAcquired(wakeLock.mFlags, wakeLock.mTag, wakeLock.mPackageName,
+-                        wakeLock.mOwnerUid, wakeLock.mOwnerPid, wakeLock.mWorkSource,
+-                        wakeLock.mHistoryTag);
+-                restartNofifyLongTimerLocked(wakeLock);
+-            }
++     if (mSystemReady && !wakeLock.mDisabled) {
++        if (!wakeLock.isBlocked()) {
++            wakeLock.mNotifiedAcquired = true;
++            mNotifier.onWakeLockAcquired(wakeLock.mFlags, wakeLock.mTag, wakeLock.mPackageName,
++                    wakeLock.mOwnerUid, wakeLock.mOwnerPid, wakeLock.mWorkSource,
++                    wakeLock.mHistoryTag);
++            restartNofifyLongTimerLocked(wakeLock);
+         }
++      }
+     }
+-
+     private void enqueueNotifyLongMsgLocked(long time) {
+         mNotifyLongScheduled = time;
+         Message msg = mHandler.obtainMessage(MSG_CHECK_FOR_LONG_WAKELOCKS);
+@@ -1242,12 +1242,13 @@ public final class PowerManagerService extends SystemService
+ 
+     protected void notifyWakeLockReleasedLocked(WakeLock wakeLock) {
+         if (mSystemReady) {
+-            if (!wakeLock.isBlocked()){
+-                wakeLock.mAcquireTime = 0;
+-                mNotifier.onWakeLockReleased(wakeLock.mFlags, wakeLock.mTag,
+-                        wakeLock.mPackageName, wakeLock.mOwnerUid, wakeLock.mOwnerPid,
+-                        wakeLock.mWorkSource, wakeLock.mHistoryTag);
+-                notifyWakeLockLongFinishedLocked(wakeLock);
++            if(!wakeLock.isBlocked() && wakeLock.mNotifiedAcquired) {
++            wakeLock.mNotifiedAcquired = false;
++            wakeLock.mAcquireTime = 0;
++            mNotifier.onWakeLockReleased(wakeLock.mFlags, wakeLock.mTag,
++                    wakeLock.mPackageName, wakeLock.mOwnerUid, wakeLock.mOwnerPid,
++                    wakeLock.mWorkSource, wakeLock.mHistoryTag);
++            notifyWakeLockLongFinishedLocked(wakeLock);
+             }
+         }
+     }
+@@ -1749,7 +1750,11 @@ public final class PowerManagerService extends SystemService
+                         if (wakeLock.isBlocked()){
+                             continue;
+                         }
+-                        if (!wakeLock.mDisabled) {
++                        if (DEBUG_SPEW) {
++                            Slog.d(TAG, "updateWakeLockSummaryLocked: PARTIAL_WAKE_LOCK tag="
++                                    + wakeLock.mTag);
++                            }
++                        if (!wakeLock.mDisabled && !wakeLock.isBlocked()) {
+                             // We only respect this if the wake lock is not disabled.
+                             mWakeLockSummary |= WAKE_LOCK_CPU;
+                         }
+@@ -1999,13 +2004,11 @@ public final class PowerManagerService extends SystemService
+ 
+     private int getScreenOffTimeoutLocked(int sleepTimeout) {
+         int timeout = mScreenOffTimeoutSetting;
+-        if (timeout != mMaximumScreenOffTimeoutFromDeviceAdmin) {
+-            if (isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked()) {
+-                timeout = Math.min(timeout, mMaximumScreenOffTimeoutFromDeviceAdmin);
+-            }
+-            if (mUserActivityTimeoutOverrideFromWindowManager >= 0) {
+-                timeout = (int)Math.min(timeout, mUserActivityTimeoutOverrideFromWindowManager);
+-            }
++        if (isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked()) {
++            timeout = Math.min(timeout, mMaximumScreenOffTimeoutFromDeviceAdmin);
++        }
++        if (mUserActivityTimeoutOverrideFromWindowManager >= 0) {
++            timeout = (int)Math.min(timeout, mUserActivityTimeoutOverrideFromWindowManager);
+         }
+         if (sleepTimeout >= 0) {
+             timeout = Math.min(timeout, sleepTimeout);
+@@ -4079,7 +4082,7 @@ public final class PowerManagerService extends SystemService
+                 String wakeLockTag = nextWakeLock.next();
+                 buffer.append(wakeLockTag + "|");
+             }
+-            if(buffer.length()>0){
++            if (buffer.length() > 0) {
+                 buffer.deleteCharAt(buffer.length() - 1);
+             }
+             return buffer.toString();
+@@ -4089,9 +4092,9 @@ public final class PowerManagerService extends SystemService
+     private void setBlockedWakeLocks(String wakeLockTagsString) {
+         mBlockedWakeLocks = new HashSet<String>();
+ 
+-        if (wakeLockTagsString!=null && wakeLockTagsString.length()!=0){
++        if (wakeLockTagsString != null && wakeLockTagsString.length() != 0) {
+             String[] parts = wakeLockTagsString.split("\\|");
+-            for(int i = 0; i < parts.length; i++){
++            for (int i = 0; i < parts.length; i++) {
+                 mBlockedWakeLocks.add(parts[i]);
+             }
+         }
+-- 
+1.9.3 (Apple Git-50)
+

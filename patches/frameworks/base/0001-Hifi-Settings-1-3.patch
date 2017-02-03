@@ -1,27 +1,18 @@
-From a1b63b28bd0446fc42426f69feb5a56a17c4e82e Mon Sep 17 00:00:00 2001
+From a7b7e5d76391a19f434e3bd9307b591fb5af7e7e Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Sat, 15 Oct 2016 20:51:48 +0300
+Date: Sat, 26 Nov 2016 12:23:25 +0300
 Subject: [PATCH] Hifi Settings [1/3]
 
-Change-Id: I756d285753115da50f29b1b88d19e4d16a3f1360
+Change-Id: I142177dc72c3aad8ec92ee6362ddeb2a49cbd241
 ---
- .../java/com/android/server/audio/AudioService.java    | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ .../core/java/com/android/server/audio/AudioService.java | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 diff --git a/services/core/java/com/android/server/audio/AudioService.java b/services/core/java/com/android/server/audio/AudioService.java
-index 44df8f5..9a2a62b 100644
+index 7c8cf5f..b03dd56 100644
 --- a/services/core/java/com/android/server/audio/AudioService.java
 +++ b/services/core/java/com/android/server/audio/AudioService.java
-@@ -133,6 +133,8 @@ import java.util.List;
- import java.util.NoSuchElementException;
- import java.util.Objects;
- 
-+import cyanogenmod.providers.CMSettings;
-+
- /**
-  * The implementation of the volume manager service.
-  * <p>
-@@ -719,6 +721,7 @@ public class AudioService extends IAudioService.Stub {
+@@ -742,6 +742,7 @@ public class AudioService extends IAudioService.Stub {
          mMediaFocusControl = new MediaFocusControl(mContext);
  
          readAndSetLowRamDevice();
@@ -29,7 +20,7 @@ index 44df8f5..9a2a62b 100644
  
          // Call setRingerModeInt() to apply correct mute
          // state on streams affected by ringer mode.
-@@ -845,6 +848,7 @@ public class AudioService extends IAudioService.Stub {
+@@ -868,6 +869,7 @@ public class AudioService extends IAudioService.Stub {
          AudioSystem.setParameters("restarting=true");
  
          readAndSetLowRamDevice();
@@ -37,7 +28,7 @@ index 44df8f5..9a2a62b 100644
  
          // Restore device connection states
          synchronized (mConnectedDevices) {
-@@ -5461,6 +5465,9 @@ public class AudioService extends IAudioService.Stub {
+@@ -5603,6 +5605,9 @@ public class AudioService extends IAudioService.Stub {
              if (!isUsb && device != AudioSystem.DEVICE_IN_WIRED_HEADSET) {
                  sendDeviceConnectionIntent(device, state, address, deviceName);
              }
@@ -47,7 +38,7 @@ index 44df8f5..9a2a62b 100644
          }
      }
  
-@@ -6604,6 +6611,17 @@ public class AudioService extends IAudioService.Stub {
+@@ -6750,6 +6755,17 @@ public class AudioService extends IAudioService.Stub {
          }
      }
  

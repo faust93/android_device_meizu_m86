@@ -1,0 +1,32 @@
+From e27b94ecc380ecaad7d44d3838dca1fa15fabf0e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 7 Dec 2016 10:39:41 +0300
+Subject: [PATCH] checking that map is not null to prevent apps crashing during
+ prefs quering
+
+Change-Id: Ie1a372a48ac87152c5c1044c1c357c7de8c16301
+---
+ core/java/android/app/SharedPreferencesImpl.java | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/core/java/android/app/SharedPreferencesImpl.java b/core/java/android/app/SharedPreferencesImpl.java
+index c1180e2..ba0d35b 100644
+--- a/core/java/android/app/SharedPreferencesImpl.java
++++ b/core/java/android/app/SharedPreferencesImpl.java
+@@ -259,8 +259,12 @@ final class SharedPreferencesImpl implements SharedPreferences {
+     }
+     public boolean getBoolean(String key, boolean defValue) {
+         synchronized (this) {
++            Boolean v;
+             awaitLoadedLocked();
+-            Boolean v = (Boolean)mMap.get(key);
++            if (mMap != null && key != null)
++                v = (Boolean)mMap.get(key);
++            else
++                v = null;
+             return v != null ? v : defValue;
+         }
+     }
+-- 
+1.9.3 (Apple Git-50)
+

@@ -1,0 +1,795 @@
+From 52fdf7e3f4923b999fe5e5d7a772880d4f075bbc Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 3 Jan 2017 12:42:03 +0300
+Subject: [PATCH] Lock screen weather info [1/2]
+
+Change-Id: I38ff22bcff5d409b6187476166bcd9a8cc7f8c02
+---
+ core/java/android/provider/Settings.java           |  53 +++++++
+ .../internal/util/crdroid/WeatherController.java   |  39 +++++
+ .../util/crdroid/WeatherControllerImpl.java        | 167 +++++++++++++++++++++
+ packages/Keyguard/AndroidManifest.xml              |   2 +
+ .../Keyguard/res/layout/keyguard_status_view.xml   |   1 +
+ .../Keyguard/res/layout/keyguard_weather_view.xml  | 138 +++++++++++++++++
+ packages/Keyguard/res/values-ru/strings.xml        |   1 +
+ packages/Keyguard/res/values/colors.xml            |   3 +
+ packages/Keyguard/res/values/strings.xml           |   2 +
+ .../com/android/keyguard/KeyguardStatusView.java   | 160 +++++++++++++++++++-
+ packages/SystemUI/AndroidManifest.xml              |   2 +
+ .../android/systemui/statusbar/BaseStatusBar.java  |  14 ++
+ 13 files changed, 588 insertions(+), 10 deletions(-)
+ create mode 100644 core/java/com/android/internal/util/crdroid/WeatherController.java
+ create mode 100644 core/java/com/android/internal/util/crdroid/WeatherControllerImpl.java
+ create mode 100644 packages/Keyguard/res/layout/keyguard_weather_view.xml
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 3bf842e..af01f1b 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4554,6 +4554,59 @@ public final class Settings {
+           */
+          public static final String LOCKSCREEN_BATTERY_INFO = "lockscreen_battery_info";
+ 
++         /**
++         * Whether to show the weather info on the lock screen
++         * @hide
++         */
++        public static final String LOCK_SCREEN_SHOW_WEATHER = "lock_screen_show_weather";
++
++        /**
++         * Whether to show the weather location lock screen
++         * @hide
++         */
++        public static final String LOCK_SCREEN_SHOW_WEATHER_LOCATION = "lock_screen_show_weather_location";
++
++        /**
++         * Whether to show the weather update timestamp on the lock screen
++         * @hide
++         */
++        public static final String LOCK_SCREEN_SHOW_WEATHER_TIMESTAMP = "lock_screen_show_weather_timestamp";
++
++        /**
++         * Weather condition icon on the lock screen
++         * 0: monochrome
++         * 1: colored
++         * 2: vclouds
++         * default: 0
++         * @hide
++         */
++        public static final String LOCK_SCREEN_WEATHER_CONDITION_ICON = "lock_screen_weather_condition_icon";
++
++        /**
++         * Whether to hide the weather panel when the notifications will reach the number of notifications
++         * @hide
++         */
++        public static final String LOCK_SCREEN_WEATHER_HIDE_PANEL = "lock_screen_weather_hide_panel";
++
++        /**
++         * Hide the weather panel when the visible lockscreen notifications will reach this number
++         * 1: 1 notification (always)
++         * 2: 2 notifications
++         * 3: 3 notifications
++         * 4: 4 notifications
++         * 5: 5 notifications
++         * 6: 6 notifications
++         * default: 4
++         * @hide
++         */
++        public static final String LOCK_SCREEN_WEATHER_NUMBER_OF_NOTIFICATIONS = "lock_screen_weather_number_of_notifications";
++
++        /**
++         * Number of notifications visible on the lockscreen including the overflow container
++         * @hide
++         */
++        public static final String LOCK_SCREEN_VISIBLE_NOTIFICATIONS = "lock_screen_visible_notifications";
++
+         /**
+          * XOSP Blur personalization settings
+          * @hide
+diff --git a/core/java/com/android/internal/util/crdroid/WeatherController.java b/core/java/com/android/internal/util/crdroid/WeatherController.java
+new file mode 100644
+index 0000000..05ec48e
+--- /dev/null
++++ b/core/java/com/android/internal/util/crdroid/WeatherController.java
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (C) 2015 The CyanogenMod Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.util.crdroid;
++
++import android.graphics.drawable.Drawable;
++
++public interface WeatherController {
++    void addCallback(Callback callback);
++    void removeCallback(Callback callback);
++    void updateWeather();
++    WeatherInfo getWeatherInfo();
++
++    public interface Callback {
++        void onWeatherChanged(WeatherInfo temp);
++    }
++    public static class WeatherInfo {
++        public String city = null;
++        public String wind = null;
++        public int conditionCode = 0;
++        public Drawable conditionDrawable = null;
++        public String temp = null;
++        public String humidity = null;
++        public String condition = null;
++    }
++}
+diff --git a/core/java/com/android/internal/util/crdroid/WeatherControllerImpl.java b/core/java/com/android/internal/util/crdroid/WeatherControllerImpl.java
+new file mode 100644
+index 0000000..603521a
+--- /dev/null
++++ b/core/java/com/android/internal/util/crdroid/WeatherControllerImpl.java
+@@ -0,0 +1,167 @@
++/*
++ * Copyright (C) 2015 The CyanogenMod Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.util.crdroid;
++
++import android.content.BroadcastReceiver;
++import android.content.ComponentName;
++import android.content.Context;
++import android.content.Intent;
++import android.content.IntentFilter;
++import android.content.pm.PackageManager;
++import android.content.res.Resources;
++import android.database.Cursor;
++import android.graphics.drawable.Drawable;
++import android.net.Uri;
++import android.provider.Settings;
++import android.util.Log;
++
++import java.util.ArrayList;
++
++public class WeatherControllerImpl implements WeatherController {
++
++    private static final String TAG = WeatherController.class.getSimpleName();
++    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
++
++    public static final ComponentName COMPONENT_WEATHER_FORECAST = new ComponentName(
++            "com.cyanogenmod.lockclock", "com.cyanogenmod.lockclock.weather.ForecastActivity");
++    public static final String ACTION_UPDATE_FINISHED
++            = "com.cyanogenmod.lockclock.action.WEATHER_UPDATE_FINISHED";
++    public static final String EXTRA_UPDATE_CANCELLED = "update_cancelled";
++    public static final String ACTION_FORCE_WEATHER_UPDATE
++            = "com.cyanogenmod.lockclock.action.FORCE_WEATHER_UPDATE";
++    public static final Uri CURRENT_WEATHER_URI
++            = Uri.parse("content://com.cyanogenmod.lockclock.weather.provider/weather/current");
++    public static final String[] WEATHER_PROJECTION = new String[]{
++            "city",
++            "wind",
++            "condition_code",
++            "temperature",
++            "humidity",
++            "condition"
++
++    };
++    public static final String LOCK_CLOCK_PACKAGE_NAME = "com.cyanogenmod.lockclock";
++
++    private static final int WEATHER_ICON_MONOCHROME = 0;
++    private static final int WEATHER_ICON_COLORED = 1;
++
++    private final ArrayList<Callback> mCallbacks = new ArrayList<Callback>();
++    private final Receiver mReceiver = new Receiver();
++    private final Context mContext;
++
++    private WeatherInfo mCachedInfo = new WeatherInfo();
++
++    public WeatherControllerImpl(Context context) {
++        mContext = context;
++                mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
++        queryWeather();
++        final IntentFilter filter = new IntentFilter();
++        filter.addAction(ACTION_UPDATE_FINISHED);
++        mContext.registerReceiver(mReceiver, filter);
++    }
++
++    public void addCallback(Callback callback) {
++        if (callback == null || mCallbacks.contains(callback)) return;
++        if (DEBUG) Log.d(TAG, "addCallback " + callback);
++        mCallbacks.add(callback);
++        callback.onWeatherChanged(mCachedInfo); // immediately update with current values
++    }
++
++    public void removeCallback(Callback callback) {
++        if (callback == null) return;
++        if (DEBUG) Log.d(TAG, "removeCallback " + callback);
++        mCallbacks.remove(callback);
++    }
++
++    private Drawable getIcon(int conditionCode) {
++        int iconNameValue = Settings.System.getInt(mContext.getContentResolver(),
++                Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON, 0);
++        String iconName;
++
++        if (iconNameValue == WEATHER_ICON_MONOCHROME) {
++            iconName = "weather_";
++        } else if (iconNameValue == WEATHER_ICON_COLORED) {
++            iconName = "weather_color_";
++        } else {
++            iconName = "weather_vclouds_";
++        }
++
++        try {
++            Resources resources =
++                    mContext.createPackageContext(LOCK_CLOCK_PACKAGE_NAME, 0).getResources();
++            return resources.getDrawable(resources.getIdentifier(iconName + conditionCode,
++                    "drawable", LOCK_CLOCK_PACKAGE_NAME));
++        } catch (PackageManager.NameNotFoundException e) {
++            return null;
++        }
++    }
++
++    @Override
++    public WeatherInfo getWeatherInfo() {
++        return mCachedInfo;
++    }
++
++    private void queryWeather() {
++        Cursor c = mContext.getContentResolver().query(CURRENT_WEATHER_URI, WEATHER_PROJECTION,
++                null, null, null);
++        if (c == null) {
++            if(DEBUG) Log.e(TAG, "cursor was null for temperature, forcing weather update");
++            mContext.sendBroadcast(new Intent(ACTION_FORCE_WEATHER_UPDATE));
++        } else {
++            try {
++                c.moveToFirst();
++                mCachedInfo.city = c.getString(0);
++                mCachedInfo.wind = c.getString(1);
++                mCachedInfo.conditionCode = c.getInt(2);
++                mCachedInfo.conditionDrawable = getIcon(mCachedInfo.conditionCode);
++                mCachedInfo.temp = c.getString(3);
++                mCachedInfo.humidity = c.getString(4);
++                mCachedInfo.condition = c.getString(5);
++            } finally {
++                c.close();
++            }
++        }
++    }
++
++    private void fireCallback() {
++        for (Callback callback : mCallbacks) {
++            callback.onWeatherChanged(mCachedInfo);
++        }
++    }
++
++    private final class Receiver extends BroadcastReceiver {
++        @Override
++        public void onReceive(Context context, Intent intent) {
++            if (DEBUG) Log.d(TAG, "onReceive " + intent.getAction());
++            if (intent.hasExtra(EXTRA_UPDATE_CANCELLED)) {
++                if (intent.getBooleanExtra(EXTRA_UPDATE_CANCELLED, false)) {
++                    // no update
++                    return;
++                }
++            }
++            queryWeather();
++            fireCallback();
++        }
++    }
++
++    @Override
++    public void updateWeather() {
++        queryWeather();
++        fireCallback();
++    }
++
++}
+diff --git a/packages/Keyguard/AndroidManifest.xml b/packages/Keyguard/AndroidManifest.xml
+index 165fe05..db7ba4e 100644
+--- a/packages/Keyguard/AndroidManifest.xml
++++ b/packages/Keyguard/AndroidManifest.xml
+@@ -41,6 +41,8 @@
+     <uses-permission android:name="android.permission.ACCESS_KEYGUARD_SECURE_STORAGE" />
+     <uses-permission android:name="android.permission.TRUST_LISTENER" />
+     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
++    <uses-permission android:name="com.cyanogenmod.lockclock.permission.READ_WEATHER" />
++    <protected-broadcast android:name="com.cyanogenmod.lockclock.action.FORCE_WEATHER_UPDATE" />
+ 
+     <application android:label="@string/app_name"
+         android:process="com.android.systemui"
+diff --git a/packages/Keyguard/res/layout/keyguard_status_view.xml b/packages/Keyguard/res/layout/keyguard_status_view.xml
+index ace52e6..6468e2a 100644
+--- a/packages/Keyguard/res/layout/keyguard_status_view.xml
++++ b/packages/Keyguard/res/layout/keyguard_status_view.xml
+@@ -48,6 +48,7 @@
+             android:layout_marginBottom="@dimen/bottom_text_spacing_digital" />
+ 
+         <include layout="@layout/keyguard_status_area" />
++        <include layout="@layout/keyguard_weather_view" />
+ 
+         <TextView android:id="@+id/weather_info"
+             android:layout_width="wrap_content"
+diff --git a/packages/Keyguard/res/layout/keyguard_weather_view.xml b/packages/Keyguard/res/layout/keyguard_weather_view.xml
+new file mode 100644
+index 0000000..3866fcc
+--- /dev/null
++++ b/packages/Keyguard/res/layout/keyguard_weather_view.xml
+@@ -0,0 +1,138 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++**
++** Copyright 2015, The CyanogenMod Project
++**
++** Licensed under the Apache License, Version 2.0 (the "License")
++** you may not use this file except in compliance with the License.
++** You may obtain a copy of the License at
++**
++**     http://www.apache.org/licenses/LICENSE-2.0
++**
++** Unless required by applicable law or agreed to in writing, software
++** distributed under the License is distributed on an "AS IS" BASIS,
++** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++** See the License for the specific language governing permissions and
++** limitations under the License.
++*/
++-->
++
++<!-- This is a view that shows general weather information in Keyguard. -->
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++        android:id="@+id/keyguard_weather_view"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:paddingTop="14dp"
++        android:layout_gravity="center"
++        android:orientation="vertical" >
++
++    <TextView
++        android:id="@+id/no_weather_info_text"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center"
++        android:includeFontPadding="false"
++        android:text="@string/weather_info_not_available"
++        android:textSize="16sp"
++        android:textColor="@color/keyguard_default_primary_text_color" />
++
++    <LinearLayout
++        android:id="@+id/weather_panel"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center" >
++
++        <LinearLayout
++            android:id="@+id/left_panel"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content"
++            android:layout_weight="1"
++            android:layout_gravity="center_vertical"
++            android:orientation="vertical" >
++
++            <TextView
++                android:id="@+id/city"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="right"
++                android:includeFontPadding="false"
++                android:textSize="16sp"
++                android:textColor="@color/keyguard_default_primary_text_color" />
++
++            <TextView
++                android:id="@+id/wind"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="right"
++                android:includeFontPadding="false"
++                android:textSize="12sp"
++                android:textColor="@color/keyguard_default_secondary_text_color" />
++
++        </LinearLayout>
++
++        <LinearLayout
++            android:id="@+id/center_panel"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_gravity="center"
++            android:paddingLeft="10dp"
++            android:paddingRight="10dp"
++            android:orientation="vertical" >
++
++            <ImageView
++                android:id="@+id/weather_image"
++                android:layout_width="72dp"
++                android:layout_height="72dp"
++                android:scaleType="centerInside"
++                android:adjustViewBounds="true" />
++
++        </LinearLayout>
++
++        <LinearLayout
++            android:id="@+id/right_panel"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content"
++            android:layout_weight="1"
++            android:layout_gravity="center_vertical"
++            android:orientation="vertical" >
++
++            <TextView
++                android:id="@+id/current_temp"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="left"
++                android:includeFontPadding="false"
++                android:textSize="16sp"
++                android:textColor="@color/keyguard_default_primary_text_color" />
++
++            <TextView
++                android:id="@+id/humidity"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="left"
++                android:includeFontPadding="false"
++                android:textSize="12sp"
++                android:textColor="@color/keyguard_default_secondary_text_color" />
++
++        </LinearLayout>
++    </LinearLayout>
++
++    <TextView
++        android:id="@+id/condition"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center_horizontal"
++        android:includeFontPadding="false"
++        android:textSize="14sp"
++        android:textColor="@color/keyguard_default_primary_text_color" />
++
++    <TextView
++        android:id="@+id/timestamp"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center_horizontal"
++        android:includeFontPadding="false"
++        android:textSize="8sp"
++        android:textColor="@color/keyguard_default_secondary_text_color" />
++
++</LinearLayout>
+diff --git a/packages/Keyguard/res/values-ru/strings.xml b/packages/Keyguard/res/values-ru/strings.xml
+index 7466c66..9f1bbd7 100644
+--- a/packages/Keyguard/res/values-ru/strings.xml
++++ b/packages/Keyguard/res/values-ru/strings.xml
+@@ -139,4 +139,5 @@
+       <item quantity="other">Устройство не разблокировали <xliff:g id="NUMBER_1">%d</xliff:g> часа. Введите пароль ещё раз.</item>
+     </plurals>
+     <string name="fingerprint_not_recognized" msgid="2690661881608146617">"Не распознано"</string>
++    <string name="weather_info_not_available">Информация о погоде недоступна</string>
+ </resources>
+diff --git a/packages/Keyguard/res/values/colors.xml b/packages/Keyguard/res/values/colors.xml
+index 3998c5b..e74ba74 100644
+--- a/packages/Keyguard/res/values/colors.xml
++++ b/packages/Keyguard/res/values/colors.xml
+@@ -18,4 +18,7 @@
+     <!-- Clock -->
+     <color name="clock_white">#ffffffff</color>
+     <color name="clock_gray">@*android:color/secondary_text_default_material_dark</color>
++    <color name="keyguard_default_primary_text_color">#ffffffff</color>
++    <color name="keyguard_default_secondary_text_color">#b3ffffff</color>
++    <color name="keyguard_default_icon_color">#ffffffff</color>
+ </resources>
+diff --git a/packages/Keyguard/res/values/strings.xml b/packages/Keyguard/res/values/strings.xml
+index 2f12d17..3a129c7 100755
+--- a/packages/Keyguard/res/values/strings.xml
++++ b/packages/Keyguard/res/values/strings.xml
+@@ -374,6 +374,8 @@
+     <!-- Fingerprint hint message when finger was not recognized.-->
+     <string name="fingerprint_not_recognized">Not recognized</string>
+ 
++    <string name="weather_info_not_available">Weather informations not available</string>
++
+     <!-- Instructions telling the user remaining times when enter SIM PIN view.  -->
+     <plurals name="kg_password_default_pin_message">
+         <item quantity="one">Enter SIM<xliff:g id="slotid">%d</xliff:g> PIN, you have <xliff:g id="number">%d</xliff:g> remaining
+diff --git a/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java b/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
+index a8a84dd..0a8fa8c 100644
+--- a/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
++++ b/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
+@@ -20,9 +20,14 @@ import android.app.ActivityManager;
+ import android.app.AlarmManager;
+ import android.content.Context;
+ import android.content.ContentResolver;
++import android.content.pm.PackageManager;
+ import android.content.res.Configuration;
+ import android.content.res.Resources;
++import android.graphics.Bitmap;
++import android.graphics.drawable.Drawable;
++import android.graphics.PorterDuff.Mode;
+ import android.os.UserHandle;
++import android.provider.AlarmClock;
+ import android.provider.Settings;
+ import android.text.TextUtils;
+ import android.text.format.DateFormat;
+@@ -32,14 +37,19 @@ import android.util.Slog;
+ import android.util.TypedValue;
+ import android.view.View;
+ import android.widget.GridLayout;
++import android.widget.ImageView;
+ import android.widget.TextClock;
+ import android.widget.TextView;
+ 
++import com.android.internal.util.crdroid.WeatherController;
++import com.android.internal.util.crdroid.WeatherControllerImpl;
+ import com.android.internal.widget.LockPatternUtils;
+ 
++import java.util.Date;
+ import java.util.Locale;
+ 
+-public class KeyguardStatusView extends GridLayout {
++public class KeyguardStatusView extends GridLayout implements
++        WeatherController.Callback  {
+     private static final boolean DEBUG = KeyguardConstants.DEBUG;
+     private static final String TAG = "KeyguardStatusView";
+ 
+@@ -50,6 +60,20 @@ public class KeyguardStatusView extends GridLayout {
+     private TextClock mDateView;
+     private TextClock mClockView;
+     private TextView mOwnerInfo;
++    private View mWeatherView;
++    private TextView mWeatherCity;
++    private TextView mWeatherWind;
++    private ImageView mWeatherConditionImage;
++    private Drawable mWeatherConditionDrawable;
++    private TextView mWeatherCurrentTemp;
++    private TextView mWeatherHumidity;
++    private TextView mWeatherConditionText;
++    private TextView mWeatherTimestamp;
++
++    private boolean mShowWeather;
++    private int mIconNameValue = 0;
++
++    private WeatherController mWeatherController;
+ 
+     //On the first boot, keyguard will start to receiver TIME_TICK intent.
+     //And onScreenTurnedOff will not get called if power off when keyguard is not started.
+@@ -106,6 +130,7 @@ public class KeyguardStatusView extends GridLayout {
+         super(context, attrs, defStyle);
+         mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+         mLockPatternUtils = new LockPatternUtils(getContext());
++        mWeatherController = new WeatherControllerImpl(mContext);
+     }
+ 
+     private void setEnableMarquee(boolean enabled) {
+@@ -123,7 +148,14 @@ public class KeyguardStatusView extends GridLayout {
+         mDateView.setShowCurrentUserTime(true);
+         mClockView.setShowCurrentUserTime(true);
+         mOwnerInfo = (TextView) findViewById(R.id.owner_info);
+-
++        mWeatherView = findViewById(R.id.keyguard_weather_view);
++        mWeatherCity = (TextView) findViewById(R.id.city);
++        mWeatherWind = (TextView) findViewById(R.id.wind);
++        mWeatherConditionImage = (ImageView) findViewById(R.id.weather_image);
++        mWeatherCurrentTemp = (TextView) findViewById(R.id.current_temp);
++        mWeatherHumidity = (TextView) findViewById(R.id.humidity);
++        mWeatherConditionText = (TextView) findViewById(R.id.condition);
++        mWeatherTimestamp = (TextView) findViewById(R.id.timestamp);
+         boolean shouldMarquee = KeyguardUpdateMonitor.getInstance(mContext).isDeviceInteractive();
+         setEnableMarquee(shouldMarquee);
+         refresh();
+@@ -165,6 +197,7 @@ public class KeyguardStatusView extends GridLayout {
+ 
+         refreshTime();
+         refreshAlarmStatus(nextAlarm);
++        updateWeatherSettings(false);
+         updateSettings(false);
+     }
+ 
+@@ -206,6 +239,8 @@ public class KeyguardStatusView extends GridLayout {
+     protected void onAttachedToWindow() {
+         super.onAttachedToWindow();
+         KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mInfoCallback);
++        updateWeatherSettings(false);
++        mWeatherController.addCallback(this);
+         updateSettings(false);
+     }
+ 
+@@ -213,6 +248,7 @@ public class KeyguardStatusView extends GridLayout {
+     protected void onDetachedFromWindow() {
+         super.onDetachedFromWindow();
+         KeyguardUpdateMonitor.getInstance(mContext).removeCallback(mInfoCallback);
++        mWeatherController.removeCallback(this);
+     }
+ 
+     private String getOwnerInfo() {
+@@ -233,6 +269,126 @@ public class KeyguardStatusView extends GridLayout {
+     }
+ 
+     @Override
++    public void onWeatherChanged(WeatherController.WeatherInfo info) {
++        if (info.temp == null || info.condition == null) {
++            mWeatherCity.setText(null);
++            mWeatherWind.setText(null);
++            mWeatherConditionDrawable = null;
++            mWeatherCurrentTemp.setText(null);
++            mWeatherHumidity.setText(null);
++            mWeatherConditionText.setText(null);
++            mWeatherTimestamp.setText(null);
++            mWeatherView.setVisibility(View.GONE);
++            updateWeatherSettings(true);
++        } else {
++            mWeatherCity.setText(info.city);
++            mWeatherWind.setText(info.wind);
++            mWeatherConditionDrawable = info.conditionDrawable;
++            mWeatherCurrentTemp.setText(info.temp);
++            mWeatherHumidity.setText(info.humidity);
++            mWeatherConditionText.setText(info.condition);
++            mWeatherTimestamp.setText(getCurrentDate());
++            mWeatherView.setVisibility(mShowWeather ? View.VISIBLE : View.GONE);
++            updateWeatherSettings(false);
++        }
++    }
++
++    private String getCurrentDate() {
++        Date now = new Date();
++        long nowMillis = now.getTime();
++        StringBuilder sb = new StringBuilder();
++        sb.append(DateFormat.format("E", nowMillis));
++        sb.append(" ");
++        sb.append(DateFormat.getTimeFormat(getContext()).format(nowMillis));
++        return sb.toString();
++    }
++
++    private void updateWeatherSettings(boolean forceHide) {
++        final ContentResolver resolver = getContext().getContentResolver();
++        final Resources res = getContext().getResources();
++        View weatherPanel = findViewById(R.id.weather_panel);
++        TextView noWeatherInfo = (TextView) findViewById(R.id.no_weather_info_text);
++        mShowWeather = Settings.System.getInt(resolver,
++                Settings.System.LOCK_SCREEN_SHOW_WEATHER, 0) == 1;
++        boolean showLocation = Settings.System.getInt(resolver,
++                Settings.System.LOCK_SCREEN_SHOW_WEATHER_LOCATION, 1) == 1;
++        boolean showTimestamp = Settings.System.getInt(resolver,
++                Settings.System.LOCK_SCREEN_SHOW_WEATHER_TIMESTAMP, 1) == 1;
++        int iconNameValue = Settings.System.getInt(resolver,
++                Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON, 0);
++        int primaryTextColor =
++                res.getColor(R.color.keyguard_default_primary_text_color);
++        // primaryTextColor with a transparency of 70%
++        int secondaryTextColor = (179 << 24) | (primaryTextColor & 0x00ffffff);
++        // primaryTextColor with a transparency of 50%
++        int alarmTextAndIconColor = (128 << 24) | (primaryTextColor & 0x00ffffff);
++        int defaultIconColor =
++                res.getColor(R.color.keyguard_default_icon_color);
++        int maxAllowedNotifications = 6;
++        int currentVisibleNotifications = Settings.System.getInt(resolver,
++                Settings.System.LOCK_SCREEN_VISIBLE_NOTIFICATIONS, 0);
++        int hideMode = Settings.System.getInt(resolver,
++                    Settings.System.LOCK_SCREEN_WEATHER_HIDE_PANEL, 0);
++        int numberOfNotificationsToHide = Settings.System.getInt(resolver,
++                       Settings.System.LOCK_SCREEN_WEATHER_NUMBER_OF_NOTIFICATIONS, 4);
++        boolean forceHideByNumberOfNotifications = false;
++
++        if (hideMode == 0) {
++            if (currentVisibleNotifications > maxAllowedNotifications) {
++                forceHideByNumberOfNotifications = true;
++            }
++        } else if (hideMode == 1) {
++            if (currentVisibleNotifications >= numberOfNotificationsToHide) {
++                forceHideByNumberOfNotifications = true;
++            }
++        }
++
++        if (mWeatherView != null) {
++            mWeatherView.setVisibility(
++                (mShowWeather && !forceHideByNumberOfNotifications) ? View.VISIBLE : View.GONE);
++        }
++        if (forceHide) {
++            noWeatherInfo.setVisibility(View.VISIBLE);
++            weatherPanel.setVisibility(View.GONE);
++            mWeatherConditionText.setVisibility(View.GONE);
++            mWeatherTimestamp.setVisibility(View.GONE);
++        } else {
++            noWeatherInfo.setVisibility(View.GONE);
++            weatherPanel.setVisibility(View.VISIBLE);
++            mWeatherConditionText.setVisibility(View.VISIBLE);
++            mWeatherCity.setVisibility(showLocation ? View.VISIBLE : View.INVISIBLE);
++            mWeatherTimestamp.setVisibility(showTimestamp ? View.VISIBLE : View.GONE);
++        }
++
++        mAlarmStatusView.setTextColor(alarmTextAndIconColor);
++        mDateView.setTextColor(primaryTextColor);
++        mClockView.setTextColor(primaryTextColor);
++        noWeatherInfo.setTextColor(primaryTextColor);
++        mWeatherCity.setTextColor(primaryTextColor);
++        mWeatherConditionText.setTextColor(primaryTextColor);
++        mWeatherCurrentTemp.setTextColor(primaryTextColor);
++        mWeatherHumidity.setTextColor(secondaryTextColor);
++        mWeatherWind.setTextColor(secondaryTextColor);
++        mWeatherTimestamp.setTextColor(secondaryTextColor);
++
++        if (mIconNameValue != iconNameValue) {
++            mIconNameValue = iconNameValue;
++            mWeatherController.updateWeather();
++        }
++        Drawable[] drawables = mAlarmStatusView.getCompoundDrawablesRelative();
++        Drawable alarmIcon = null;
++        mAlarmStatusView.setCompoundDrawablesRelative(null, null, null, null);
++        if (drawables[0] != null) {
++            alarmIcon = drawables[0];
++            alarmIcon.setColorFilter(alarmTextAndIconColor, Mode.MULTIPLY);
++        }
++        mAlarmStatusView.setCompoundDrawablesRelative(alarmIcon, null, null, null);
++        mWeatherConditionImage.setImageDrawable(null);
++        Drawable weatherIcon = mWeatherConditionDrawable;
++        mWeatherConditionImage.setImageDrawable(weatherIcon);
++    }
++
++    @Override
+     public boolean hasOverlappingRendering() {
+         return false;
+     }
+diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
+index c35b7fa..55235c8 100644
+--- a/packages/SystemUI/AndroidManifest.xml
++++ b/packages/SystemUI/AndroidManifest.xml
+@@ -112,6 +112,8 @@
+     <uses-permission android:name="android.permission.TRUST_LISTENER" />
+     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+     <uses-permission android:name="android.permission.RESET_FINGERPRINT_LOCKOUT" />
++    <uses-permission android:name="com.cyanogenmod.lockclock.permission.READ_WEATHER" />
++    <protected-broadcast android:name="com.cyanogenmod.lockclock.action.FORCE_WEATHER_UPDATE" />
+ 
+     <!-- Needed for WallpaperManager.clear in ImageWallpaper.updateWallpaperLocked -->
+     <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
+index 4dbea55..3069f12 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
+@@ -2609,6 +2609,9 @@ public abstract class BaseStatusBar extends SystemUI implements
+         mStackScroller.changeViewPosition(mEmptyShadeView, mStackScroller.getChildCount() - 2);
+         mStackScroller.changeViewPosition(mKeyguardIconOverflowContainer,
+                 mStackScroller.getChildCount() - 3);
++        if (onKeyguard) {
++            hideWeatherPanelIfNecessary(visibleNotifications, getMaxKeyguardNotifications(true));
++        }
+     }
+ 
+     public boolean shouldShowOnKeyguard(StatusBarNotification sbn) {
+@@ -2617,6 +2620,17 @@ public abstract class BaseStatusBar extends SystemUI implements
+                > importanceToLevel(IMPORTANCE_VERY_LOW);
+     }
+ 
++    private void hideWeatherPanelIfNecessary(int visibleNotifications, int maxKeyguardNotifications) {
++        final ContentResolver resolver = mContext.getContentResolver();
++        int notifications = visibleNotifications;
++        if (mKeyguardIconOverflowContainer.getIconsView().getChildCount() > 0) {
++            notifications += 1;
++        }
++        Settings.System.putInt(resolver,
++                Settings.System.LOCK_SCREEN_VISIBLE_NOTIFICATIONS, notifications);
++        maxKeyguardNotifications = getMaxKeyguardNotifications(true);
++    }
++
+     protected void setZenMode(int mode) {
+         if (!isDeviceProvisioned()) return;
+         mZenMode = mode;
+-- 
+1.9.3 (Apple Git-50)
+

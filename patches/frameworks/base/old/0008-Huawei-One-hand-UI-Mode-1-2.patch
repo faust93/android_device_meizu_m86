@@ -1,0 +1,2378 @@
+From d6f7342dfc64aafd9469935a68260c98dd4cdce4 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sat, 21 Jan 2017 13:30:03 +0300
+Subject: [PATCH] Huawei One-hand UI Mode [1/2
+
+Change-Id: I26f2eb229307d2dc79ab345d3af92fdc3777e58b
+---
+ core/java/android/provider/Settings.java           |   2 +
+ core/java/android/view/WindowManagerPolicy.java    |   8 +
+ .../drawable-xxhdpi/singlehandmode_click_hint.png  | Bin 0 -> 4565 bytes
+ .../res/drawable-xxhdpi/singlehandmode_info.png    | Bin 0 -> 4250 bytes
+ .../singlehandmode_info_pressed.png                | Bin 0 -> 4171 bytes
+ .../singlehandmode_slide_hint.9.png                | Bin 0 -> 4044 bytes
+ core/res/res/drawable/singlehandmode_hintinfo.xml  |   8 +
+ core/res/res/layout/single_hand_window.xml         |  87 +++
+ core/res/res/values-ru/cm_strings.xml              |   2 +
+ core/res/res/values-zh-rCN/strings.xml             |   2 +
+ core/res/res/values/config.xml                     |   2 +
+ core/res/res/values/strings.xml                    |   2 +
+ core/res/res/values/symbols.xml                    |  13 +
+ packages/SystemUI/res/values/dimens.xml            |   4 +
+ .../systemui/singlehandmode/SlideTouchEvent.java   | 199 +++++++
+ .../android/server/policy/PhoneWindowManager.java  |  28 +
+ .../com/android/server/wm/SingleHandAdapter.java   | 289 ++++++++++
+ .../com/android/server/wm/SingleHandWindow.java    | 587 +++++++++++++++++++++
+ .../com/android/server/wm/WallpaperController.java |   8 +-
+ .../java/com/android/server/wm/WindowAnimator.java |   6 +-
+ .../android/server/wm/WindowManagerService.java    |  64 ++-
+ .../com/android/server/wm/WindowStateAnimator.java | 284 +++++++++-
+ ...om_android_server_input_InputManagerService.cpp |  11 +
+ 23 files changed, 1585 insertions(+), 21 deletions(-)
+ create mode 100644 core/res/res/drawable-xxhdpi/singlehandmode_click_hint.png
+ create mode 100644 core/res/res/drawable-xxhdpi/singlehandmode_info.png
+ create mode 100644 core/res/res/drawable-xxhdpi/singlehandmode_info_pressed.png
+ create mode 100644 core/res/res/drawable-xxhdpi/singlehandmode_slide_hint.9.png
+ create mode 100644 core/res/res/drawable/singlehandmode_hintinfo.xml
+ create mode 100644 core/res/res/layout/single_hand_window.xml
+ create mode 100644 packages/SystemUI/src/com/android/systemui/singlehandmode/SlideTouchEvent.java
+ create mode 100644 services/core/java/com/android/server/wm/SingleHandAdapter.java
+ create mode 100644 services/core/java/com/android/server/wm/SingleHandWindow.java
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index ac35871..54b5d62 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -9812,6 +9812,8 @@ public final class Settings {
+          */
+         public static final String ALARM_MANAGER_CONSTANTS = "alarm_manager_constants";
+ 
++        public static final String SINGLE_HAND_MODE = "single_hand_mode";
++
+         /**
+          * Job scheduler specific settings.
+          * This is encoded as a key=value list, separated by commas. Ex:
+diff --git a/core/java/android/view/WindowManagerPolicy.java b/core/java/android/view/WindowManagerPolicy.java
+index 6f136de..8437b00 100644
+--- a/core/java/android/view/WindowManagerPolicy.java
++++ b/core/java/android/view/WindowManagerPolicy.java
+@@ -90,6 +90,7 @@ public interface WindowManagerPolicy {
+ 
+     public final static int FLAG_INTERACTIVE = 0x20000000;
+     public final static int FLAG_PASS_TO_USER = 0x40000000;
++    public final static int POLICY_FLAG_REMOVE_HANDYMODE = 0x80000000;
+ 
+     // Flags for IActivityManager.keyguardGoingAway()
+     public final static int KEYGUARD_GOING_AWAY_FLAG_TO_SHADE = 1 << 0;
+@@ -1448,4 +1449,11 @@ public interface WindowManagerPolicy {
+     public void onConfigurationChanged();
+ 
+     public boolean shouldRotateSeamlessly(int oldRotation, int newRotation);
++
++    /**
++     * Lock the device orientation to the specified rotation,
++     * Sensor input or hdmi will be ignored until
++     * freezeOrThawRotation(-1) is called or reboot the devcie.
++     */
++    public void freezeOrThawRotation(int rotation);
+ }
+diff --git a/core/res/res/drawable-xxhdpi/singlehandmode_click_hint.png b/core/res/res/drawable-xxhdpi/singlehandmode_click_hint.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8d61356d2ee4f834698f8f4a5a6b6597a49cb1e
+GIT binary patch
+literal 4565
+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
+Q%Ly3VGPzl!>-6})0Ijxb>Hq)$
+
+literal 0
+HcmV?d00001
+
+diff --git a/core/res/res/drawable-xxhdpi/singlehandmode_info.png b/core/res/res/drawable-xxhdpi/singlehandmode_info.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..bcbfe327f1d9b3717e267c90886d06ea907ae24f
+GIT binary patch
+literal 4250
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/core/res/res/drawable-xxhdpi/singlehandmode_info_pressed.png b/core/res/res/drawable-xxhdpi/singlehandmode_info_pressed.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..9bebe5ad5eb40e0ef1ecf4c32a5e81a529369d85
+GIT binary patch
+literal 4171
+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
+SrSbjqHPF`7zgwqn8~HzGht2Q+
+
+literal 0
+HcmV?d00001
+
+diff --git a/core/res/res/drawable-xxhdpi/singlehandmode_slide_hint.9.png b/core/res/res/drawable-xxhdpi/singlehandmode_slide_hint.9.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..06ff14daaeeaf0c80c705b9f166d9953cc9aa8ea
+GIT binary patch
+literal 4044
+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
+RQ0<bA0C`_iwL;k}<X_G4my-Yh
+
+literal 0
+HcmV?d00001
+
+diff --git a/core/res/res/drawable/singlehandmode_hintinfo.xml b/core/res/res/drawable/singlehandmode_hintinfo.xml
+new file mode 100644
+index 0000000..a2e9b9f
+--- /dev/null
++++ b/core/res/res/drawable/singlehandmode_hintinfo.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="utf-8"?>
++
++<selector
++    xmlns:android="http://schemas.android.com/apk/res/android">
++    <item android:state_focused="true" android:drawable="@android:drawable/singlehandmode_info_pressed" />
++    <item android:state_focused="false" android:state_pressed="false" android:drawable="@android:drawable/singlehandmode_info" />
++    <item android:state_focused="false" android:state_pressed="true" android:drawable="@android:drawable/singlehandmode_info_pressed" />
++</selector>
+diff --git a/core/res/res/layout/single_hand_window.xml b/core/res/res/layout/single_hand_window.xml
+new file mode 100644
+index 0000000..452926f
+--- /dev/null
++++ b/core/res/res/layout/single_hand_window.xml
+@@ -0,0 +1,87 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2012 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent">
++  <RelativeLayout android:layout_width="match_parent"
++                  android:layout_height="0px"
++                  android:background="#FF000000"
++                  android:id="@+id/relative_top">
++    <FrameLayout android:id="@+id/hint_section"
++        android:layout_width="60dp"
++        android:layout_height="70dp"
++        android:clickable="true">
++       <ImageView
++              android:id="@+id/hint_info"
++              android:visibility="invisible"
++              android:layout_width="32dp"
++              android:layout_height="32dp"
++              android:layout_marginTop="16dip"
++              android:layout_marginStart="10dip"
++              android:focusable="true"
++              android:clickable="true"
++              android:background="@android:drawable/singlehandmode_hintinfo" />
++    </FrameLayout>
++    <TextView android:id="@+id/single_hand_window_title"
++              android:layout_width="match_parent"
++              android:layout_height="wrap_content"
++              android:layout_marginTop="32dip"
++              android:layout_marginStart="18dip"
++              android:layout_marginEnd="18dip"
++              android:textSize="14dp"
++              android:textColor="#d9ffffff"
++              android:text="@android:string/singlehandmode_click_hint_message"
++              android:visibility="invisible"
++              android:gravity="center" />
++    <ImageView
++              android:id="@+id/click_hint"
++              android:layout_below="@id/single_hand_window_title"
++              android:visibility="invisible"
++              android:layout_width="wrap_content"
++              android:layout_height="wrap_content"
++              android:layout_marginTop="2dip"
++              android:layout_centerHorizontal="true"
++              android:src="@android:drawable/singlehandmode_click_hint" />
++  </RelativeLayout>
++  <RelativeLayout android:layout_width="0px"
++                  android:layout_height="0px"
++                  android:background="#FF000000"
++                  android:id="@+id/relative_bottom" />
++  <LinearLayout android:id="@+id/slide_hint_area"
++                android:visibility="invisible"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_alignParentBottom="true"
++                android:orientation="vertical">
++    <TextView android:id="@+id/singlehandmode_slide_hint_text"
++              android:layout_width="240dip"
++              android:layout_height="wrap_content"
++              android:visibility="invisible"
++              android:textSize="14dp"
++              android:textColor="#d9ffffff"
++              android:text="@android:string/singlehandmode_slide_hint_message"
++              android:layout_gravity="center_horizontal"
++              android:gravity="center" />
++    <ImageView
++              android:id="@+id/slide_hint"
++              android:visibility="invisible"
++              android:layout_width="0px"
++              android:layout_height="0px"
++              android:layout_marginTop="12dip"
++              android:background="@android:drawable/singlehandmode_slide_hint" />
++ </LinearLayout>
++</RelativeLayout>
+diff --git a/core/res/res/values-ru/cm_strings.xml b/core/res/res/values-ru/cm_strings.xml
+index 0d44a2a..92663b9 100644
+--- a/core/res/res/values-ru/cm_strings.xml
++++ b/core/res/res/values-ru/cm_strings.xml
+@@ -140,4 +140,6 @@
+   <string name="notify_package_component_protected_text">Приложение «<xliff:g id="app_name">%1$s</xliff:g>» заблокировано. Нажмите, чтобы ввести пароль и запустить приложение.</string>
+   <!-- Notify user that they are in Lock-to-app (for devices without navbar) -->
+   <string name="lock_to_app_toast_no_navbar">Чтобы открепить экран, нажмите и удерживайте кнопку «Назад».</string>
++  <string name="singlehandmode_click_hint_message">Коснитесь снаружи экрана для выхода из режима одной руки</string>
++  <string name="singlehandmode_slide_hint_message">Проведите пальцем по кнопке сенсора для переключения между обычным режимом и режимом одной руки</string>
+ </resources>
+diff --git a/core/res/res/values-zh-rCN/strings.xml b/core/res/res/values-zh-rCN/strings.xml
+index 4427a36..751569b 100644
+--- a/core/res/res/values-zh-rCN/strings.xml
++++ b/core/res/res/values-zh-rCN/strings.xml
+@@ -1001,6 +1001,8 @@
+     <string name="aerr_close" msgid="2991640326563991340">"关闭"</string>
+     <string name="aerr_mute" msgid="1974781923723235953">"忽略（直到设备重启）"</string>
+     <string name="aerr_wait" msgid="3199956902437040261">"等待"</string>
++    <string name="singlehandmode_click_hint_message">"点击屏幕外区域可退出小屏模式"</string>
++    <string name="singlehandmode_slide_hint_message">"在虚拟导航栏区域内左右滑动，可切换小屏模式和正常模式，方便单手使用"</string>
+     <string name="aerr_close_app" msgid="3269334853724920302">"关闭应用"</string>
+     <string name="anr_title" msgid="4351948481459135709"></string>
+     <string name="anr_activity_application" msgid="8493290105678066167">"<xliff:g id="APPLICATION">%2$s</xliff:g>没有响应"</string>
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index aaf2981..c81b7c8 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -2756,6 +2756,8 @@
+     <!-- emergency call number for the emergency affordance -->
+     <string name="config_emergency_call_number" translatable="false">112</string>
+ 
++    <bool name="single_hand_mode">true</bool>
++
+     <!-- Do not translate. Mcc codes whose existence trigger the presence of emergency
+          affordances-->
+     <integer-array name="config_emergency_mcc_codes" translatable="false">
+diff --git a/core/res/res/values/strings.xml b/core/res/res/values/strings.xml
+index 8f5f8cf..37a4e5a 100644
+--- a/core/res/res/values/strings.xml
++++ b/core/res/res/values/strings.xml
+@@ -4435,4 +4435,6 @@
+ 
+     <!-- Label used by Telephony code, assigned as the display name for conference calls [CHAR LIMIT=60] -->
+     <string name="conference_call">Conference Call</string>
++    <string name="singlehandmode_click_hint_message">Touch outside the screen to exit mini screen view</string>
++    <string name="singlehandmode_slide_hint_message">Slide your finger across the fp sensor button to switch between the standard and mini screen views</string>
+ </resources>
+diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
+index 847bb19..320a0f8 100644
+--- a/core/res/res/values/symbols.xml
++++ b/core/res/res/values/symbols.xml
+@@ -213,6 +213,15 @@
+   <java-symbol type="id" name="selection_start_handle" />
+   <java-symbol type="id" name="selection_end_handle" />
+   <java-symbol type="id" name="insertion_handle" />
++  <java-symbol type="id" name="relative_top" />
++  <java-symbol type="id" name="hint_info" />
++  <java-symbol type="id" name="single_hand_window_title" />
++  <java-symbol type="id" name="click_hint" />
++  <java-symbol type="id" name="hint_section" />
++  <java-symbol type="id" name="relative_bottom" />
++  <java-symbol type="id" name="singlehandmode_slide_hint_text" />
++  <java-symbol type="id" name="slide_hint" />
++  <java-symbol type="id" name="slide_hint_area" />
+ 
+   <java-symbol type="attr" name="actionModeShareDrawable" />
+   <java-symbol type="attr" name="alertDialogCenterButtons" />
+@@ -309,6 +318,7 @@
+   <java-symbol type="bool" name="config_guestUserEphemeral" />
+   <java-symbol type="bool" name="config_localDisplaysMirrorContent" />
+   <java-symbol type="bool" name="config_enableAppWidgetService" />
++  <java-symbol type="bool" name="single_hand_mode" />
+   <java-symbol type="string" name="config_defaultPictureInPictureBounds" />
+   <java-symbol type="integer" name="config_wifi_framework_5GHz_preference_boost_threshold" />
+   <java-symbol type="integer" name="config_wifi_framework_5GHz_preference_boost_factor" />
+@@ -1120,6 +1130,8 @@
+   <java-symbol type="string" name="demo_restarting_message" />
+   <java-symbol type="string" name="conference_call" />
+ 
++  <java-symbol type="string" name="singlehandmode_click_hint_message" />
++  <java-symbol type="string" name="singlehandmode_slide_hint_message" />
+ 
+   <java-symbol type="plurals" name="bugreport_countdown" />
+   <java-symbol type="plurals" name="duration_hours" />
+@@ -1388,6 +1400,7 @@
+   <java-symbol type="layout" name="immersive_mode_cling" />
+   <java-symbol type="layout" name="user_switching_dialog" />
+   <java-symbol type="layout" name="common_tab_settings" />
++  <java-symbol type="layout" name="single_hand_window" />
+ 
+   <java-symbol type="anim" name="slide_in_child_bottom" />
+   <java-symbol type="anim" name="slide_in_right" />
+diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
+index b68756c..bbc1836 100644
+--- a/packages/SystemUI/res/values/dimens.xml
++++ b/packages/SystemUI/res/values/dimens.xml
+@@ -673,4 +673,8 @@
+ 
+     <!-- The alpha to apply to the recents row when it doesn't have focus -->
+     <item name="recents_recents_row_dim_alpha" format="float" type="dimen">0.5</item>
++
++    <dimen name="navbar_single_hand_mode_horizontal_threshhold">90dp</dimen>
++    <dimen name="navbar_single_hand_mode_vertical_threshhold">48dp</dimen>
++
+ </resources>
+diff --git a/packages/SystemUI/src/com/android/systemui/singlehandmode/SlideTouchEvent.java b/packages/SystemUI/src/com/android/systemui/singlehandmode/SlideTouchEvent.java
+new file mode 100644
+index 0000000..2a70115
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/singlehandmode/SlideTouchEvent.java
+@@ -0,0 +1,199 @@
++package com.android.systemui.singlehandmode;
++
++import android.content.Context;
++import android.content.res.Configuration;
++import android.content.res.Resources.NotFoundException;
++import android.graphics.Rect;
++import android.os.*;
++import android.provider.Settings;
++import android.text.TextUtils;
++import android.util.DisplayMetrics;
++import android.util.Log;
++import android.view.*;
++import com.android.systemui.R;
++
++public class SlideTouchEvent {
++    private static final String TAG = "SlideTouchEvent";
++    private static final String LEFT = "left";
++    private static final String RIGHT = "right";
++
++    /**
++     * The units you would like the velocity in. A value of 1 provides pixels per millisecond, 1000 provides pixels per second, etc.
++     */
++    private static final int UNITS = 1000;
++
++    public static final float SCALE = (float) 3 / 4;
++
++    public static final String KEY_SINGLE_HAND_SCREEN_ZOOM = "single_hand_screen_zoom";
++    private boolean mIsSupport = true;
++    private boolean mScreenZoomEnabled = true;
++    private boolean mZoomGestureEnabled = false;
++
++    private float[] mDownPoint = new float[2];
++    private float mTriggerSingleHandMode;
++    private float mVerticalProhibit;
++
++    private int mMinimumFlingVelocity;
++    private int mMaximumFlingVelocity;
++
++    private VelocityTracker mVelocityTracker;
++    private Handler mHandler = new Handler();
++    private Context mContext;
++
++    private boolean mFlag = false;
++
++    public SlideTouchEvent(Context context) {
++        mContext = context;
++        init();
++    }
++
++    private void init() {
++        if (null == mContext) {
++            Log.e(TAG, "SlideTouchEvent init return...");
++            return;
++        }
++        mIsSupport = isSupportSingleHand();
++        if (!mIsSupport) return;
++
++        final ViewConfiguration configuration = ViewConfiguration.get(mContext);
++        mMinimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
++        mMaximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
++
++        mTriggerSingleHandMode = mContext.getResources().getDimension(R.dimen.navbar_single_hand_mode_horizontal_threshhold);
++        mVerticalProhibit = mContext.getResources().getDimension(R.dimen.navbar_single_hand_mode_vertical_threshhold);
++    }
++
++    /**
++     * handle MotionEvent, maybe trigger single hand mode
++     * @param event MotionEvent
++     */
++    public void handleTouchEvent(MotionEvent event) {
++        //Log.i(TAG, "handleTouchEvent:" + event);
++        if (event == null) {
++            return;
++        }
++        if (!mIsSupport) {
++            return;
++        }
++
++        if (!mScreenZoomEnabled) {
++            return;
++        }
++
++        if (mZoomGestureEnabled) {
++            return;
++        }
++
++        if (null == mVelocityTracker) {
++            mVelocityTracker = VelocityTracker.obtain();
++        }
++
++        mVelocityTracker.addMovement(event);
++
++        switch (event.getActionMasked()) {
++            case MotionEvent.ACTION_DOWN:
++                mFlag = true;
++                mDownPoint[0] = event.getX();
++                mDownPoint[1] = event.getY();
++                break;
++            case MotionEvent.ACTION_POINTER_UP:
++                if (event.getActionIndex() == 0) {
++                    mFlag = false;
++                }
++                break;
++            case MotionEvent.ACTION_UP:
++                if (!mFlag) {
++                    break;
++                }
++                mFlag = false;
++                if (true) {
++                    final VelocityTracker velocityTracker = mVelocityTracker;
++                    velocityTracker.computeCurrentVelocity(UNITS, mMaximumFlingVelocity);
++
++                    final int pointerId = event.getPointerId(0);
++                    final float velocityX = velocityTracker.getXVelocity(pointerId);
++
++                    Log.i(TAG, "vel=" + Math.abs(velocityX) + ", MinimumFlingVelocity=" + mMinimumFlingVelocity);
++                    if (Math.abs(velocityX) > mMinimumFlingVelocity) {
++
++                        final int historySize = event.getHistorySize();
++
++                        for (int i = 0; i < historySize + 1; i++) {
++
++                            float x = i < historySize ? event.getHistoricalX(i) : event.getX();
++                            float y = i < historySize ? event.getHistoricalY(i) : event.getY();
++                            float distanceX = mDownPoint[0] - x;
++                            float distanceY = mDownPoint[1] - y;
++                            if (Math.abs(distanceY) > Math.abs(distanceX) || Math.abs(distanceY) > mVerticalProhibit) {
++                                Log.i(TAG, "Sliding distanceY > distancex, " + distanceY + ", " + distanceX);
++                                return;
++                            }
++                            if (Math.abs(distanceX) > mTriggerSingleHandMode) {
++                                if (Configuration.ORIENTATION_PORTRAIT == mContext.getResources().getConfiguration().orientation) {
++                                    startSingleHandMode(distanceX);
++                                }
++                            } else {
++                                Log.i(TAG, "Sliding distance is too short, can not trigger the single hand mode");
++                            }
++                        }
++                    }
++                }
++                break;
++            default:
++                break;
++        }
++    }
++
++    /**
++     * start single hand mode.
++     * @param distanceX Sliding X distance
++     */
++    private void startSingleHandMode(float distanceX) {
++        String str = Settings.Global.getString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE);
++        Log.i("SingleHand", "start single hand mode str: " + str + " distanceX: " + distanceX);
++        if (distanceX > 0 && TextUtils.isEmpty(str)) {
++            Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, LEFT);
++        }
++
++        if (distanceX < 0 && TextUtils.isEmpty(str)) {
++            Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, RIGHT);
++        }
++
++        if (distanceX < 0 && str != null && str.contains(LEFT)) {
++            quitLSingleHandMode();
++        }
++
++        if (distanceX > 0 && str != null && str.contains(RIGHT)) {
++            quitLSingleHandMode();
++        }
++    }
++
++    public static final int STATE_MIDDLE = 0;
++    public static final int STATE_LEFT = 1;
++    public static final int STATE_RIGHT = 2;
++
++    public static int getSingleHandState(Context context) {
++        String str = Settings.Global.getString(context.getContentResolver(), Settings.Global.SINGLE_HAND_MODE);
++        if (TextUtils.isEmpty(str)) {
++            return STATE_MIDDLE;
++        } else if (str.contains(LEFT)) {
++            return STATE_LEFT;
++        } else if (str.contains(RIGHT)) {
++            return STATE_RIGHT;
++        }
++        return STATE_MIDDLE;
++    }
++
++    public static boolean isSingleHandMode(Context context) {
++        return getSingleHandState(context) == STATE_MIDDLE ? false : true;
++    }
++
++    private void quitLSingleHandMode() {
++        Log.i(TAG, "quitLSingleHandMode");
++        Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++    }
++
++    private boolean isSupportSingleHand() {
++        return true;
++    }
++}
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 63f4c83..fc7f100 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -871,6 +871,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     private boolean mClearedBecauseOfForceShow;
+     private boolean mTopWindowIsKeyguard;
+ 
++    int mDesiredRotation = -1;
++
+     private boolean mVolumeAnswerCall;
+ 
+     private CameraManager mCameraManager;
+@@ -7161,6 +7163,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     /** {@inheritDoc} */
+     @Override
+     public int interceptMotionBeforeQueueingNonInteractive(long whenNanos, int policyFlags) {
++        if ((WindowManagerPolicy.POLICY_FLAG_REMOVE_HANDYMODE & policyFlags) !=0) {
++            Slog.i(TAG, "interceptMotionBeforeQueueingNonInteractive policyFlags: "+policyFlags);
++            Settings.Global.putString(mContext.getContentResolver(),
++                Settings.Global.SINGLE_HAND_MODE, "");
++            return 0;
++        }
+         if ((policyFlags & FLAG_WAKE) != 0) {
+             if (wakeUp(whenNanos / 1000000, mAllowTheaterModeWakeFromMotion,
+                     "android.policy:MOTION")) {
+@@ -7466,9 +7474,20 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ 
++    class OverscanTimeout implements Runnable {
++        @Override
++        public void run() {
++            Slog.i(TAG, "OverscanTimeout run");
++            Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++        }
++    }
++    OverscanTimeout mOverscanTimeout = new OverscanTimeout();
++
+     // Called on the PowerManager's Notifier thread.
+     @Override
+     public void finishedGoingToSleep(int why) {
++        mHandler.removeCallbacks(mOverscanTimeout);
++        mHandler.postDelayed(mOverscanTimeout, 200);
+         EventLog.writeEvent(70000, 0);
+         if (DEBUG_WAKEUP) Slog.i(TAG, "Finished going to sleep... (why=" + why + ")");
+         MetricsLogger.histogram(mContext, "screen_timeout", mLockScreenTimeout / 1000);
+@@ -7871,6 +7890,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             }
+ 
+             final int preferredRotation;
++            if (mDesiredRotation >= 0) {
++                preferredRotation = mDesiredRotation;
++                Slog.i(TAG, "mDesiredRotation:" + mDesiredRotation);
++                return preferredRotation;
++            }
+             if (mLidState == LID_OPEN && mLidOpenRotation >= 0) {
+                 // Ignore sensor when lid switch is open and rotation is forced.
+                 preferredRotation = mLidOpenRotation;
+@@ -9261,4 +9285,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             mKeyguardDelegate.dump(prefix, pw);
+         }
+     }
++
++    public void freezeOrThawRotation(int rotation) {
++        mDesiredRotation = rotation;
++    }
+ }
+diff --git a/services/core/java/com/android/server/wm/SingleHandAdapter.java b/services/core/java/com/android/server/wm/SingleHandAdapter.java
+new file mode 100644
+index 0000000..ea1b26d
+--- /dev/null
++++ b/services/core/java/com/android/server/wm/SingleHandAdapter.java
+@@ -0,0 +1,289 @@
++/*
++ * Copyright (C) 2012 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.wm;
++
++import android.content.Context;
++import android.database.ContentObserver;
++import android.os.Handler;
++import android.os.IBinder;
++import android.provider.Settings;
++import android.util.Slog;
++import android.view.Display;
++import android.view.Gravity;
++
++import java.util.ArrayList;
++import android.os.ServiceManager;
++import android.os.Looper;
++import android.app.IWallpaperManager;
++import android.app.IWallpaperManagerCallback;
++import android.graphics.Bitmap;
++import android.os.Bundle;
++import android.graphics.Rect;
++import android.os.ParcelFileDescriptor;
++import java.io.IOException;
++import android.os.RemoteException;
++import android.os.Message;
++import android.app.WallpaperManager;
++import android.graphics.Canvas;
++import android.view.WindowManager;
++import android.view.DisplayInfo;
++import android.graphics.Paint;
++import android.app.ActivityManager;
++import android.os.UserHandle;
++
++
++/**
++ * A single hand adapter that simulates a small display
++ * Blur background is not implementend temporary.
++ */
++final class SingleHandAdapter {
++    static final String TAG = "SingleHandAdapter";
++    static final boolean DEBUG = false;
++
++    private final ArrayList<SingleHandHandle> mSingleHandlers =
++            new ArrayList<SingleHandHandle>();
++    private String mCurMode = "";
++    private final Context mContext;
++
++    private Bitmap mBlurBitmap;
++    private WallpaperManager mWallpaperManager;
++
++    private static final int MSG_CLEAR_WALLPAPER = 1;
++    private final Handler mPaperHandler;
++
++    static Bitmap scaleWallpaper = null;
++    private DisplayInfo mDefaultDisplayInfo = new DisplayInfo();
++    private final Handler mHandler;
++    private final Handler mUiHandler;
++    private final WindowManagerService mService;
++    static final Object mLock = new Object();
++    private final static float INITIAL_SCALE = 0.75f;
++
++    private static boolean isSingleHandEnabled = true;
++    public static final String KEY_SINGLE_HAND_SCREEN_ZOOM = "single_hand_screen_zoom";
++
++    public SingleHandAdapter(Context context, Handler handler, Handler uiHandler, WindowManagerService service) {
++        mHandler = handler;
++        mContext = context;
++        mUiHandler = uiHandler;
++        mService = service;
++        mDefaultDisplayInfo = mService.getDefaultDisplayInfoLocked();
++        mWallpaperManager = (WallpaperManager) mContext.getSystemService(Context.WALLPAPER_SERVICE);
++        mPaperHandler = new Handler(mUiHandler.getLooper()) {
++            @Override
++            public void handleMessage(Message msg) {
++                switch (msg.what) {
++                    case MSG_CLEAR_WALLPAPER:
++                        Slog.i(TAG, "for BlurWallpaper :Wallpaper changed.");
++                        updateScaleWallpaperForBlur();
++                        break;
++                    default:
++                        break;
++                }
++            }
++        };
++        updateBlur();
++    }
++
++    public void registerLocked() {
++        Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++
++        mHandler.post(new Runnable() {
++            @Override
++            public void run() {
++                mContext.getContentResolver().registerContentObserver(
++                        Settings.Global.getUriFor(Settings.Global.SINGLE_HAND_MODE),
++                        true, new ContentObserver(mHandler) {
++                            @Override
++                            public void onChange(boolean selfChange) {
++                                Slog.i(TAG, "onChange..");
++                                updateSingleHandMode();
++                            }
++                        });
++
++                mContext.getContentResolver().registerContentObserver(
++                        Settings.System.getUriFor(KEY_SINGLE_HAND_SCREEN_ZOOM),
++                        true, new ContentObserver(mHandler) {
++                            @Override
++                            public void onChange(boolean selfChange) {
++                                isSingleHandEnabled = Settings.System.getIntForUser(mContext.getContentResolver(),
++                                KEY_SINGLE_HAND_SCREEN_ZOOM, 1, ActivityManager.getCurrentUser()) == 1;
++                                Slog.i(TAG, " KEY_SINGLE_HAND_SCREEN_ZOOM onChange isSingleHandEnabled="+isSingleHandEnabled);
++                                synchronized(mLock) {
++                                    if (isSingleHandEnabled) {
++                                        updateBlur();
++                                        updateScaleWallpaperForBlur();
++                                    } else {
++                                        if(mBlurBitmap!=null) {
++                                            mBlurBitmap.recycle();
++                                            mBlurBitmap = null;
++                                        }
++                                        if(scaleWallpaper!=null) {
++                                            scaleWallpaper.recycle();
++                                            scaleWallpaper = null;
++                                        }
++                                    }
++                                }
++                            }
++                        });
++            }
++        });
++    }
++
++    private void updateSingleHandMode() {
++        String value = Settings.Global.getString(mContext.getContentResolver(),
++                Settings.Global.SINGLE_HAND_MODE);
++        Slog.i(TAG, "updateSingleHandMode value: "+value+" cur: "+mCurMode);
++        if (value == null) {
++            value = "";
++        }
++
++        if (value.equals(mCurMode)) {
++            return;
++        }
++        mCurMode = value;
++
++        synchronized(mLock) {
++            if (!mSingleHandlers.isEmpty()) {
++                for (SingleHandHandle overlay : mSingleHandlers) {
++                    overlay.dismissLocked();
++                }
++                mSingleHandlers.clear();
++            }
++            if(value != null && !"".equals(value)) {
++                boolean left = value.contains("left");
++                mSingleHandlers.add(new SingleHandHandle(left));
++            }
++        }
++    }
++
++    private final class SingleHandHandle {
++        private final boolean mLeft;
++        private SingleHandWindow mWindowWalltop;
++        private SingleHandWindow mWindow;
++
++        public SingleHandHandle(boolean left) {
++            mLeft = left;
++            synchronized(mLock) {
++                mUiHandler.post(mShowRunnableWalltop);
++                mUiHandler.postDelayed(mShowRunnable, 150);
++            }
++        }
++
++        public void dismissLocked() {
++            mUiHandler.removeCallbacks(mShowRunnable);
++            mUiHandler.removeCallbacks(mShowRunnableWalltop);
++            mUiHandler.post(mDismissRunnable);
++        }
++
++        // Runs on the UI thread.
++        private final Runnable mShowRunnable = new Runnable() {
++            @Override
++            public void run() {
++                SingleHandWindow window = new SingleHandWindow(mContext, mLeft,
++                        "virtual", mDefaultDisplayInfo.logicalWidth, mDefaultDisplayInfo.logicalHeight, mService);
++                window.show();
++                mWindow = window;
++            }
++        };
++
++        private final Runnable mShowRunnableWalltop = new Runnable() {
++            @Override
++            public void run() {
++                SingleHandWindow window = new SingleHandWindow(mContext, mLeft,
++                        "blurpapertop", mDefaultDisplayInfo.logicalWidth, mDefaultDisplayInfo.logicalHeight, mService);
++                window.show();
++                mWindowWalltop = window;
++            }
++        };
++
++        // Runs on the UI thread.
++        private final Runnable mDismissRunnable = new Runnable() {
++            @Override
++            public void run() {
++                SingleHandWindow window;
++
++                window = mWindow;
++                mWindow = null;
++                if (window != null) {
++                    window.dismiss();
++                }
++
++                window = mWindowWalltop;
++                mWindowWalltop = null;
++                if (window != null) {
++                    window.dismiss();
++                }
++            }
++        };
++
++        public void onBlurWallpaperChanged() {
++            if (mWindowWalltop != null) {
++                mWindowWalltop.onBlurWallpaperChanged();
++            }
++        }
++    }
++
++    private void updateScaleWallpaperForBlur() {
++        synchronized(mLock) {
++            // update scaleWallpaper
++            if (scaleWallpaper != null) {
++                scaleWallpaper.recycle();
++                scaleWallpaper = null;
++            }
++
++            if(mBlurBitmap == null) {
++                Slog.e(TAG, "getBlurBitmap return null");
++                return;
++            }
++            int wwidth = (int)(mBlurBitmap.getWidth() * 1.0f);
++            int hheight = (int)(mBlurBitmap.getHeight() * 1.0f);
++            scaleWallpaper = Bitmap.createBitmap(wwidth, hheight, Bitmap.Config.ARGB_8888);
++            if(scaleWallpaper == null) {
++                Slog.e(TAG, "createBitmap return null");
++                return;
++            }
++            Canvas canvas = new Canvas(scaleWallpaper);
++            Paint p = new Paint();
++            p.setColor(0x92000000);
++            canvas.drawBitmap(mBlurBitmap, 0, 0, null);
++            canvas.drawRect(0, 0, mBlurBitmap.getWidth(), mBlurBitmap.getHeight(), p);
++
++            int[] inPixels = new int[wwidth * hheight];
++            scaleWallpaper.getPixels(inPixels, 0, wwidth, 0, 0, wwidth, hheight);
++
++            for (int y = 0; y < hheight; y++) {
++                for (int x = 0; x < wwidth; x++) {
++                    int index = y * wwidth + x;
++                    inPixels[index] = 0xff000000 | inPixels[index];
++                }
++            }
++            scaleWallpaper.setPixels(inPixels, 0, wwidth, 0, 0, wwidth, hheight);
++
++            // notify SingleHandWindow to invalidate background
++            if (!mSingleHandlers.isEmpty()) {
++                for (SingleHandHandle overlay : mSingleHandlers) {
++                    overlay.onBlurWallpaperChanged();
++                }
++            }
++        }
++    }
++
++    private void updateBlur() {
++        //TODO
++    }
++}
+diff --git a/services/core/java/com/android/server/wm/SingleHandWindow.java b/services/core/java/com/android/server/wm/SingleHandWindow.java
+new file mode 100644
+index 0000000..e7f1a6e
+--- /dev/null
++++ b/services/core/java/com/android/server/wm/SingleHandWindow.java
+@@ -0,0 +1,587 @@
++/*
++ * Copyright (C) 2012 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.wm;
++
++import android.content.Context;
++import android.util.Slog;
++import android.view.Display;
++import android.view.DisplayInfo;
++import android.view.Gravity;
++import android.view.LayoutInflater;
++import android.view.MotionEvent;
++import android.view.View;
++import android.view.WindowManager;
++import android.widget.TextView;
++import android.os.IBinder;
++import android.os.Parcel;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.view.IWindowManager;
++import android.view.Surface;
++import android.graphics.Canvas;
++import android.graphics.Rect;
++import android.graphics.drawable.BitmapDrawable;
++import android.graphics.drawable.Drawable;
++import android.app.WallpaperManager;
++
++import android.graphics.Bitmap;
++import android.renderscript.Allocation;
++import android.renderscript.Element;
++import android.renderscript.RenderScript;
++import android.renderscript.ScriptIntrinsicBlur;
++import android.os.Handler;
++import android.graphics.PixelFormat;
++import android.widget.RelativeLayout;
++import android.view.ViewGroup;
++import android.provider.Settings;
++import android.widget.ImageView;
++import android.widget.LinearLayout;
++import android.widget.FrameLayout;
++import android.content.Intent;
++import android.content.IntentFilter;
++import android.content.BroadcastReceiver;
++import android.hardware.display.DisplayManager;
++import android.content.res.Configuration;
++import android.content.pm.ActivityInfo;
++
++/**
++ * Manages an single hand window.
++ */
++final class SingleHandWindow {
++    private static final String TAG = "SingleHandWindow";
++    private static final boolean DEBUG = false;
++
++    private final static float INITIAL_SCALE = 0.75f;
++    private final static float MIN_SCALE = 0.3f;
++    private final static float MAX_SCALE = 1.0f;
++    private final static float WINDOW_ALPHA = 1.0f;
++
++    private final Context mContext;
++    private final String mName;
++    private int mWidth;
++    private int mHeight;
++    private final boolean mLeft;
++
++    private final Display mDefaultDisplay;
++    private DisplayInfo mDefaultDisplayInfo = new DisplayInfo();
++    private Configuration mConfiguration = new Configuration();
++
++    private DisplayInfo mPreDisplayInfo = new DisplayInfo();
++
++    private View mWindowContent;
++    private WindowManager.LayoutParams mWindowParams;
++    private TextView mTitleTextView;
++
++    private boolean mWindowVisible;
++
++    private float mWidthScale;
++    private float mHeightScale;
++
++    private final DisplayManager mDisplayManager;
++    private final WindowManager mWindowManager;
++    private final WindowManagerService mService;
++
++    private Handler mHandler;
++    private RelativeLayout mRelateViewtop;
++    private RelativeLayout mRelateViewbottom;
++    private ViewGroup.LayoutParams mLayoutParams;
++    private static final String SINGLE_HAND_MODE_HINT_SHOWN = "single_hand_mode_hint_shown";
++    private static final String YES = "yes";
++    private static final String HINT_INFO_TAG = "hint_info";
++    private static final String WINDOW_BG_TAG = "other_area";
++    private boolean mPointDownOuter = false;
++    private ImageView mImageView;
++    private TextView overlay_display_window = null;
++    private TextView singlehandmode_slide_hint = null;
++    private boolean mAttachedToWindow=false;
++    private boolean mIsNeedRelayout=false;
++    private boolean mIsBlurTopWindow = false;
++
++    public SingleHandWindow(Context context, boolean left, String name, int width, int height, WindowManagerService service) {
++        mContext = context;
++        mName = name;
++        mWidth = width;
++        mHeight = height;
++        mLeft = left;
++        mHandler = new Handler();
++        mWindowManager = (WindowManager)context.getSystemService(
++                Context.WINDOW_SERVICE);
++        mDisplayManager = (DisplayManager)context.getSystemService(
++                Context.DISPLAY_SERVICE);
++        mService = service;
++        mDefaultDisplay = mWindowManager.getDefaultDisplay();
++        mDefaultDisplayInfo = mService.getDefaultDisplayInfoLocked();
++        mConfiguration =mContext.getResources().getConfiguration();
++        mPreDisplayInfo.copyFrom(mDefaultDisplayInfo);
++        if (mName.contains("blurpaper")) {
++            mIsBlurTopWindow = true;
++            createWindow();
++        }
++    }
++
++    public void show() {
++        if (!mWindowVisible) {
++            if (!mIsBlurTopWindow) {
++                mService.freezeOrThawRotation(Surface.ROTATION_0);
++                mService.setSingleHandMode(mLeft ? 1 : 2);
++                mService.requestTraversal();
++            }
++
++            mDisplayManager.registerDisplayListener(mDisplayListener, null);
++            if (!updateDefaultDisplayInfo()) {
++                mDisplayManager.unregisterDisplayListener(mDisplayListener);
++                return;
++            }
++
++            if (mIsBlurTopWindow) {
++                mWindowParams.x = 0;
++                mWindowParams.y = 0;
++                mWindowParams.width = mWidth;
++                mWindowParams.height = mHeight;
++                mWindowContent.setOnTouchListener(mOnTouchListener);
++                mWindowManager.addView(mWindowContent, mWindowParams);
++            }
++            mWindowVisible = true;
++        }
++    }
++
++    public void dismiss() {
++        if(mAttachedToWindow){
++            mAttachedToWindow = false;
++            mContext.unregisterReceiver(mIntentReceiver);
++        }
++        if (mWindowVisible) {
++            if (!updateDefaultDisplayInfo()) {
++                mDisplayManager.unregisterDisplayListener(mDisplayListener);
++                return;
++            }
++            if (!mIsBlurTopWindow) {
++                mHandler.postDelayed(new Runnable(){
++                        public void run() {
++                            mService.freezeOrThawRotation(-1);
++                        }
++                }, 100);
++                mService.setSingleHandMode(0);
++            } else {
++                mWindowManager.removeView(mWindowContent);
++            }
++            mWindowVisible = false;
++        }
++    }
++
++    public void relayout() {
++        if (mWindowVisible && mIsBlurTopWindow) {
++            mWindowManager.removeView(mWindowContent);
++            mWindowVisible=false;
++            createWindow();
++            updateWindowParams();
++            mWindowContent.setOnTouchListener(mOnTouchListener);
++            mWindowManager.addView(mWindowContent, mWindowParams);
++            mWindowVisible=true;
++
++        }
++    }
++
++    private Bitmap cropwallpaper(boolean isTop) {
++        if(SingleHandAdapter.scaleWallpaper == null) {
++            return null;
++        }
++        int w = SingleHandAdapter.scaleWallpaper.getWidth();
++        int h = SingleHandAdapter.scaleWallpaper.getHeight();
++        Bitmap crop;
++        if (isTop) {
++            crop = Bitmap.createBitmap(SingleHandAdapter.scaleWallpaper, 0, 0, w, (int)(h * (1-INITIAL_SCALE)));
++        } else {
++            if (mLeft) {
++                crop = Bitmap.createBitmap(SingleHandAdapter.scaleWallpaper, (int)(w * INITIAL_SCALE), (int)(h * (1-INITIAL_SCALE)), (int)(w - w * INITIAL_SCALE), (int)(h * INITIAL_SCALE));
++            } else {
++                crop = Bitmap.createBitmap(SingleHandAdapter.scaleWallpaper, 0, (int)(h * (1-INITIAL_SCALE)), (int)(w - w * INITIAL_SCALE), (int)(h * INITIAL_SCALE));
++            }
++        }
++        return crop;
++    }
++
++    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
++        @Override
++        public void onReceive(Context context, Intent intent) {
++            if (null == intent || null == intent.getAction()) {
++                return;
++            }
++            final String action = intent.getAction();
++            if (Intent.ACTION_LOCALE_CHANGED.equals(action)) {
++                updateLocale();
++            }
++
++            if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
++                updateConfiguration();
++            }
++
++        }
++    };
++
++    void updateLocale() {
++        Slog.d(TAG, "updateLocale .");
++        if (null != overlay_display_window) {
++            overlay_display_window.setText(mContext.getResources().getString(com.android.internal.R.string.singlehandmode_click_hint_message));
++        }
++        if (null != singlehandmode_slide_hint) {
++            singlehandmode_slide_hint.setText(mContext.getResources().getString(com.android.internal.R.string.singlehandmode_slide_hint_message));
++        }
++    }
++
++    void updateConfiguration() {
++        Configuration newConfiguration = mContext.getResources().getConfiguration();
++        int diff = mConfiguration.diff(newConfiguration);
++        mConfiguration=newConfiguration;
++        if (DEBUG) {
++            Slog.d(TAG, "updateConfiguration diff =#0x"+Integer.toHexString(diff));       
++        }
++        if ((diff & ActivityInfo.CONFIG_ORIENTATION) != 0) {
++            Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++            return;
++        }
++    }
++
++    private boolean updateDefaultDisplayInfo() {
++        boolean value=false;
++        mIsNeedRelayout=false;
++        value=mDefaultDisplay.getDisplayInfo(mDefaultDisplayInfo);
++        if (!value) {
++            Slog.w(TAG, "Cannot show overlay display because there is no "
++                    + "default display upon which to show it.");
++            return false;
++        }
++        if (mPreDisplayInfo == null) {
++            return false;
++        }
++        if (!mPreDisplayInfo.equals(mDefaultDisplayInfo)) {
++            mWidthScale = (float)mDefaultDisplayInfo.logicalWidth/mPreDisplayInfo.logicalWidth;
++            mHeightScale = (float)mDefaultDisplayInfo.logicalHeight/mPreDisplayInfo.logicalHeight;
++            if (mDefaultDisplayInfo.logicalWidth !=mPreDisplayInfo.logicalWidth
++                || mDefaultDisplayInfo.logicalHeight !=mPreDisplayInfo.logicalHeight
++                || mDefaultDisplayInfo.logicalDensityDpi !=mPreDisplayInfo.logicalDensityDpi
++                )
++            mIsNeedRelayout=true;
++            mPreDisplayInfo.copyFrom(mDefaultDisplayInfo);
++        }
++        return true;
++    }
++    
++    private final DisplayManager.DisplayListener mDisplayListener =
++            new DisplayManager.DisplayListener() {
++        @Override
++        public void onDisplayAdded(int displayId) {
++        }
++
++        @Override
++        public void onDisplayChanged(int displayId) {
++            if (displayId == mDefaultDisplay.getDisplayId()) {
++                if (updateDefaultDisplayInfo()) {
++                    if(mIsNeedRelayout)
++                    relayout();
++                } else {
++                    dismiss();
++                }
++            }
++        }
++
++        @Override
++        public void onDisplayRemoved(int displayId) {
++            if (displayId == mDefaultDisplay.getDisplayId()) {
++                dismiss();
++            }
++        }
++    };
++
++    public void updateLayoutParams() {
++        mLayoutParams = mRelateViewtop.getLayoutParams();
++        mLayoutParams.height = mDefaultDisplayInfo.logicalHeight / 4;
++        mRelateViewtop.setLayoutParams(mLayoutParams);
++
++        mLayoutParams = mRelateViewbottom.getLayoutParams();
++        mLayoutParams.height = mDefaultDisplayInfo.logicalHeight * 3 / 4;
++        mLayoutParams.width = mDefaultDisplayInfo.logicalWidth / 4;
++        if (mLeft)
++            ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
++        else
++            ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_LEFT);
++        ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
++        mRelateViewbottom.setLayoutParams(mLayoutParams);
++    }
++
++    private void createWindow() {
++        LayoutInflater inflater = LayoutInflater.from(mContext);
++        Drawable mDrawable;
++        Drawable mDrawable1;
++
++        mWindowContent = inflater.inflate(
++            com.android.internal.R.layout.single_hand_window, null);
++
++        boolean hintShown = isSingleHandModeHintShown();
++
++        if (!mAttachedToWindow) {
++            mAttachedToWindow = true;
++            IntentFilter filter = new IntentFilter();
++            filter.addAction(Intent.ACTION_LOCALE_CHANGED);
++            filter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
++            mContext.registerReceiver(mIntentReceiver, filter, null, mHandler);
++        }
++
++        if (mIsBlurTopWindow) {
++            synchronized (SingleHandAdapter.mLock) {
++                mWindowContent.setBackgroundColor(0x00000000);
++                mRelateViewtop = (RelativeLayout)mWindowContent.findViewById(
++                        com.android.internal.R.id.relative_top);
++                mLayoutParams = mRelateViewtop.getLayoutParams();
++                mLayoutParams.height = mDefaultDisplayInfo.logicalHeight / 4;
++                mRelateViewtop.setLayoutParams(mLayoutParams);
++                Bitmap bg = cropwallpaper(true);
++                if(null != bg) {
++                    mDrawable = new BitmapDrawable(mRelateViewtop.getResources(), bg);
++                    mRelateViewtop.setBackground(mDrawable);
++                }
++
++                mRelateViewbottom = (RelativeLayout)mWindowContent.findViewById(
++                        com.android.internal.R.id.relative_bottom);
++                mLayoutParams = mRelateViewbottom.getLayoutParams();
++                mLayoutParams.height = mDefaultDisplayInfo.logicalHeight * 3 / 4;
++                mLayoutParams.width = mDefaultDisplayInfo.logicalWidth / 4;
++                if (mLeft)
++                    ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
++                else
++                    ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_LEFT);
++                ((android.widget.RelativeLayout.LayoutParams)mLayoutParams).addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
++                mRelateViewbottom.setLayoutParams(mLayoutParams);
++                Bitmap bg1 = cropwallpaper(false);
++                if(bg1 != null) {
++                    mDrawable1 = new BitmapDrawable(mRelateViewbottom.getResources(), bg1);
++                    mRelateViewbottom.setBackground(mDrawable1);
++                }
++            }
++        }
++
++        mWindowParams = new WindowManager.LayoutParams(
++                WindowManager.LayoutParams.TYPE_DISPLAY_OVERLAY);
++        mWindowParams.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
++                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
++                | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
++                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
++                | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
++        mWindowParams.privateFlags |=
++                WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_HARDWARE_ACCELERATED;
++        mWindowParams.alpha = WINDOW_ALPHA;
++        mWindowParams.gravity = Gravity.TOP | Gravity.LEFT;
++        mWindowParams.format = PixelFormat.TRANSLUCENT;
++
++        if (mIsBlurTopWindow) {
++            showHint(!hintShown);
++            mWidthScale = 1.0f;
++            mHeightScale = 1.0f;
++        }
++    }
++
++    private void updateWindowParams() {
++        mWindowParams.x = 0;
++        mWindowParams.y = 0;
++        mWindowParams.width = mDefaultDisplayInfo.logicalWidth;
++        mWindowParams.height = mDefaultDisplayInfo.logicalHeight;
++
++        mWidth = (int)(mWidth * mWidthScale);
++        mHeight = (int)(mHeight * mHeightScale);
++    }
++
++    boolean isSingleHandModeHintShown() {
++        String value = Settings.Global.getString(mContext.getContentResolver(),
++                SINGLE_HAND_MODE_HINT_SHOWN);
++        if (value == null || !value.equals(YES)) {
++            return false;
++        } else {
++            return true;
++        }
++    }
++
++    private void show(View v, boolean visible) {
++        if (null != v) {
++            if (visible) {
++                v.setVisibility(View.VISIBLE);
++            } else {
++                v.setVisibility(View.INVISIBLE);
++            }
++        }
++    }
++
++    private void showHint(boolean visible) {
++        FrameLayout layout;
++        /* if hint visible, hide the hint_info_icon; else show it */
++        mImageView = (ImageView) mWindowContent.findViewById(com.android.internal.R.id.hint_info);
++        layout = (FrameLayout) mWindowContent.findViewById(com.android.internal.R.id.hint_section);
++        layout.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++               mImageView.performClick();
++            }
++        });
++        if (!visible && mImageView != null) {
++            mImageView.setOnClickListener(mActionClickListener);
++        }
++        show(mImageView, !visible);
++
++        /* setBackground so that hint is clear to see */
++        if (!visible) {
++            mWindowContent.setBackgroundColor(0x00000000);
++        } else {
++            mWindowContent.setBackgroundColor(0x99000000);
++        }
++
++        /* show/hide click hint  */
++        overlay_display_window = (TextView)mWindowContent.findViewById(com.android.internal.R.id.single_hand_window_title);
++        show(overlay_display_window, visible);
++
++        ImageView imageView = (ImageView) mWindowContent.findViewById(com.android.internal.R.id.click_hint);
++
++        show(imageView, visible);
++
++        /* put slide_hint in correct place */
++        LinearLayout viewSlideHint = (LinearLayout)mWindowContent.findViewById(com.android.internal.R.id.slide_hint_area);
++        if (null != viewSlideHint) {
++            if (visible) {
++                ViewGroup.LayoutParams layoutParams = viewSlideHint.getLayoutParams();
++                if (mLeft)
++                    ((android.widget.RelativeLayout.LayoutParams)layoutParams).addRule(RelativeLayout.ALIGN_PARENT_LEFT);
++                else
++                    ((android.widget.RelativeLayout.LayoutParams)layoutParams).addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
++                viewSlideHint.setLayoutParams(layoutParams);
++                viewSlideHint.setVisibility(View.VISIBLE);
++            } else {
++                viewSlideHint.setVisibility(View.INVISIBLE);
++            }
++        }
++
++        /* show/hide slide hint */
++        singlehandmode_slide_hint = (TextView)mWindowContent.findViewById(com.android.internal.R.id.singlehandmode_slide_hint_text);
++        show(singlehandmode_slide_hint, visible);
++        imageView = (ImageView) mWindowContent.findViewById(com.android.internal.R.id.slide_hint);
++        if (null != imageView) {
++            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) imageView.getLayoutParams();
++            params.width = (int)(mDefaultDisplayInfo.logicalWidth * INITIAL_SCALE);
++            params.height = (int)(mContext.getResources().getDimensionPixelSize(com.android.internal.R.dimen.navigation_bar_height) * INITIAL_SCALE);
++            imageView.setLayoutParams(params);
++        }
++        show(imageView, visible);
++
++        /* update title, InputFlinger filter click_event depending on title */
++        if (visible) {
++            mWindowParams.setTitle("SingleMode_windowbg_hint");
++        } else {
++            if (mLeft) {
++                mWindowParams.setTitle("SingleMode_windowbg_left");
++            } else {
++                mWindowParams.setTitle("SingleMode_windowbg_right");
++            }
++        }
++        if (mWindowVisible) {
++            mWindowManager.updateViewLayout(mWindowContent, mWindowParams);
++        }
++    }
++
++    boolean singlehandRegionContainsPoint (int x, int y) {
++        int top = (int)((float)mDefaultDisplayInfo.logicalHeight * (1-INITIAL_SCALE));
++        int bottom = mDefaultDisplayInfo.logicalHeight;
++        int left;
++        int right;
++
++        if(mLeft) {
++            left = 0;
++            right = (int)(mDefaultDisplayInfo.logicalWidth * INITIAL_SCALE);
++        } else {
++            left = (int)(mDefaultDisplayInfo.logicalWidth * (1-INITIAL_SCALE));
++            right = mDefaultDisplayInfo.logicalWidth;
++        }
++
++        if (y >= top && y < bottom && x >= left && x < right) {
++            return true;
++        }
++
++        return false;
++    }
++
++    private final View.OnTouchListener mOnTouchListener = new View.OnTouchListener() {
++        @Override
++        public boolean onTouch(View view, MotionEvent event) {
++            final float rawX = event.getRawX();
++            final float rawY = event.getRawY();
++            boolean inRegion = singlehandRegionContainsPoint((int)rawX, (int)rawY);
++
++            switch (event.getActionMasked()) {
++                case MotionEvent.ACTION_DOWN:
++                    mPointDownOuter = !inRegion;
++                    break;
++                case MotionEvent.ACTION_UP:
++                    ImageView imageView = (ImageView) mWindowContent.findViewById(com.android.internal.R.id.hint_info);
++                    /* In case hint_info icon is shown, clicking empty_area trigger Exiting SingleHandMode */
++                    if (imageView != null && imageView.getVisibility() == View.VISIBLE) {
++                        if (!inRegion && mPointDownOuter) {
++                            Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++                        }
++                    } else {
++                        /* Else, clicking any_area trigger Hidding hint and show hint_info Icon */
++                        // hide hint
++                        showHint(false);
++                        // update Setting, so not show hint again when entering single_hand_mode
++                        Settings.Global.putString(mContext.getContentResolver(), SINGLE_HAND_MODE_HINT_SHOWN, YES);
++                    }
++
++                    mPointDownOuter = false;
++                    break;
++                case MotionEvent.ACTION_CANCEL:
++                    mPointDownOuter = false;
++                    break;
++                default:
++                    break;
++            }
++
++            return true;
++        }
++    };
++
++    private View.OnClickListener mActionClickListener = new View.OnClickListener(){
++        @Override
++        public void onClick(View v) {
++            // Click the hint_info icon
++            showHint(true);
++        }
++    };
++
++    public void onBlurWallpaperChanged() {
++        Drawable mDrawable;
++        Drawable mDrawable1;
++        mRelateViewtop = (RelativeLayout)mWindowContent.findViewById(
++                com.android.internal.R.id.relative_top);
++        Bitmap bg = cropwallpaper(true);
++        if (bg != null) {
++            mDrawable = new BitmapDrawable(mRelateViewtop.getResources(), bg);
++            mRelateViewtop.setBackground(mDrawable);
++        }
++        mRelateViewbottom = (RelativeLayout)mWindowContent.findViewById(
++                com.android.internal.R.id.relative_bottom);
++        Bitmap bg1 = cropwallpaper(false);
++        if (bg1 != null) {
++            mDrawable1 = new BitmapDrawable(mRelateViewbottom.getResources(), bg1);
++            mRelateViewbottom.setBackground(mDrawable1);
++        }
++    }
++}
+diff --git a/services/core/java/com/android/server/wm/WallpaperController.java b/services/core/java/com/android/server/wm/WallpaperController.java
+index e7ceba9..2ec4ace 100644
+--- a/services/core/java/com/android/server/wm/WallpaperController.java
++++ b/services/core/java/com/android/server/wm/WallpaperController.java
+@@ -421,7 +421,13 @@ class WallpaperController {
+                 WindowState wallpaper = windows.get(wallpaperNdx);
+                 if (updateWallpaperOffset(wallpaper, dw, dh, sync)) {
+                     WindowStateAnimator winAnimator = wallpaper.mWinAnimator;
+-                    winAnimator.computeShownFrameLocked();
++                    if (mService.mSingleHandMode == 1) {
++                        winAnimator.computeShownFrameLeftLocked();
++                    } else if(mService.mSingleHandMode == 2) {
++                        winAnimator.computeShownFrameRightLocked();
++                    } else {
++                        winAnimator.computeShownFrameNormalLocked();
++                    }
+                     // No need to lay out the windows - we can just set the wallpaper position
+                     // directly.
+                     winAnimator.setWallpaperOffset(wallpaper.mShownPosition);
+diff --git a/services/core/java/com/android/server/wm/WindowAnimator.java b/services/core/java/com/android/server/wm/WindowAnimator.java
+index 888f3a2..5b8765b 100644
+--- a/services/core/java/com/android/server/wm/WindowAnimator.java
++++ b/services/core/java/com/android/server/wm/WindowAnimator.java
+@@ -119,6 +119,7 @@ public class WindowAnimator {
+     static final int KEYGUARD_SHOWN         = 1;
+     static final int KEYGUARD_ANIMATING_OUT = 2;
+     int mForceHiding = KEYGUARD_NOT_SHOWN;
++    int offsetLayer = 0;
+ 
+     // When set to true the animator will go over all windows after an animation frame is posted and
+     // check if some got replaced and can be removed.
+@@ -731,6 +732,7 @@ public class WindowAnimator {
+         mBulkUpdateParams = SET_ORIENTATION_CHANGE_COMPLETE;
+         boolean wasAnimating = mAnimating;
+         setAnimating(false);
++        boolean isSingleHandAnimating = false;
+         mAppWindowAnimating = false;
+         if (DEBUG_WINDOW_TRACE) {
+             Slog.i(TAG, "!!! animate: entry time=" + mCurrentTime);
+@@ -777,6 +779,8 @@ public class WindowAnimator {
+                 final int N = windows.size();
+                 for (int j = 0; j < N; j++) {
+                     windows.get(j).mWinAnimator.prepareSurfaceLocked(true);
++                    if (windows.get(j).mWinAnimator.mIsSingleHandExiting || windows.get(j).mWinAnimator.mIsSingleHandEntering)
++                        isSingleHandAnimating = true;
+                 }
+             }
+ 
+@@ -805,7 +809,7 @@ public class WindowAnimator {
+                 mAnimating |= mService.mDragState.stepAnimationLocked(mCurrentTime);
+             }
+ 
+-            if (mAnimating) {
++            if (mAnimating || isSingleHandAnimating) {
+                 mService.scheduleAnimationLocked();
+             }
+ 
+diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
+index 8b023bb..1ceac4d 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerService.java
++++ b/services/core/java/com/android/server/wm/WindowManagerService.java
+@@ -1092,6 +1092,7 @@ public class WindowManagerService extends IWindowManager.Stub
+         mSfHwRotation = android.os.SystemProperties.getInt("ro.sf.hwrotation",0) / 90;
+ 
+         showEmulatorDisplayOverlayIfNeeded();
++        mUiHandler = UiThread.getHandler();
+     }
+ 
+     public InputMonitor getInputMonitor() {
+@@ -3990,7 +3991,13 @@ public class WindowManagerService extends IWindowManager.Stub
+                 Slog.w(TAG_WM, "Attempted to set orientation of non-existing app token: " + token);
+                 return;
+             }
+-
++            if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
++                  || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
++                  || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
++                  || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
++                Slog.i(TAG, "setAppOrientation token: "+token+" requestedOrientation: "+requestedOrientation);
++                Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++            }
+             atoken.requestedOrientation = requestedOrientation;
+         }
+     }
+@@ -4039,6 +4046,16 @@ public class WindowManagerService extends IWindowManager.Stub
+             }
+ 
+             final boolean changed = mFocusedApp != newFocus;
++            if (changed && newFocus != null) {
++                int requestedOrientation = newFocus.requestedOrientation;
++                if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
++                         || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
++                         || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
++                         || requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
++                    Slog.i(TAG, "setFocusedApp token: "+token+" requestedOrientation: "+requestedOrientation);
++                    Settings.Global.putString(mContext.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
++                }
++            }
+             if (changed) {
+                 mFocusedApp = newFocus;
+                 mInputMonitor.setFocusedAppLw(newFocus);
+@@ -8254,6 +8271,11 @@ public class WindowManagerService extends IWindowManager.Stub
+ 
+     public void systemReady() {
+         mPolicy.systemReady();
++        mSingleHandSwitch = judgeSingleHandSwitchBySize() ? 1 : 0;
++        if (mSingleHandSwitch > 0) {
++            mSingleHandAdapter = new SingleHandAdapter(mContext, mH, mUiHandler, this);
++            mSingleHandAdapter.registerLocked();
++        }
+     }
+ 
+     // -------------------------------------------------------------
+@@ -11821,4 +11843,44 @@ public class WindowManagerService extends IWindowManager.Stub
+             }
+         }
+     }
++
++    public int mSingleHandMode = 0;
++    private SingleHandAdapter mSingleHandAdapter;
++    private final Handler mUiHandler;
++
++    private static int mSingleHandSwitch;
++    public int getSingleHandMode() {
++        return mSingleHandMode;
++    }
++    public void setSingleHandMode(int singleHandMode) {
++        Slog.i(TAG, "cur: "+mSingleHandMode+" to: "+singleHandMode);
++        if(mSingleHandMode == singleHandMode) return;
++        mSingleHandMode = singleHandMode;
++    }
++
++    /**
++     * Freeze rotation changes.  (Enable "rotation lock".)
++     * not persists across reboots.
++     * @param rotation The desired rotation to freeze to, or -1 to thaw rotation
++     * changes
++     */
++    public void freezeOrThawRotation(int rotation) {
++        if (!checkCallingPermission(android.Manifest.permission.SET_ORIENTATION,
++                "freezeRotation()")) {
++            throw new SecurityException("Requires SET_ORIENTATION permission");
++        }
++        if (rotation < -1 || rotation > Surface.ROTATION_270) {
++            throw new IllegalArgumentException("Rotation argument must be -1 or a valid "
++                    + "rotation constant.");
++        }
++
++        Slog.i(TAG, "freezeRotationTemporarily: mRotation=" + mRotation);
++
++        mPolicy.freezeOrThawRotation(rotation);
++        updateRotationUnchecked(false, false);
++    }
++
++    private boolean judgeSingleHandSwitchBySize() {
++        return mContext.getResources().getBoolean(com.android.internal.R.bool.single_hand_mode);
++    }
+ }
+diff --git a/services/core/java/com/android/server/wm/WindowStateAnimator.java b/services/core/java/com/android/server/wm/WindowStateAnimator.java
+index fc8c639..a9f58c9 100644
+--- a/services/core/java/com/android/server/wm/WindowStateAnimator.java
++++ b/services/core/java/com/android/server/wm/WindowStateAnimator.java
+@@ -46,10 +46,12 @@ import static com.android.server.wm.WindowManagerService.logWithStack;
+ import static com.android.server.wm.WindowSurfacePlacer.SET_ORIENTATION_CHANGE_COMPLETE;
+ import static com.android.server.wm.WindowSurfacePlacer.SET_TURN_ON_SCREEN;
+ 
++import android.view.Display;
+ import android.content.Context;
+ import android.graphics.Matrix;
+ import android.graphics.PixelFormat;
+ import android.graphics.Point;
++import android.graphics.PointF;
+ import android.graphics.Rect;
+ import android.graphics.RectF;
+ import android.graphics.Region;
+@@ -65,6 +67,7 @@ import android.view.SurfaceControl;
+ import android.view.WindowManager;
+ import android.view.WindowManager.LayoutParams;
+ import android.view.WindowManagerPolicy;
++import android.content.pm.ActivityInfo;
+ import android.view.animation.Animation;
+ import android.view.animation.AnimationSet;
+ import android.view.animation.AnimationUtils;
+@@ -241,6 +244,22 @@ class WindowStateAnimator {
+ 
+     private final Rect mTmpSize = new Rect();
+ 
++    boolean mIsLeftSingleHand;
++    boolean mIsRightSingleHand;
++    int mOpenSingleHandMode;
++    float mSingleHandScale;
++    final boolean mIsSingleHandWindow;
++    private Display mDefaultDisplay;
++    private DisplayInfo mDefaultDisplayInfo = new DisplayInfo();
++    private final WindowManager mWindowManager;
++    int mWidth;
++    int mHeight;
++    boolean mIsSingleHandEntering;
++    boolean mIsSingleHandExiting;
++    private static final int TYPE_NORMAL = 0;
++    private static final int TYPE_LEFT = 1;
++    private static final int TYPE_RIGHT = 2;
++
+     WindowStateAnimator(final WindowState win) {
+         final WindowManagerService service = win.mService;
+ 
+@@ -266,6 +285,23 @@ class WindowStateAnimator {
+         mAttrType = win.mAttrs.type;
+         mIsWallpaper = win.mIsWallpaper;
+         mWallpaperControllerLocked = mService.mWallpaperControllerLocked;
++        mIsSingleHandWindow = win.toString().contains("SingleMode_window");
++        mOpenSingleHandMode = mService.getSingleHandMode();
++        mSingleHandScale = 1.0f;
++        mIsSingleHandExiting = false;
++        mIsSingleHandEntering = false;
++        mWindowManager = (WindowManager)mContext.getSystemService(
++                Context.WINDOW_SERVICE);
++        updatedisplayinfo();
++    }
++
++    public void updatedisplayinfo() {
++        mDefaultDisplay = mWindowManager.getDefaultDisplay();
++        mDefaultDisplay.getDisplayInfo(mDefaultDisplayInfo);
++        //cause single hand only use in portrait
++        boolean isPortrait = mDefaultDisplayInfo.logicalHeight > mDefaultDisplayInfo.logicalWidth;
++        mWidth = isPortrait ? mDefaultDisplayInfo.logicalWidth : mDefaultDisplayInfo.logicalHeight;
++        mHeight = isPortrait ? mDefaultDisplayInfo.logicalHeight : mDefaultDisplayInfo.logicalWidth;
+     }
+ 
+     public void setAnimation(Animation anim, long startTime, int stackClip) {
+@@ -944,7 +980,7 @@ class WindowStateAnimator {
+         }
+     }
+ 
+-    void computeShownFrameLocked() {
++    void computeShownFrameLocked(int type) {
+         final boolean selfTransformation = mHasLocalTransformation;
+         Transformation attachedTransformation =
+                 (mAttachedWinAnimator != null && mAttachedWinAnimator.mHasLocalTransformation)
+@@ -952,6 +988,9 @@ class WindowStateAnimator {
+         Transformation appTransformation = (mAppAnimator != null && mAppAnimator.hasTransformation)
+                 ? mAppAnimator.transformation : null;
+ 
++        if (type == TYPE_LEFT || type == TYPE_RIGHT) {
++            updatedisplayinfo();
++        }
+         // Wallpapers are animated based on the "real" window they
+         // are currently targeting.
+         final WindowState wallpaperTarget = mWallpaperControllerLocked.getWallpaperTarget();
+@@ -983,6 +1022,18 @@ class WindowStateAnimator {
+         final boolean screenAnimation =
+                 screenRotationAnimation != null && screenRotationAnimation.isAnimating();
+ 
++        float ratio = 1.0f;
++        float pendingX = 0.0f;
++        float pendingY = 0.0f;
++        if (type == TYPE_LEFT) {
++            ratio = mSingleHandScale;
++            pendingY = (float)mHeight * (1-mSingleHandScale);
++        } else if (type == TYPE_RIGHT){
++            ratio = mSingleHandScale;
++            pendingX = (float)mWidth * (1-mSingleHandScale);
++            pendingY = (float)mHeight * (1-mSingleHandScale);
++        }
++
+         mHasClipRect = false;
+         if (selfTransformation || attachedTransformation != null
+                 || appTransformation != null || screenAnimation) {
+@@ -1040,12 +1091,12 @@ class WindowStateAnimator {
+ 
+             mHaveMatrix = true;
+             tmpMatrix.getValues(tmpFloats);
+-            mDsDx = tmpFloats[Matrix.MSCALE_X];
+-            mDtDx = tmpFloats[Matrix.MSKEW_Y];
+-            mDsDy = tmpFloats[Matrix.MSKEW_X];
+-            mDtDy = tmpFloats[Matrix.MSCALE_Y];
+-            float x = tmpFloats[Matrix.MTRANS_X];
+-            float y = tmpFloats[Matrix.MTRANS_Y];
++            mDsDx = tmpFloats[Matrix.MSCALE_X] * ratio;
++            mDtDx = tmpFloats[Matrix.MSKEW_Y] * ratio;
++            mDsDy = tmpFloats[Matrix.MSKEW_X] * ratio;
++            mDtDy = tmpFloats[Matrix.MSCALE_Y] * ratio;
++            float x = tmpFloats[Matrix.MTRANS_X] * ratio + pendingX;
++            float y = tmpFloats[Matrix.MTRANS_Y] * ratio + pendingY;
+             mWin.mShownPosition.set(Math.round(x), Math.round(y));
+ 
+             // Now set the alpha...  but because our current hardware
+@@ -1057,7 +1108,7 @@ class WindowStateAnimator {
+             if (!mService.mLimitedAlphaCompositing
+                     || (!PixelFormat.formatHasAlpha(mWin.mAttrs.format)
+                     || (mWin.isIdentityMatrix(mDsDx, mDtDx, mDsDy, mDtDy)
+-                            && x == frame.left && y == frame.top))) {
++                    && floatEqualCompare(x, frame.left) && floatEqualCompare(y, frame.top)))) {
+                 //Slog.i(TAG_WM, "Applying alpha transform");
+                 if (selfTransformation) {
+                     mShownAlpha *= mTransformation.getAlpha();
+@@ -1133,26 +1184,28 @@ class WindowStateAnimator {
+             tmpMatrix.getValues(tmpFloats);
+ 
+             mHaveMatrix = true;
+-            mDsDx = tmpFloats[Matrix.MSCALE_X];
+-            mDtDx = tmpFloats[Matrix.MSKEW_Y];
+-            mDsDy = tmpFloats[Matrix.MSKEW_X];
+-            mDtDy = tmpFloats[Matrix.MSCALE_Y];
+-            float x = tmpFloats[Matrix.MTRANS_X];
+-            float y = tmpFloats[Matrix.MTRANS_Y];
++            mDsDx = tmpFloats[Matrix.MSCALE_X] * ratio;
++            mDtDx = tmpFloats[Matrix.MSKEW_Y] * ratio;
++            mDsDy = tmpFloats[Matrix.MSKEW_X] * ratio;
++            mDtDy = tmpFloats[Matrix.MSCALE_Y] * ratio;
++            float x = tmpFloats[Matrix.MTRANS_X] * ratio + pendingX;
++            float y = tmpFloats[Matrix.MTRANS_Y]* ratio + pendingY;
+             mWin.mShownPosition.set(Math.round(x), Math.round(y));
+ 
+             mShownAlpha = mAlpha;
+         } else {
+-            mWin.mShownPosition.set(mWin.mFrame.left, mWin.mFrame.top);
++            float x = mWin.mFrame.left * ratio + pendingX;
++            float y = mWin.mFrame.top * ratio + pendingY;
++            mWin.mShownPosition.set((int) x, (int) y);
+             if (mWin.mXOffset != 0 || mWin.mYOffset != 0) {
+-                mWin.mShownPosition.offset(mWin.mXOffset, mWin.mYOffset);
++                mWin.mShownPosition.offset((int)(mWin.mXOffset * mSingleHandScale), (int)(mWin.mYOffset * mSingleHandScale));
+             }
+             mShownAlpha = mAlpha;
+             mHaveMatrix = false;
+-            mDsDx = mWin.mGlobalScale;
++            mDsDx = mWin.mGlobalScale * ratio;
+             mDtDx = 0;
+             mDsDy = 0;
+-            mDtDy = mWin.mGlobalScale;
++            mDtDy = mWin.mGlobalScale * ratio;
+         }
+     }
+ 
+@@ -2155,4 +2208,199 @@ class WindowStateAnimator {
+                     DtDy * w.mVScale, false);
+         }
+     }
++
++    private boolean floatEqualCompare(float f) {
++        return Math.abs(mSingleHandScale - f) < 1e-6;
++    }
++
++    private boolean floatEqualCompare(float f1, float f2) {
++        return Math.abs(f1 - f2) < 1e-6;
++    }
++
++    void computeShownFrameLocked() {
++        int openSingleHandMode = mService.getSingleHandMode();
++        int requestedOrientation = -1;
++        if(mWin.mAppToken != null) {
++           requestedOrientation = mWin.mAppToken.requestedOrientation;
++        }
++
++        if(mIsSingleHandWindow) {
++            computeShownFrameNormalLocked();
++            if (mWin.toString().contains("SingleMode_windowbg")) mAnimLayer = 10000 + mAnimator.offsetLayer;
++            if (mWin.toString().contains("SingleMode_windowbg_hint")) mAnimLayer = 810000;
++        } else if(isOrientationLandscape(requestedOrientation)) {
++            computeShownFrameNormalLocked();
++            mOpenSingleHandMode = 0;
++        } else {
++            computeShownFrameLockedByMode(openSingleHandMode);
++        }
++        if (mWin.mAttrs.type == WindowManager.LayoutParams.TYPE_STATUS_BAR
++            && mOpenSingleHandMode != 0 && openSingleHandMode != 0
++            && (mIsLeftSingleHand || mIsRightSingleHand)) {
++            float extraScale = 2.0f / mWin.mFrame.height();
++            mDtDy += extraScale;
++        }
++        traceLogForSingleHandMode(openSingleHandMode);
++    }
++
++    private boolean isOrientationLandscape(int requestedOrientation) {
++        return (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
++                || (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE)
++                || (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)
++                || (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
++    }
++
++    private void computeShownFrameLockedByMode(int openSingleHandMode) {
++        if(openSingleHandMode == 0 && mOpenSingleHandMode == 1) {
++            mOpenSingleHandMode = 0;
++            mIsSingleHandExiting = true;
++            mIsSingleHandEntering = false;
++            mAnimator.offsetLayer = 0;
++            mSingleHandScale = 0.8f;
++            computeShownFrameLeftLocked();
++        } else if(openSingleHandMode == 0 && mOpenSingleHandMode == 2) {
++            mOpenSingleHandMode = 0;
++            mIsSingleHandExiting = true;
++            mIsSingleHandEntering = false;
++            mSingleHandScale = 0.8f;
++            mAnimator.offsetLayer = 0;
++            computeShownFrameRightLocked();
++        } else if(openSingleHandMode == 0 && mIsSingleHandExiting && mOpenSingleHandMode == 0) {
++            if(mIsLeftSingleHand) {
++                setLeftScale();
++            } else if (mIsRightSingleHand) {
++                setRightScale();
++            } else {
++                mSingleHandScale = 1.0f;
++                mIsSingleHandExiting = false;
++                mIsSingleHandEntering = false;
++                mIsRightSingleHand = false;
++                mIsLeftSingleHand = false;
++                mOpenSingleHandMode = 0;
++                computeShownFrameNormalLocked();
++            }
++        } else if (openSingleHandMode == 1) {
++            handleLeftScale();
++        } else if (openSingleHandMode == 2) {
++            handleRightScale();
++        } else {
++            computeShownFrameNormalLocked();
++        }
++    }
++
++    private void setLeftScale() {
++        if (floatEqualCompare(0.8f)) {
++            mSingleHandScale = 0.85f;
++            computeShownFrameLeftLocked();
++        } else if (floatEqualCompare(0.85f)) {
++            mSingleHandScale = 0.9f;
++            computeShownFrameLeftLocked();
++        } else if (floatEqualCompare(0.9f)) {
++            mSingleHandScale = 0.95f;
++            computeShownFrameLeftLocked();
++        } else if (floatEqualCompare(0.95f)) {
++            mSingleHandScale = 1.0f;
++            mIsSingleHandExiting = false;
++            mIsLeftSingleHand = false;
++            computeShownFrameNormalLocked();
++        }
++    }
++
++    private void setRightScale() {
++        if (floatEqualCompare(0.8f)) {
++            mSingleHandScale = 0.85f;
++            computeShownFrameRightLocked();
++        } else if (floatEqualCompare(0.85f)) {
++            mSingleHandScale = 0.9f;
++            computeShownFrameRightLocked();
++        } else if (floatEqualCompare(0.9f)) {
++            mSingleHandScale = 0.95f;
++            computeShownFrameRightLocked();
++        } else if (floatEqualCompare(0.95f)) {
++            mSingleHandScale = 1.0f;
++            mIsSingleHandExiting = false;
++            mIsRightSingleHand = false;
++            computeShownFrameNormalLocked();
++        }
++    }
++
++    private void handleLeftScale() {
++        if(mOpenSingleHandMode == 0) {
++            mOpenSingleHandMode = 1;
++            mIsSingleHandEntering = true;
++            mIsSingleHandExiting = false;
++            mSingleHandScale = 0.95f;
++            computeShownFrameLeftLocked();
++        } else if(mOpenSingleHandMode ==1 && mIsSingleHandEntering) {
++            if (floatEqualCompare(0.95f)) {
++                mSingleHandScale = 0.9f;
++            } else if (floatEqualCompare(0.9f)) {
++                mSingleHandScale = 0.85f;
++            } else if (floatEqualCompare(0.85f)) {
++                mSingleHandScale = 0.8f;
++            } else if (floatEqualCompare(0.8f)) {
++                mAnimator.offsetLayer = 800000;
++                mSingleHandScale = 0.75f;
++                mIsSingleHandEntering = false;
++                mIsLeftSingleHand = true;
++            }
++            computeShownFrameLeftLocked();
++        } else {
++            mSingleHandScale = 0.75f;
++            mIsLeftSingleHand = true;
++            computeShownFrameLeftLocked();
++        }
++    }
++
++    private void handleRightScale() {
++        if(mOpenSingleHandMode == 0) {
++            mOpenSingleHandMode = 2;
++            mIsSingleHandEntering = true;
++            mIsSingleHandExiting = false;
++            mSingleHandScale = 0.95f;
++            computeShownFrameRightLocked();
++        } else if(mOpenSingleHandMode == 2 && mIsSingleHandEntering) {
++            if (floatEqualCompare(0.95f)) {
++                mSingleHandScale = 0.9f;
++            } else if (floatEqualCompare(0.9f)) {
++                mSingleHandScale = 0.85f;
++            } else if (floatEqualCompare(0.85f)) {
++                mSingleHandScale = 0.8f;
++            } else if (floatEqualCompare(0.8f)) {
++                mAnimator.offsetLayer = 800000;
++                mSingleHandScale = 0.75f;
++                mIsSingleHandEntering = false;
++                mIsRightSingleHand = true;
++            }
++            computeShownFrameRightLocked();
++        } else {
++            mSingleHandScale = 0.75f;
++            mIsRightSingleHand = true;
++            computeShownFrameRightLocked();
++        }
++    }
++
++    void computeShownFrameRightLocked() {
++        computeShownFrameLocked(TYPE_RIGHT);
++    }
++
++    void computeShownFrameLeftLocked() {
++        computeShownFrameLocked(TYPE_LEFT);
++    }
++
++    void computeShownFrameNormalLocked() {
++        computeShownFrameLocked(TYPE_NORMAL);
++    }
++
++    private void traceLogForSingleHandMode(int openSingleHandMode) {
++        if (mWin.mAppToken != null && openSingleHandMode != 0
++                && floatEqualCompare(0.75f)) {
++            Slog.i(TAG, "win="+mWin+",openSingleHandMode="+openSingleHandMode
++                            +",mOpenSingleHandMode="+mOpenSingleHandMode
++                            +",shownPosition="+mWin.mShownPosition
++                            +",mIsSingleHandEntering="+mIsSingleHandEntering+",mIsSingleHandExiting="+mIsSingleHandExiting
++                            +",mIsLeftSingleHand="+mIsLeftSingleHand+",mIsRightSingleHand="+mIsRightSingleHand
++                            +",MATRIX [" + mDsDx + "," + mDtDx + "," + mDsDy + "," + mDtDy + "]");
++        }
++    }
+ }
+diff --git a/services/core/jni/com_android_server_input_InputManagerService.cpp b/services/core/jni/com_android_server_input_InputManagerService.cpp
+index 2b2655a..f415c2c 100644
+--- a/services/core/jni/com_android_server_input_InputManagerService.cpp
++++ b/services/core/jni/com_android_server_input_InputManagerService.cpp
+@@ -960,10 +960,21 @@ void NativeInputManager::interceptMotionBeforeQueueing(nsecs_t when, uint32_t& p
+     if (interactive) {
+         policyFlags |= POLICY_FLAG_INTERACTIVE;
+     }
++    if (policyFlags & POLICY_FLAG_REMOVE_HANDYMODE) {
++        ALOGD("interceptMotionBeforeQueueing..");
++        JNIEnv* env = jniEnv();
++        env->CallIntMethod(mServiceObj,
++                gServiceClassInfo.interceptMotionBeforeQueueingNonInteractive,
++                when, policyFlags);
++    }
++
+     if ((policyFlags & POLICY_FLAG_TRUSTED) && !(policyFlags & POLICY_FLAG_INJECTED)) {
+         if (policyFlags & POLICY_FLAG_INTERACTIVE) {
+             policyFlags |= POLICY_FLAG_PASS_TO_USER;
+         } else {
++            if (policyFlags & POLICY_FLAG_REMOVE_HANDYMODE) {
++                policyFlags &= ~POLICY_FLAG_REMOVE_HANDYMODE;
++            }
+             JNIEnv* env = jniEnv();
+             jint wmActions = env->CallIntMethod(mServiceObj,
+                         gServiceClassInfo.interceptMotionBeforeQueueingNonInteractive,
+-- 
+1.9.3 (Apple Git-50)
+

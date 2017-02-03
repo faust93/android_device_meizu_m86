@@ -1,0 +1,26 @@
+From e5ecd8cdf8c1633272a2d3798165fc6a0fcf7c29 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 2 Feb 2017 11:52:34 +0300
+Subject: [PATCH] ProxyController: trying to avoid wakelock
+
+Change-Id: Ia8f321eb1f8c3c7428491e1bb4a438bfc4f2e849
+---
+ src/java/com/android/internal/telephony/ProxyController.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/ProxyController.java b/src/java/com/android/internal/telephony/ProxyController.java
+index db1cfaa..b83b30d 100644
+--- a/src/java/com/android/internal/telephony/ProxyController.java
++++ b/src/java/com/android/internal/telephony/ProxyController.java
+@@ -373,7 +373,7 @@ public class ProxyController {
+                 HashSet<String> modemsInUse = new HashSet<String>(mNewLogicalModemIds.length);
+                 for (String modemId : mNewLogicalModemIds) {
+                     if (!modemsInUse.add(modemId)) {
+-                        mTransactionFailed = true;
++                        mTransactionFailed = false;
+                         Log.wtf(LOG_TAG, "ERROR: sending down the same id for different phones");
+                     }
+                 }
+-- 
+1.9.3 (Apple Git-50)
+

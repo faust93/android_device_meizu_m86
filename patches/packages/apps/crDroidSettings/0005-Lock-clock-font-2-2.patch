@@ -1,0 +1,198 @@
+From 74dc4e063b57b3b68980ffe723c7095685d31cfe Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 2 Feb 2017 12:26:45 +0300
+Subject: [PATCH] Lock clock font [2/2]
+
+Change-Id: Ic315df104cc2b1278e16ce1c8f49748349ff315c
+---
+ res/values-ru/crdroid_strings.xml                  | 23 ++++++++++++
+ res/values/crdroid_arrays.xml                      | 43 ++++++++++++++++++++++
+ res/values/crdroid_strings.xml                     | 22 +++++++++++
+ res/xml/crdroid_settings_lockscreen.xml            |  9 +++++
+ .../settings/fragments/LockScreenSettings.java     | 15 ++++++++
+ 5 files changed, 112 insertions(+)
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index 93da131..a984203 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -1300,6 +1300,29 @@
+     <string name="screen_state_on_delay_title">Отложить действия при включении экрана</string>
+     <string name="screen_state_on_delay_summary">Отложить действия при включении экране на указанное количество секунд</string>
+ 
++    <!-- Lock Clock Fonts -->
++    <string name="lock_clock_font_title">Шрифт часов</string>
++    <string name="lock_clock_font_summary">Сменить шрифт часов на экране блокировки</string>
++    <string name="lock_clock_font_dialog_title">Выберите шрифт</string>
++    <string name="lock_clock_font_normal">Обычный</string>
++    <string name="lock_clock_font_bold">Жирный</string>
++    <string name="lock_clock_font_italic">Курсив</string>
++    <string name="lock_clock_font_bold_italic">Жирный курсив</string>
++    <string name="lock_clock_font_light_normal">Легкий (по умолчанию)</string>
++    <string name="lock_clock_font_light_italic">Легкий курсив</string>
++    <string name="lock_clock_font_thin_normal">Тонкий</string>
++    <string name="lock_clock_font_thin_italic">Тонкий курсив</string>
++    <string name="lock_clock_font_condensed_normal">Плотный</string>
++    <string name="lock_clock_font_condensed_bold">Плотный жирный</string>
++    <string name="lock_clock_font_condensed_italic">Плотный курсив</string>
++    <string name="lock_clock_font_condensed_bold_italic">Плотный жирный курсив</string>
++    <string name="lock_clock_font_medium_normal">Средний</string>
++    <string name="lock_clock_font_medium_italic">Средний курсив</string>
++    <string name="lock_clock_font_black_normal">Чёрный</string>
++    <string name="lock_clock_font_black_italic">Чёрный курсив</string>
++    <string name="lock_clock_font_condensed_light_normal">Плотный легкий</string>
++    <string name="lock_clock_font_condensed_light_italic">Плотный легкий курсив</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Заголовки</string>
+     <string name="status_bar_custom_header_title">Пользовательское изображение в заголовке</string>
+diff --git a/res/values/crdroid_arrays.xml b/res/values/crdroid_arrays.xml
+index 83a304c..9b2bfaf 100644
+--- a/res/values/crdroid_arrays.xml
++++ b/res/values/crdroid_arrays.xml
+@@ -1113,6 +1113,49 @@
+         <item>2</item>
+     </string-array>
+ 
++    <!-- Lock Clock Fonts -->
++    <string-array name="lock_clock_fonts_entries" translatable="false">
++        <item>@string/lock_clock_font_normal</item>
++        <item>@string/lock_clock_font_bold</item>
++        <item>@string/lock_clock_font_italic</item>
++        <item>@string/lock_clock_font_bold_italic</item>
++        <item>@string/lock_clock_font_light_normal</item>
++        <item>@string/lock_clock_font_light_italic</item>
++        <item>@string/lock_clock_font_thin_normal</item>
++        <item>@string/lock_clock_font_thin_italic</item>
++        <item>@string/lock_clock_font_condensed_normal</item>
++        <item>@string/lock_clock_font_condensed_bold</item>
++        <item>@string/lock_clock_font_condensed_italic</item>
++        <item>@string/lock_clock_font_condensed_bold_italic</item>
++        <item>@string/lock_clock_font_medium_normal</item>
++        <item>@string/lock_clock_font_medium_italic</item>
++        <item>@string/lock_clock_font_black_normal</item>
++        <item>@string/lock_clock_font_black_italic</item>
++        <item>@string/lock_clock_font_condensed_light_normal</item>
++        <item>@string/lock_clock_font_condensed_light_italic</item>
++    </string-array>
++
++    <string-array name="lock_clock_fonts_values" translatable="false">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++        <item>3</item>
++        <item>4</item>
++        <item>5</item>
++        <item>6</item>
++        <item>7</item>
++        <item>8</item>
++        <item>9</item>
++        <item>10</item>
++        <item>11</item>
++        <item>12</item>
++        <item>13</item>
++        <item>14</item>
++        <item>15</item>
++        <item>16</item>
++        <item>17</item>
++    </string-array>
++
+     <!-- Header options -->
+     <string-array name="custom_header_provider_entries" translatable="false">
+         <item>@string/daylight_header_provider_title</item>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 9e5e429..d1c565d 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -1314,6 +1314,28 @@
+     <string name="screen_state_on_delay_title">Screen On actions delay</string>
+     <string name="screen_state_on_delay_summary">Number of seconds to wait before performing actions after screen on</string>
+ 
++    <!-- Lockscreen clock fonts -->
++    <string name="lock_clock_font_title">Lockscreen clock font</string>
++    <string name="lock_clock_font_summary">Change the default font of the lockscreen clock widget</string>
++    <string name="lock_clock_font_normal">Roboto</string>
++    <string name="lock_clock_font_bold">Roboto Bold</string>
++    <string name="lock_clock_font_italic">Roboto Italic</string>
++    <string name="lock_clock_font_bold_italic">Roboto Bold Italic</string>
++    <string name="lock_clock_font_light_normal">Roboto Light (default)</string>
++    <string name="lock_clock_font_light_italic">Roboto Light Italic</string>
++    <string name="lock_clock_font_thin_normal">Roboto Thin</string>
++    <string name="lock_clock_font_thin_italic">Roboto Thin Italic</string>
++    <string name="lock_clock_font_condensed_normal">Roboto Condensed</string>
++    <string name="lock_clock_font_condensed_bold">Roboto Condensed Bold</string>
++    <string name="lock_clock_font_condensed_italic">Roboto Condensed Italic</string>
++    <string name="lock_clock_font_condensed_bold_italic">Roboto Condensed Bold Italic</string>
++    <string name="lock_clock_font_medium_normal">Roboto Medium</string>
++    <string name="lock_clock_font_medium_italic">Roboto Medium Italic</string>
++    <string name="lock_clock_font_black_normal">Roboto Black</string>
++    <string name="lock_clock_font_black_italic">Roboto Black Italic</string>
++    <string name="lock_clock_font_condensed_light_normal">Roboto Condensed Light</string>
++    <string name="lock_clock_font_condensed_light_italic">Roboto Condensed Light Italic</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Headers</string>
+     <string name="status_bar_custom_header_title">Custom header image</string>
+diff --git a/res/xml/crdroid_settings_lockscreen.xml b/res/xml/crdroid_settings_lockscreen.xml
+index 7b83c7f..e8fb79a 100644
+--- a/res/xml/crdroid_settings_lockscreen.xml
++++ b/res/xml/crdroid_settings_lockscreen.xml
+@@ -57,6 +57,15 @@
+             android:summary="@string/hide_lockscreen_alarm_summary"
+             android:defaultValue="true" />
+ 
++         <ListPreference
++            android:key="lock_clock_fonts"
++            android:title="@string/lock_clock_font_title"
++            android:dialogTitle="@string/lock_clock_font_title"
++            android:entries="@array/lock_clock_fonts_entries"
++            android:entryValues="@array/lock_clock_fonts_values"
++            android:summary="@string/lock_clock_font_summary"
++            android:persistent="false" />
++
+          <PreferenceScreen
+             android:key="lockscreen_weather"
+             android:title="@string/lock_screen_weather_settings_title"
+diff --git a/src/com/crdroid/settings/fragments/LockScreenSettings.java b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+index 7ba0d7a..1631b20 100644
+--- a/src/com/crdroid/settings/fragments/LockScreenSettings.java
++++ b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+@@ -27,6 +27,9 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+ 
+     private static final String LOCKSCREEN_MAX_NOTIF_CONFIG = "lockscreen_max_notif_cofig";
+     private static final String LOCKSCREEN_CHARGING = "lockscreen_battery_info";
++    private static final String LOCK_CLOCK_FONTS = "lock_clock_fonts";
++
++    private ListPreference mLockClockFonts;
+ 
+     private SeekBarPreference mMaxKeyguardNotifConfig;
+     private SwitchPreference mLockscreenCharging;
+@@ -55,6 +58,12 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+         mLockscreenCharging.setChecked((Settings.System.getInt(getContentResolver(),
+                         Settings.System.LOCKSCREEN_BATTERY_INFO, 0) == 1));
+         mLockscreenCharging.setOnPreferenceChangeListener(this);
++
++        mLockClockFonts = (ListPreference) findPreference(LOCK_CLOCK_FONTS);
++        mLockClockFonts.setValue(String.valueOf(Settings.System.getInt(
++                getContentResolver(), Settings.System.LOCK_CLOCK_FONTS, 4)));
++        mLockClockFonts.setSummary(mLockClockFonts.getEntry());
++        mLockClockFonts.setOnPreferenceChangeListener(this);
+     }
+ 
+     @Override
+@@ -70,6 +79,12 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+             Settings.System.putInt(getActivity().getContentResolver(),
+                     Settings.System.LOCKSCREEN_BATTERY_INFO, value ? 1 : 0);
+             return true;
++        } else if (preference == mLockClockFonts) {
++            Settings.System.putInt(getActivity().getContentResolver(), Settings.System.LOCK_CLOCK_FONTS,
++                    Integer.valueOf((String) newValue));
++            mLockClockFonts.setValue(String.valueOf(newValue));
++            mLockClockFonts.setSummary(mLockClockFonts.getEntry());
++            return true;
+         }
+         return false;
+     }
+-- 
+1.9.3 (Apple Git-50)
+

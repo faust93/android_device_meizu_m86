@@ -1,0 +1,26 @@
+From a9ec2450500201003e0e2f847b2aba51a2e6eceb Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 13 Jan 2017 20:30:55 +0300
+Subject: [PATCH] temporary disable broken summary
+
+Change-Id: Ib2a7f5b1acb626e18166de97a6244aee1e6ab3da
+---
+ src/org/cyanogenmod/cmparts/power/PerfProfileSettings.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/org/cyanogenmod/cmparts/power/PerfProfileSettings.java b/src/org/cyanogenmod/cmparts/power/PerfProfileSettings.java
+index 209516f..86d3fca 100644
+--- a/src/org/cyanogenmod/cmparts/power/PerfProfileSettings.java
++++ b/src/org/cyanogenmod/cmparts/power/PerfProfileSettings.java
+@@ -270,7 +270,7 @@ public class PerfProfileSettings extends SettingsPreferenceFragment
+         } else {
+             summary = getResources().getString(R.string.auto_power_save_summary_off);
+         }
+-        mAutoPowerSavePref.setSummary(summary);
++//        mAutoPowerSavePref.setSummary(summary);
+     }
+ 
+     public static final SummaryProvider SUMMARY_PROVIDER = new SummaryProvider() {
+-- 
+1.9.3 (Apple Git-50)
+

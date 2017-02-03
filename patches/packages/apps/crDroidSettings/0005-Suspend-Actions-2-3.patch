@@ -1,0 +1,594 @@
+From 980b86109834adad079f61f134117b585c7af1df Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 2 Feb 2017 12:23:52 +0300
+Subject: [PATCH] Suspend Actions [2/3]
+
+Change-Id: I4f90212b2d79d1badb6dce5fff3fec71cb30bee3
+---
+ res/drawable-hdpi/ic_screen_state.png              | Bin 0 -> 4263 bytes
+ res/drawable-xhdpi/ic_screen_state.png             | Bin 0 -> 4069 bytes
+ res/values-ru/crdroid_strings.xml                  |  18 ++
+ res/values/crdroid_strings.xml                     |  18 ++
+ res/xml/crdroid_screen_state_toggles.xml           |  76 +++++++
+ res/xml/crdroid_settings.xml                       |   7 +
+ .../settings/fragments/ScreenStateToggles.java     | 227 +++++++++++++++++++++
+ 7 files changed, 346 insertions(+)
+ create mode 100644 res/drawable-hdpi/ic_screen_state.png
+ create mode 100644 res/drawable-xhdpi/ic_screen_state.png
+ create mode 100644 res/xml/crdroid_screen_state_toggles.xml
+ create mode 100644 src/com/crdroid/settings/fragments/ScreenStateToggles.java
+
+diff --git a/res/drawable-hdpi/ic_screen_state.png b/res/drawable-hdpi/ic_screen_state.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..0405a2ac94b393aa7e9ab450e3a5e07aa5192959
+GIT binary patch
+literal 4263
+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
+JPDHLkV1hgQ;V%FH
+
+literal 0
+HcmV?d00001
+
+diff --git a/res/drawable-xhdpi/ic_screen_state.png b/res/drawable-xhdpi/ic_screen_state.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..5635ba32c238c1af0588329069c3cd08700ad2dc
+GIT binary patch
+literal 4069
+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
+X9!AqW_Q#sL00000NkvXXu0mjfY6OqR
+
+literal 0
+HcmV?d00001
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index 38b4713..93da131 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -1282,6 +1282,24 @@
+     <string name="recents_finger_gesture">Свайп вызова недавних приложений</string>
+     <string name="recents_finger_gesture_summary">Свайп одним пальцем вверх из нижнего правого угла для вызова недавних</string>
+ 
++    <!-- Screen state service -->
++    <string name="screen_state_toggles_summary">@null</string>
++    <string name="screen_state_toggles_title">Действия в режиме ожидания</string>
++    <string name="screen_state_toggles_enable_title">Включить</string>
++    <string name="screen_state_toggles_enable_summary">Действия выполняемые при выключении экрана. При включении возвращается прежние состояния параметров.</string>
++    <string name="screen_state_toggles_mobile_title">Мобильные сети</string>
++    <string name="screen_state_toggles_location_title">Местоположение</string>
++    <string name="screen_state_toggles_twog">Использовать режим 2G</string>
++    <string name="screen_state_toggles_twog_summary">Режим передачи данных активной сети будет переключен в режим 2G</string>
++    <string name="screen_state_toggles_gps">Выключить GPS</string>
++    <string name="screen_state_toggles_gps_summary">Не использовать GPS при выключенном экране</string>
++    <string name="screen_state_toggles_mobile_data">Отключить мобильные данные</string>
++    <string name="screen_state_toggles_mobile_data_summary">Не использовать передачу данных при выключенном экране </string>
++    <string name="screen_state_off_delay_title">Отложить действия при выключении экрана</string>
++    <string name="screen_state_off_delay_summary">Отложить действия при выключении экране на указанное количество секунд</string>
++    <string name="screen_state_on_delay_title">Отложить действия при включении экрана</string>
++    <string name="screen_state_on_delay_summary">Отложить действия при включении экране на указанное количество секунд</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Заголовки</string>
+     <string name="status_bar_custom_header_title">Пользовательское изображение в заголовке</string>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 4ffd5e5..9e5e429 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -1296,6 +1296,24 @@
+     <string name="lockscreen_battery_info_title">Lockscreen charging info</string>
+     <string name="lockscreen_battery_info_summary">Display negociated charger max current and voltage and battery temperature on lockscreen while charging</string>
+ 
++    <!-- Screen state service -->
++    <string name="screen_state_toggles_summary">@null</string>
++    <string name="screen_state_toggles_title">Suspend Actions</string>
++    <string name="screen_state_toggles_enable_title">Enable</string>
++    <string name="screen_state_toggles_enable_summary">Actions will be executed on screen off. On screen on the previous state will be restored.</string>
++    <string name="screen_state_toggles_mobile_title">Mobile networks</string>
++    <string name="screen_state_toggles_location_title">Location</string>
++    <string name="screen_state_toggles_twog">Switch to 2G</string>
++    <string name="screen_state_toggles_twog_summary">Network mode will be switched to 2G on screen off</string>
++    <string name="screen_state_toggles_gps">Disable GPS</string>
++    <string name="screen_state_toggles_gps_summary">GPS based location service will be disabled on screen off</string>
++    <string name="screen_state_toggles_mobile_data">Disable mobile data</string>
++    <string name="screen_state_toggles_mobile_data_summary">Mobile data will be disabled on screen off</string>
++    <string name="screen_state_off_delay_title">Screen Off actions delay</string>
++    <string name="screen_state_off_delay_summary">Number of seconds to wait before performing actions after screen off</string>
++    <string name="screen_state_on_delay_title">Screen On actions delay</string>
++    <string name="screen_state_on_delay_summary">Number of seconds to wait before performing actions after screen on</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Headers</string>
+     <string name="status_bar_custom_header_title">Custom header image</string>
+diff --git a/res/xml/crdroid_screen_state_toggles.xml b/res/xml/crdroid_screen_state_toggles.xml
+new file mode 100644
+index 0000000..8cba7f1
+--- /dev/null
++++ b/res/xml/crdroid_screen_state_toggles.xml
+@@ -0,0 +1,76 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!-- Copyright (C) 2012 The CyanogenMod Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++
++<PreferenceScreen
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:title="@string/screen_state_toggles_title"
++    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings">
++
++    <SwitchPreference
++        android:key="screen_state_toggles_enable_key"
++        android:title="@string/screen_state_toggles_enable_title"
++        android:summary="@string/screen_state_toggles_enable_summary"
++        android:defaultValue="false"/>
++
++    <com.crdroid.settings.preferences.SeekBarPreference
++        android:key="screen_state_off_delay"
++        android:title="@string/screen_state_off_delay_title"
++        android:summary="@string/screen_state_off_delay_summary"
++        android:max="180"
++        settings:min="0"
++        settings:units="s"
++        android:persistent="false"
++        android:dependency="screen_state_toggles_enable_key" />
++
++    <com.crdroid.settings.preferences.SeekBarPreference
++        android:key="screen_state_on_delay"
++        android:title="@string/screen_state_on_delay_title"
++        android:summary="@string/screen_state_on_delay_summary"
++        android:max="180"
++        settings:min="0"
++        settings:units="s"
++        android:persistent="false"
++        android:dependency="screen_state_toggles_enable_key" />
++
++    <PreferenceCategory
++        android:key="screen_state_toggles_mobile_key"
++        android:title="@string/screen_state_toggles_mobile_title">
++
++       <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++            android:key="screen_state_toggles_twog"
++            android:title="@string/screen_state_toggles_twog"
++            android:summary="@string/screen_state_toggles_twog_summary"
++            android:defaultValue="false"/>
++
++       <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++            android:key="screen_state_toggles_mobile_data"
++            android:title="@string/screen_state_toggles_mobile_data"
++            android:summary="@string/screen_state_toggles_mobile_data_summary"
++            android:defaultValue="false"/>
++    </PreferenceCategory>
++
++    <PreferenceCategory
++        android:key="screen_state_toggles_location_key"
++        android:title="@string/screen_state_toggles_location_title">
++
++       <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++            android:key="screen_state_toggles_gps"
++            android:title="@string/screen_state_toggles_gps"
++            android:summary="@string/screen_state_toggles_gps_summary"
++            android:defaultValue="false"/>
++
++    </PreferenceCategory>
++</PreferenceScreen>
+diff --git a/res/xml/crdroid_settings.xml b/res/xml/crdroid_settings.xml
+index 0c61120..9d818a8 100644
+--- a/res/xml/crdroid_settings.xml
++++ b/res/xml/crdroid_settings.xml
+@@ -87,6 +87,13 @@
+             android:fragment="com.crdroid.settings.fragments.AnimationSettings"
+             android:icon="@drawable/ic_settings_animation" />
+ 
++        <!-- Screen state -->
++        <PreferenceScreen
++            android:key="screenstate_category"
++            android:title="@string/screen_state_toggles_title" 
++            android:fragment="com.crdroid.settings.fragments.ScreenStateToggles"
++            android:icon="@drawable/ic_settings_powermenu" />
++
+         <!-- Misc -->
+         <PreferenceScreen
+             android:key="misc_category"
+diff --git a/src/com/crdroid/settings/fragments/ScreenStateToggles.java b/src/com/crdroid/settings/fragments/ScreenStateToggles.java
+new file mode 100644
+index 0000000..241864f
+--- /dev/null
++++ b/src/com/crdroid/settings/fragments/ScreenStateToggles.java
+@@ -0,0 +1,227 @@
++/*
++ * Copyright (C) 2013 Android Open Kang Project
++ * Copyright (C) 2017 faust93 at monumentum@gmail.com
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.crdroid.settings.fragments;
++
++import android.os.Bundle;
++import android.content.ContentResolver;
++import android.content.res.Resources;
++import android.support.v7.preference.Preference;
++import android.support.v7.preference.PreferenceCategory;
++import android.support.v7.preference.PreferenceScreen;
++import android.support.v7.preference.Preference.OnPreferenceChangeListener;
++import android.support.v14.preference.SwitchPreference;
++import android.provider.Settings;
++import android.text.TextUtils;
++import android.view.View;
++
++import android.content.Intent;
++import android.util.Log;
++import android.net.ConnectivityManager;
++import android.content.Context;
++import android.os.UserManager;
++
++import android.preference.PreferenceManager;
++
++import com.android.settings.R;
++import com.crdroid.settings.preferences.SeekBarPreference;
++import com.android.settings.SettingsPreferenceFragment;
++import com.android.settings.Utils;
++
++import com.android.internal.logging.MetricsProto.MetricsEvent;
++
++public class ScreenStateToggles extends SettingsPreferenceFragment implements Preference.OnPreferenceChangeListener {
++
++    private static final String TAG = "ScreenStateToggles";
++    private static final String SCREEN_STATE_TOOGLES_ENABLE = "screen_state_toggles_enable_key";
++    private static final String SCREEN_STATE_TOOGLES_TWOG = "screen_state_toggles_twog";
++    private static final String SCREEN_STATE_TOOGLES_GPS = "screen_state_toggles_gps";
++    private static final String SCREEN_STATE_TOOGLES_MOBILE_DATA = "screen_state_toggles_mobile_data";
++    private static final String SCREEN_STATE_ON_DELAY = "screen_state_on_delay";
++    private static final String SCREEN_STATE_OFF_DELAY = "screen_state_off_delay";
++    private static final String SCREEN_STATE_CATGEGORY_LOCATION = "screen_state_toggles_location_key";
++    private static final String SCREEN_STATE_CATGEGORY_MOBILE_DATA = "screen_state_toggles_mobile_key";
++
++    private Context mContext;
++
++    private SwitchPreference mEnableScreenStateToggles;
++    private SwitchPreference mEnableScreenStateTogglesTwoG;
++    private SwitchPreference mEnableScreenStateTogglesGps;
++    private SwitchPreference mEnableScreenStateTogglesMobileData;
++    private SeekBarPreference mSecondsOffDelay;
++    private SeekBarPreference mSecondsOnDelay;
++    private PreferenceCategory mMobileDateCategory;
++    private PreferenceCategory mLocationCategory;
++
++    @Override
++    protected int getMetricsCategory() {
++        return MetricsEvent.CRDROID_SETTINGS;
++    }
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++
++        mContext = (Context) getActivity();
++
++        addPreferencesFromResource(R.xml.crdroid_screen_state_toggles);
++        PreferenceScreen prefSet = getPreferenceScreen();
++
++        mEnableScreenStateToggles = (SwitchPreference) findPreference(
++                SCREEN_STATE_TOOGLES_ENABLE);
++
++        int enabled = Settings.System.getInt(getActivity().getContentResolver(), Settings.System.START_SCREEN_STATE_SERVICE, 0);
++
++        mEnableScreenStateToggles.setChecked(enabled != 0);
++        mEnableScreenStateToggles.setOnPreferenceChangeListener(this);
++
++        mSecondsOffDelay = (SeekBarPreference) findPreference(SCREEN_STATE_OFF_DELAY);
++        int offd = Settings.System.getInt(getContentResolver(),
++                Settings.System.SCREEN_STATE_OFF_DELAY, 0);
++        mSecondsOffDelay.setValue(offd / 1);
++        mSecondsOffDelay.setOnPreferenceChangeListener(this);
++
++        mSecondsOnDelay = (SeekBarPreference) findPreference(SCREEN_STATE_ON_DELAY);
++        int ond = Settings.System.getInt(getContentResolver(),
++                Settings.System.SCREEN_STATE_ON_DELAY, 0);
++        mSecondsOnDelay.setValue(ond / 1);
++        mSecondsOnDelay.setOnPreferenceChangeListener(this);
++
++        mMobileDateCategory = (PreferenceCategory) findPreference(
++                SCREEN_STATE_CATGEGORY_MOBILE_DATA);
++        mLocationCategory = (PreferenceCategory) findPreference(
++                SCREEN_STATE_CATGEGORY_LOCATION);
++
++        mEnableScreenStateTogglesTwoG = (SwitchPreference) findPreference(
++                SCREEN_STATE_TOOGLES_TWOG);
++
++        ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
++
++        if (!cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE)){
++            getPreferenceScreen().removePreference(mEnableScreenStateTogglesTwoG);
++        } else {
++            mEnableScreenStateTogglesTwoG.setChecked((
++                Settings.System.getInt(getActivity().getContentResolver(), Settings.System.SCREEN_STATE_TWOG, 0) == 1));
++            mEnableScreenStateTogglesTwoG.setOnPreferenceChangeListener(this);
++        }
++
++        mEnableScreenStateTogglesMobileData = (SwitchPreference) findPreference(
++                SCREEN_STATE_TOOGLES_MOBILE_DATA);
++
++        if (!cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE)){
++            getPreferenceScreen().removePreference(mEnableScreenStateTogglesMobileData);
++        } else {
++            mEnableScreenStateTogglesMobileData.setChecked((
++                Settings.System.getInt(getActivity().getContentResolver(), Settings.System.SCREEN_STATE_MOBILE_DATA, 0) == 1));
++            mEnableScreenStateTogglesMobileData.setOnPreferenceChangeListener(this);
++        }
++
++        // Only enable these controls if this user is allowed to change location
++        // sharing settings.
++        final UserManager um = (UserManager) getActivity().getSystemService(Context.USER_SERVICE);
++        boolean isLocationChangeAllowed = !um.hasUserRestriction(UserManager.DISALLOW_SHARE_LOCATION);
++
++        // TODO: check if gps is available on this device?
++        mEnableScreenStateTogglesGps = (SwitchPreference) findPreference(
++                SCREEN_STATE_TOOGLES_GPS);
++
++        if (!isLocationChangeAllowed){
++            getPreferenceScreen().removePreference(mEnableScreenStateTogglesGps);
++            mEnableScreenStateTogglesGps = null;
++        } else {
++            mEnableScreenStateTogglesGps.setChecked((
++                Settings.System.getInt(getActivity().getContentResolver(), Settings.System.SCREEN_STATE_GPS, 0) == 1));
++            mEnableScreenStateTogglesGps.setOnPreferenceChangeListener(this);
++        }
++
++        mMobileDateCategory.setEnabled(enabled != 0);
++        mLocationCategory.setEnabled(enabled != 0);
++    }
++
++    @Override
++    public boolean onPreferenceChange(Preference preference, Object newValue) {
++        ContentResolver resolver = getActivity().getContentResolver();
++
++        if (preference == mEnableScreenStateToggles) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(resolver,
++                    Settings.System.START_SCREEN_STATE_SERVICE, value ? 1 : 0);
++
++            Intent service = (new Intent())
++                .setClassName("com.android.systemui", "com.android.systemui.screenstate.ScreenStateService");
++            if (value) {
++                getActivity().stopService(service);
++                getActivity().startService(service);
++            } else {
++                getActivity().stopService(service);
++            }
++
++            mMobileDateCategory.setEnabled(value);
++            mLocationCategory.setEnabled(value);
++
++            return true;
++        } else if (preference == mEnableScreenStateTogglesTwoG) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(resolver,
++                    Settings.System.SCREEN_STATE_TWOG, value ? 1 : 0);
++
++            Intent intent = new Intent("android.intent.action.SCREEN_STATE_SERVICE_UPDATE");
++            mContext.sendBroadcast(intent);
++
++            return true;
++        } else if (preference == mEnableScreenStateTogglesGps) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(resolver,
++                    Settings.System.SCREEN_STATE_GPS, value ? 1 : 0);
++
++            Intent intent = new Intent("android.intent.action.SCREEN_STATE_SERVICE_UPDATE");
++            mContext.sendBroadcast(intent);
++
++            return true;
++        } else if (preference == mEnableScreenStateTogglesMobileData) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(resolver,
++                    Settings.System.SCREEN_STATE_MOBILE_DATA, value ? 1 : 0);
++
++            Intent intent = new Intent("android.intent.action.SCREEN_STATE_SERVICE_UPDATE");
++            mContext.sendBroadcast(intent);
++
++            return true;
++        } else if (preference == mSecondsOffDelay) {
++            int delay = (Integer) newValue;
++            Settings.System.putInt(getActivity().getContentResolver(),
++                    Settings.System.SCREEN_STATE_OFF_DELAY, delay);
++
++            return true;
++        } else if (preference == mSecondsOnDelay) {
++            int delay = (Integer) newValue;
++            Settings.System.putInt(getActivity().getContentResolver(),
++                    Settings.System.SCREEN_STATE_ON_DELAY, delay);
++
++            return true;
++        }
++
++        return false;
++    }
++
++    private void restartService(){
++        Intent service = (new Intent())
++                .setClassName("com.android.systemui", "com.android.systemui.screenstate.ScreenStateService");
++        getActivity().stopService(service);
++        getActivity().startService(service);
++    }
++}
+-- 
+1.9.3 (Apple Git-50)
+

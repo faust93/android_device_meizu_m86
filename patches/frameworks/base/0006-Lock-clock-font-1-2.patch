@@ -1,0 +1,153 @@
+From 77d668d47a1678b8ce924bea8c573035a1290669 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 11:18:14 +0300
+Subject: [PATCH] Lock clock font [1/2]
+
+Change-Id: I587dccf2648be00a946923edd7e063f3be930123
+---
+ core/java/android/provider/Settings.java           |  6 ++
+ .../com/android/keyguard/KeyguardStatusView.java   | 74 ++++++++++++++++++++--
+ 2 files changed, 76 insertions(+), 4 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index b45a331..a7e8d53 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4561,6 +4561,12 @@ public final class Settings {
+           */
+         public static final String RECENTS_FINGER_GESTURE = "recents_finger_gesture";
+ 
++        /**
++         * Change fonts for the system lockscreen clock widget
++         * @hide
++         */
++        public static final String LOCK_CLOCK_FONTS = "lock_clock_fonts";
++
+           /**
+           * Whether to show the battery info on the lockscreen while charging
+           * @hide
+diff --git a/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java b/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
+index 0a8fa8c..37a99e9 100644
+--- a/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
++++ b/packages/Keyguard/src/com/android/keyguard/KeyguardStatusView.java
+@@ -23,6 +23,7 @@ import android.content.ContentResolver;
+ import android.content.pm.PackageManager;
+ import android.content.res.Configuration;
+ import android.content.res.Resources;
++import android.graphics.Typeface;
+ import android.graphics.Bitmap;
+ import android.graphics.drawable.Drawable;
+ import android.graphics.PorterDuff.Mode;
+@@ -182,6 +183,11 @@ public class KeyguardStatusView extends GridLayout implements
+                 getResources().getDimensionPixelSize(R.dimen.widget_label_font_size));
+     }
+ 
++    private int getLockClockFont() {
++        return Settings.System.getInt(mContext.getContentResolver(),
++                Settings.System.LOCK_CLOCK_FONTS, 4);
++    }
++
+     public void refreshTime() {
+         mDateView.setFormat24Hour(Patterns.dateView);
+         mDateView.setFormat12Hour(Patterns.dateView);
+@@ -239,8 +245,8 @@ public class KeyguardStatusView extends GridLayout implements
+     protected void onAttachedToWindow() {
+         super.onAttachedToWindow();
+         KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mInfoCallback);
+-        updateWeatherSettings(false);
+         mWeatherController.addCallback(this);
++        updateWeatherSettings(false);
+         updateSettings(false);
+     }
+ 
+@@ -289,7 +295,7 @@ public class KeyguardStatusView extends GridLayout implements
+             mWeatherConditionText.setText(info.condition);
+             mWeatherTimestamp.setText(getCurrentDate());
+             mWeatherView.setVisibility(mShowWeather ? View.VISIBLE : View.GONE);
+-            updateWeatherSettings(false);
++            updateWeatherSettings(true);
+         }
+     }
+ 
+@@ -406,8 +412,69 @@ public class KeyguardStatusView extends GridLayout implements
+                 Settings.System.HIDE_LOCKSCREEN_DATE, 1, UserHandle.USER_CURRENT) == 1;
+ 
+         if (showClock) {
+-            mClockView = (TextClock) findViewById(R.id.clock_view);
++
++            boolean isPrimary = UserHandle.getCallingUserId() == UserHandle.USER_OWNER;
++            int lockClockFont = isPrimary ? getLockClockFont() : 0;
++
++            switch (lockClockFont) {
++                case 0:
++                    mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
++                    break;
++                case 1:
++                    mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
++                    break;
++                case 2:
++                    mClockView.setTypeface(Typeface.create("sans-serif", Typeface.ITALIC));
++                    break;
++                case 3:
++                    mClockView.setTypeface(Typeface.create("sans-serif", Typeface.BOLD_ITALIC));
++                    break;
++                case 4:
++                    mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
++                    break;
++                case 5:
++                    mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.ITALIC));
++                    break;
++                case 6:
++                    mClockView.setTypeface(Typeface.create("sans-serif-thin", Typeface.NORMAL));
++                    break;
++                case 7:
++                    mClockView.setTypeface(Typeface.create("sans-serif-thin", Typeface.ITALIC));
++                    break;
++                case 8:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.NORMAL));
++                    break;
++                case 9:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
++                    break;
++                case 10:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.ITALIC));
++                    break;
++                case 11:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD_ITALIC));
++                    break;
++                case 12:
++                    mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
++                    break;
++                case 13:
++                    mClockView.setTypeface(Typeface.create("sans-serif-medium", Typeface.ITALIC));
++                    break;
++                case 14:
++                    mClockView.setTypeface(Typeface.create("sans-serif-black", Typeface.NORMAL));
++                    break;
++                case 15:
++                    mClockView.setTypeface(Typeface.create("sans-serif-black", Typeface.ITALIC));
++                    break;
++                case 16:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.NORMAL));
++                break;
++                case 17:
++                    mClockView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.ITALIC));
++                    break;
++            }
++
+             mClockView.setVisibility(View.VISIBLE);
++
+         } else {
+             mClockView = (TextClock) findViewById(R.id.clock_view);
+             mClockView.setVisibility(View.GONE);
+@@ -428,7 +495,6 @@ public class KeyguardStatusView extends GridLayout implements
+         }
+     }
+ 
+-
+     // DateFormat.getBestDateTimePattern is extremely expensive, and refresh is called often.
+     // This is an optimization to ensure we only recompute the patterns when the inputs change.
+     private static final class Patterns {
+-- 
+1.9.3 (Apple Git-50)
+

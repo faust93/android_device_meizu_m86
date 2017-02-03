@@ -1,0 +1,139 @@
+From 30f020a6c5d555a3d83e113799f448c6c963f46e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 29 Jan 2017 22:16:51 +0300
+Subject: [PATCH] Revert: Disable hwui blending for first draw to main FBO
+
+Change-Id: I58ccf80f264f7cd05fab9462734c7d8bdd2bdecc
+---
+ libs/hwui/BakedOpRenderer.cpp         | 10 +++-------
+ libs/hwui/OpenGLRenderer.cpp          |  2 +-
+ libs/hwui/Readback.cpp                |  2 +-
+ libs/hwui/renderstate/Blend.cpp       |  2 +-
+ libs/hwui/renderstate/RenderState.cpp |  9 ++-------
+ libs/hwui/renderstate/RenderState.h   |  2 +-
+ 6 files changed, 9 insertions(+), 18 deletions(-)
+
+diff --git a/libs/hwui/BakedOpRenderer.cpp b/libs/hwui/BakedOpRenderer.cpp
+index 3ab8393..6db345a 100644
+--- a/libs/hwui/BakedOpRenderer.cpp
++++ b/libs/hwui/BakedOpRenderer.cpp
+@@ -190,7 +190,6 @@ Texture* BakedOpRenderer::getTexture(const SkBitmap* bitmap) {
+ }
+ 
+ void BakedOpRenderer::drawRects(const float* rects, int count, const SkPaint* paint) {
+-    bool firstDraw = !mHasDrawn;
+     std::vector<Vertex> vertices;
+     vertices.reserve(count);
+     Vertex* vertex = vertices.data();
+@@ -220,7 +219,7 @@ void BakedOpRenderer::drawRects(const float* rects, int count, const SkPaint* pa
+             .setTransform(Matrix4::identity(), TransformFlags::None)
+             .setModelViewIdentityEmptyBounds()
+             .build();
+-    mRenderState.render(glop, mRenderTarget.orthoMatrix, firstDraw);
++    mRenderState.render(glop, mRenderTarget.orthoMatrix);
+ }
+ 
+ // clears and re-fills stencil with provided rendertarget space quads,
+@@ -237,7 +236,7 @@ void BakedOpRenderer::setupStencilQuads(std::vector<Vertex>& quadVertices,
+             .setTransform(Matrix4::identity(), TransformFlags::None)
+             .setModelViewIdentityEmptyBounds()
+             .build();
+-    mRenderState.render(glop, mRenderTarget.orthoMatrix, false);
++    mRenderState.render(glop, mRenderTarget.orthoMatrix);
+     mRenderState.stencil().enableTest(incrementThreshold);
+ }
+ 
+@@ -349,10 +348,7 @@ void BakedOpRenderer::prepareRender(const Rect* dirtyBounds, const ClipBase* cli
+ void BakedOpRenderer::renderGlopImpl(const Rect* dirtyBounds, const ClipBase* clip,
+         const Glop& glop) {
+     prepareRender(dirtyBounds, clip);
+-    // Let the renderer know that this is the first draw to the main framebuffer
+-    // This lets us optimise away blending for badly behaved applications
+-    // TODO: Is there a better way to enforce this? Also for other FBOs?
+-    mRenderState.render(glop, mRenderTarget.orthoMatrix, !mHasDrawn && !mRenderTarget.frameBufferId);
++    mRenderState.render(glop, mRenderTarget.orthoMatrix);
+     if (!mRenderTarget.frameBufferId) mHasDrawn = true;
+ }
+ 
+diff --git a/libs/hwui/OpenGLRenderer.cpp b/libs/hwui/OpenGLRenderer.cpp
+index 182c679..db5d22b 100644
+--- a/libs/hwui/OpenGLRenderer.cpp
++++ b/libs/hwui/OpenGLRenderer.cpp
+@@ -1407,7 +1407,7 @@ void OpenGLRenderer::renderGlop(const Glop& glop, GlopRenderType type) {
+ 
+         setStencilFromClip();
+     }
+-    mRenderState.render(glop, currentSnapshot()->getOrthoMatrix(), false);
++    mRenderState.render(glop, currentSnapshot()->getOrthoMatrix());
+     if (type == GlopRenderType::Standard && !mRenderState.stencil().isWriteEnabled()) {
+         // TODO: specify more clearly when a draw should dirty the layer.
+         // is writing to the stencil the only time we should ignore this?
+diff --git a/libs/hwui/Readback.cpp b/libs/hwui/Readback.cpp
+index e22e643..0ab247d 100644
+--- a/libs/hwui/Readback.cpp
++++ b/libs/hwui/Readback.cpp
+@@ -174,7 +174,7 @@ CopyResult Readback::copySurfaceInto(renderthread::RenderThread& renderThread,
+                 .build();
+         Matrix4 ortho;
+         ortho.loadOrtho(destWidth, destHeight);
+-        renderState.render(glop, ortho, false);
++        renderState.render(glop, ortho);
+ 
+         glReadPixels(0, 0, bitmap->width(), bitmap->height(), format,
+                 type, bitmap->getPixels());
+diff --git a/libs/hwui/renderstate/Blend.cpp b/libs/hwui/renderstate/Blend.cpp
+index 66159c2..93f787d 100644
+--- a/libs/hwui/renderstate/Blend.cpp
++++ b/libs/hwui/renderstate/Blend.cpp
+@@ -117,7 +117,7 @@ void Blend::getFactors(SkXfermode::Mode mode, ModeOrderSwap modeUsage, GLenum* o
+ }
+ 
+ void Blend::setFactors(GLenum srcMode, GLenum dstMode) {
+-    if ((srcMode == GL_ZERO || srcMode == GL_ONE) && dstMode == GL_ZERO) {
++    if (srcMode == GL_ZERO && dstMode == GL_ZERO) {
+         // disable blending
+         if (mEnabled) {
+             glDisable(GL_BLEND);
+diff --git a/libs/hwui/renderstate/RenderState.cpp b/libs/hwui/renderstate/RenderState.cpp
+index ec199ee..22ed4a1 100644
+--- a/libs/hwui/renderstate/RenderState.cpp
++++ b/libs/hwui/renderstate/RenderState.cpp
+@@ -235,7 +235,7 @@ void RenderState::postDecStrong(VirtualLightRefBase* object) {
+ // Render
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+-void RenderState::render(const Glop& glop, const Matrix4& orthoMatrix, bool firstDraw) {
++void RenderState::render(const Glop& glop, const Matrix4& orthoMatrix) {
+     const Glop::Mesh& mesh = glop.mesh;
+     const Glop::Mesh::Vertices& vertices = mesh.vertices;
+     const Glop::Mesh::Indices& indices = mesh.indices;
+@@ -361,12 +361,7 @@ void RenderState::render(const Glop& glop, const Matrix4& orthoMatrix, bool firs
+     // ------------------------------------
+     // ---------- GL state setup ----------
+     // ------------------------------------
+-    if (firstDraw) {
+-        // Disable blending for first draw to optimise badly behaved applications
+-        blend().setFactors(GL_ZERO, GL_ZERO);
+-    } else {
+-        blend().setFactors(glop.blend.src, glop.blend.dst);
+-    }
++    blend().setFactors(glop.blend.src, glop.blend.dst);
+ 
+     GL_CHECKPOINT(MODERATE);
+ 
+diff --git a/libs/hwui/renderstate/RenderState.h b/libs/hwui/renderstate/RenderState.h
+index d95a4a2..b65944e 100644
+--- a/libs/hwui/renderstate/RenderState.h
++++ b/libs/hwui/renderstate/RenderState.h
+@@ -94,7 +94,7 @@ public:
+     // more thinking...
+     void postDecStrong(VirtualLightRefBase* object);
+ 
+-    void render(const Glop& glop, const Matrix4& orthoMatrix, bool firstDraw);
++    void render(const Glop& glop, const Matrix4& orthoMatrix);
+ 
+     AssetAtlas& assetAtlas() { return mAssetAtlas; }
+     Blend& blend() { return *mBlend; }
+-- 
+1.9.3 (Apple Git-50)
+

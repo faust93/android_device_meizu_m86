@@ -1,0 +1,167 @@
+From 454ed6416b928fab9db679cebf27ec32a5a1745f Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 2 Jan 2017 15:06:54 +0300
+Subject: [PATCH] [2/2] frameworks: show charging current & voltage on 
+ lockscreen Thanx to ezio84 for the switch ;)
+
+Change-Id: I3d63633f83c5fe868773acb3f8599de1519bce3d
+---
+ core/java/android/provider/Settings.java           |  6 ++++
+ .../android/keyguard/KeyguardUpdateMonitor.java    | 16 ++++++++--
+ .../statusbar/KeyguardIndicationController.java    | 34 ++++++++++++++++++++--
+ 3 files changed, 51 insertions(+), 5 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 4d11c25..04d5d88 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4542,6 +4542,12 @@ public final class Settings {
+          */
+         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
+ 
++          /**
++          * Whether to show the battery info on the lockscreen while charging
++          * @hide
++          */
++         public static final String LOCKSCREEN_BATTERY_INFO = "lockscreen_battery_info";
++
+         /**
+          * XOSP Blur personalization settings
+          * @hide
+diff --git a/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java b/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
+index a05bf94..9451b19 100644
+--- a/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
++++ b/packages/Keyguard/src/com/android/keyguard/KeyguardUpdateMonitor.java
+@@ -24,6 +24,7 @@ import static android.os.BatteryManager.EXTRA_HEALTH;
+ import static android.os.BatteryManager.EXTRA_LEVEL;
+ import static android.os.BatteryManager.EXTRA_MAX_CHARGING_CURRENT;
+ import static android.os.BatteryManager.EXTRA_MAX_CHARGING_VOLTAGE;
++import static android.os.BatteryManager.EXTRA_TEMPERATURE;
+ import static android.os.BatteryManager.EXTRA_PLUGGED;
+ import static android.os.BatteryManager.EXTRA_STATUS;
+ 
+@@ -658,6 +659,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 final int maxChargingMicroAmp = intent.getIntExtra(EXTRA_MAX_CHARGING_CURRENT, -1);
+                 int maxChargingMicroVolt = intent.getIntExtra(EXTRA_MAX_CHARGING_VOLTAGE, -1);
+                 final int maxChargingMicroWatt;
++                final int temperature = intent.getIntExtra(EXTRA_TEMPERATURE, -1);;
+ 
+                 if (maxChargingMicroVolt <= 0) {
+                     maxChargingMicroVolt = DEFAULT_CHARGING_VOLTAGE_MICRO_VOLT;
+@@ -672,7 +674,8 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+                 }
+                 final Message msg = mHandler.obtainMessage(
+                         MSG_BATTERY_UPDATE, new BatteryStatus(status, level, plugged, health,
+-                                maxChargingMicroWatt));
++                                maxChargingMicroAmp, maxChargingMicroVolt, maxChargingMicroWatt,
++                                temperature));
+                 mHandler.sendMessage(msg);
+             } else if (TelephonyIntents.ACTION_SIM_STATE_CHANGED.equals(action)) {
+                 SimData args = SimData.fromIntent(intent);
+@@ -866,14 +869,21 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+         public final int level;
+         public final int plugged;
+         public final int health;
++        public final int maxChargingCurrent;
++        public final int maxChargingVoltage;
+         public final int maxChargingWattage;
++        public final int temperature;
+         public BatteryStatus(int status, int level, int plugged, int health,
+-                int maxChargingWattage) {
++                int maxChargingCurrent, int maxChargingVoltage, int maxChargingWattage,
++                int temperature) {
+             this.status = status;
+             this.level = level;
+             this.plugged = plugged;
+             this.health = health;
++            this.maxChargingCurrent = maxChargingCurrent;
++            this.maxChargingVoltage = maxChargingVoltage;
+             this.maxChargingWattage = maxChargingWattage;
++            this.temperature = temperature;
+         }
+ 
+         /**
+@@ -1058,7 +1068,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
+         }
+ 
+         // Take a guess at initial SIM state, battery status and PLMN until we get an update
+-        mBatteryStatus = new BatteryStatus(BATTERY_STATUS_UNKNOWN, 100, 0, 0, 0);
++        mBatteryStatus = new BatteryStatus(BATTERY_STATUS_UNKNOWN, 100, 0, 0, 0, 0 ,0, 0);
+ 
+         // Watch for interesting updates
+         final IntentFilter filter = new IntentFilter();
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java b/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
+index 0ef9715..01264da 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/KeyguardIndicationController.java
+@@ -32,6 +32,7 @@ import android.os.RemoteException;
+ import android.os.ServiceManager;
+ import android.os.UserHandle;
+ import android.os.UserManager;
++import android.provider.Settings;
+ import android.text.TextUtils;
+ import android.text.format.Formatter;
+ import android.util.Log;
+@@ -75,7 +76,10 @@ public class KeyguardIndicationController {
+     private boolean mPowerPluggedIn;
+     private boolean mPowerCharged;
+     private int mChargingSpeed;
++    private int mChargingCurrent;
++    private int mChargingVoltage;
+     private int mChargingWattage;
++    private int mTemperature;
+     private String mMessageToShowOnScreenOn;
+ 
+     public KeyguardIndicationController(Context context, KeyguardIndicationTextView textView,
+@@ -218,12 +222,35 @@ public class KeyguardIndicationController {
+                 break;
+         }
+ 
++        String batteryInfo = "";
++        boolean showbatteryInfo = Settings.System.getIntForUser(mContext.getContentResolver(),
++            Settings.System.LOCKSCREEN_BATTERY_INFO, 0, UserHandle.USER_CURRENT) == 1;
++
++        if (showbatteryInfo) {
++            if (mChargingCurrent > 0) {
++                batteryInfo = batteryInfo + (mChargingCurrent / 1000) + "mA/h";
++            }
++            if (mChargingVoltage > 0) {
++                batteryInfo = (batteryInfo == "" ? "" : batteryInfo + " · ") +
++                        (mChargingVoltage / 1000 / 1000) + "V";
++            }
++            if (mTemperature > 0) {
++                batteryInfo = (batteryInfo == "" ? "" : batteryInfo + " · ") +
++                        mTemperature / 10 + "°c";
++            }
++            if (batteryInfo != "") {
++                batteryInfo = "\n" + batteryInfo;
++            }
++        }
++
+         if (hasChargingTime) {
+             String chargingTimeFormatted = Formatter.formatShortElapsedTimeRoundingUpToMinutes(
+                     mContext, chargingTimeRemaining);
+-            return mContext.getResources().getString(chargingId, chargingTimeFormatted);
++            String chargingText = mContext.getResources().getString(chargingId, chargingTimeFormatted);
++            return chargingText + batteryInfo;
+         } else {
+-            return mContext.getResources().getString(chargingId);
++            String chargingText = mContext.getResources().getString(chargingId);
++            return chargingText + batteryInfo;
+         }
+     }
+ 
+@@ -236,7 +263,10 @@ public class KeyguardIndicationController {
+                     || status.status == BatteryManager.BATTERY_STATUS_FULL;
+             mPowerPluggedIn = status.isPluggedIn() && isChargingOrFull;
+             mPowerCharged = status.isCharged();
++            mChargingCurrent = status.maxChargingCurrent;
++            mChargingVoltage = status.maxChargingVoltage;
+             mChargingWattage = status.maxChargingWattage;
++            mTemperature = status.temperature;
+             mChargingSpeed = status.getChargingSpeed(mSlowThreshold, mFastThreshold);
+             updateIndication();
+         }
+-- 
+1.9.3 (Apple Git-50)
+

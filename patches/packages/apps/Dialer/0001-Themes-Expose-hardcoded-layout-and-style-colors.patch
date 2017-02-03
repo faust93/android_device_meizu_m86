@@ -1,0 +1,155 @@
+From 289063b598f3c33e2d55c66c5150dd79cd61a771 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 25 Jan 2017 16:45:38 +0300
+Subject: [PATCH] Themes: Expose hardcoded layout and style colors
+
+Change-Id: I2a941cde18470686a955f48bf116235c422e2c40
+---
+ res/layout-land/dialpad_fragment.xml |  2 +-
+ res/layout/dialpad_fragment.xml      |  2 +-
+ res/layout/keyguard_preview.xml      |  2 +-
+ res/values/crdroid_colors.xml        | 32 ++++++++++++++++++++++++++++++++
+ res/values/styles.xml                | 27 +++++++++++++++++++--------
+ 5 files changed, 54 insertions(+), 11 deletions(-)
+ create mode 100644 res/values/crdroid_colors.xml
+
+diff --git a/res/layout-land/dialpad_fragment.xml b/res/layout-land/dialpad_fragment.xml
+index 0639899..0371396 100644
+--- a/res/layout-land/dialpad_fragment.xml
++++ b/res/layout-land/dialpad_fragment.xml
+@@ -29,7 +29,7 @@
+             android:layout_width="0dp"
+             android:layout_height="match_parent"
+             android:layout_weight="4"
+-            android:background="#00000000" />
++            android:background="@color/background_color_transparent" />
+ 
+         <!-- Dialpad shadow -->
+         <View
+diff --git a/res/layout/dialpad_fragment.xml b/res/layout/dialpad_fragment.xml
+index 5748f5d..4440e90 100644
+--- a/res/layout/dialpad_fragment.xml
++++ b/res/layout/dialpad_fragment.xml
+@@ -30,7 +30,7 @@
+             android:layout_width="match_parent"
+             android:layout_height="0dp"
+             android:layout_weight="1"
+-            android:background="#00000000" />
++            android:background="@color/background_color_transparent" />
+         <!-- Dialpad shadow -->
+         <View
+             android:layout_width="match_parent"
+diff --git a/res/layout/keyguard_preview.xml b/res/layout/keyguard_preview.xml
+index 16243eb..3f6cd72 100644
+--- a/res/layout/keyguard_preview.xml
++++ b/res/layout/keyguard_preview.xml
+@@ -26,5 +26,5 @@
+         android:layout_width="match_parent"
+         android:layout_weight="1"
+         android:layout_height="0dp"
+-        android:background="#ffffff" />
++        android:background="@color/keyguard_preview_bg" />
+ </LinearLayout>
+diff --git a/res/values/crdroid_colors.xml b/res/values/crdroid_colors.xml
+new file mode 100644
+index 0000000..8c59bcf
+--- /dev/null
++++ b/res/values/crdroid_colors.xml
+@@ -0,0 +1,32 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++    Copyright (c) 2016 Project Substratum
++
++    Licensed under the Apache License, Version 2.0 (the "License");
++    you may not use this file except in compliance with the License.
++    You may obtain a copy of the License at
++
++        http://www.apache.org/licenses/LICENSE-2.0
++
++    Unless required by applicable law or agreed to in writing, software
++    distributed under the License is distributed on an "AS IS" BASIS,
++    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++    See the License for the specific language governing permissions and
++    limitations under the License.
++-->
++
++<resources>
++    <color name="background_color_transparent">#00000000</color>
++    <color name="call_log_primary_background_color">#000000</color>
++    <color name="call_log_secondary_background_color">#333333</color>
++    <color name="call_log_header_color">#33b5e5</color>
++    <color name="call_log_voicemail_status_background_color">#262626</color>
++    <color name="call_log_voicemail_status_text_color">#888888</color>
++    <color name="call_log_voicemail_status_action_text_color">#33b5e5</color>
++    <color name="call_log_primary_bg_color">#FFFFFF</color>
++    <color name="call_log_secondary_bg_color">#FFFFFF</color>
++    <color name="call_log_header_color_dark">#FFFFFF</color>
++    <color name="dialer_button_text_color">#fff</color>
++    <color name="dialpad_text_color">#FFFFFF</color>
++    <color name="keyguard_preview_bg">#ffffff</color>
++</resources>
+diff --git a/res/values/styles.xml b/res/values/styles.xml
+index 6753aed..fce669b 100644
+--- a/res/values/styles.xml
++++ b/res/values/styles.xml
+@@ -68,15 +68,25 @@
+         <item name="list_item_text_offset_top">-2dp</item>
+         <!-- CallLog -->
+         <item name="call_log_primary_text_color">@color/dialtacts_primary_text_color</item>
+-        <item name="call_log_primary_background_color">#000000</item>
++        <item name="call_log_primary_background_color">
++            @color/call_log_primary_background_color
++        </item>
+         <item name="call_log_secondary_text_color">@color/dialtacts_secondary_text_color</item>
+-        <item name="call_log_secondary_background_color">#333333</item>
+-        <item name="call_log_header_color">#33b5e5</item>
++        <item name="call_log_secondary_background_color">
++            @color/call_log_secondary_background_color
++        </item>
++        <item name="call_log_header_color">@color/call_log_header_color</item>
+         <!-- VoicemailStatus -->
+         <item name="call_log_voicemail_status_height">48dip</item>
+-        <item name="call_log_voicemail_status_background_color">#262626</item>
+-        <item name="call_log_voicemail_status_text_color">#888888</item>
+-        <item name="call_log_voicemail_status_action_text_color">#33b5e5</item>
++        <item name="call_log_voicemail_status_background_color">
++            @color/call_log_voicemail_status_background_color
++        </item>
++        <item name="call_log_voicemail_status_text_color">
++            @color/call_log_voicemail_status_text_color
++        </item>
++        <item name="call_log_voicemail_status_action_text_color">
++            @color/call_log_voicemail_status_action_text_color
++        </item>
+             <!-- Favorites -->
+         <item name="favorites_padding_bottom">?android:attr/actionBarSize</item>
+         <item name="android:colorPrimary">@color/dialer_theme_color</item>
+@@ -92,7 +102,7 @@
+     </style>
+ 
+     <style name="DialerButtonTextStyle" parent="@android:style/TextAppearance.Material.Widget.Button">
+-        <item name="android:textColor">#fff</item>
++        <item name="android:textColor">@color/dialer_button_text_color</item>
+     </style>
+ 
+     <!-- Action bar overflow menu icon. -->
+@@ -108,7 +118,7 @@
+     </style>
+ 
+     <style name="DialpadTheme" parent="DialtactsTheme">
+-        <item name="android:textColorPrimary">#FFFFFF</item>
++        <item name="android:textColorPrimary">@color/dialpad_text_color</item>
+     </style>
+ 
+     <style name="DialtactsThemeWithoutActionBarOverlay" parent="DialtactsTheme">
+@@ -253,6 +263,7 @@
+         <!-- Setting description. -->
+         <item name="android:textColorSecondary">@color/settings_text_color_secondary</item>
+         <item name="android:windowBackground">@color/setting_background_color</item>
++        <item name="android:colorControlActivated">@color/dialer_theme_color</item>
+         <item name="android:colorAccent">@color/dialtacts_theme_color</item>
+         <item name="android:textColorLink">@color/dialtacts_theme_color</item>
+     </style>
+-- 
+1.9.3 (Apple Git-50)
+

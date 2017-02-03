@@ -1,0 +1,63 @@
+From 61f9f10ea38a97aa460acf3263188a029e4827a3 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 11:39:06 +0300
+Subject: [PATCH] Swipe for Recents [2/2]
+
+Change-Id: Ib1296ec2b7e72970e84ca32f8039409043f79ee9
+---
+ res/values-ru/crdroid_strings.xml | 4 ++++
+ res/values/crdroid_strings.xml    | 4 ++++
+ res/xml/crdroid_settings_misc.xml | 7 +++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index 38ba9ea..a2e62ef 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -1245,6 +1245,10 @@
+     <string name="wakelock_blocker_warning_title">Продолжайте с осторожностью</string>
+     <string name="wakelock_blocker_warning">Блокировка пробуждений может вызвать нестабильную работу, ошибки или потерю данных</string>
+ 
++    <!-- Swipe bottom right up for recents -->
++    <string name="recents_finger_gesture">Свайп вызова недавних приложений</string>
++    <string name="recents_finger_gesture_summary">Свайп одним пальцем вверх из нижнего правого угла для вызова недавних</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Заголовки</string>
+     <string name="status_bar_custom_header_title">Пользовательское изображение в заголовке</string>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 8dfd5fe..2f01c9d 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -1263,6 +1263,10 @@
+     <string name="wakelock_blocker_warning_title">Proceed with caution</string>
+     <string name="wakelock_blocker_warning">Blocking wakelocks have the potential to cause instability, crashes or data loss</string>
+ 
++    <!-- Swipe bottom right up for recents -->
++    <string name="recents_finger_gesture">Recents finger gesture</string>
++    <string name="recents_finger_gesture_summary">Swipe finger up from bottom-right for recent apps</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Headers</string>
+     <string name="status_bar_custom_header_title">Custom header image</string>
+diff --git a/res/xml/crdroid_settings_misc.xml b/res/xml/crdroid_settings_misc.xml
+index 17d0723..d6382f1 100644
+--- a/res/xml/crdroid_settings_misc.xml
++++ b/res/xml/crdroid_settings_misc.xml
+@@ -33,6 +33,13 @@
+              android:summary="@string/three_finger_gesture_summary"
+              android:defaultValue="false" />
+ 
++       <!-- Bottom-right swipe up to recents -->
++       <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++             android:key="recents_finger_gesture"
++             android:title="@string/recents_finger_gesture"
++             android:summary="@string/recents_finger_gesture_summary"
++             android:defaultValue="true" />
++
+        <com.crdroid.settings.preferences.SystemSettingSwitchPreference
+             android:key="disable_settings_suggestions"
+             android:title="@string/disable_settings_suggestions_title"
+-- 
+1.9.3 (Apple Git-50)
+

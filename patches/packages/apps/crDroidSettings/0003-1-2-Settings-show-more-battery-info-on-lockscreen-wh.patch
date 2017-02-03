@@ -1,0 +1,104 @@
+From dd03eaba50c94e868faec40733b1e71b60deb673 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 11:41:38 +0300
+Subject: [PATCH] [1/2] Settings: show more battery info on lockscreen when 
+ charging
+
+Change-Id: I32e7679a9aa18429ecafceaf4c08a0fbdb10aa76
+---
+ res/values-ru/crdroid_strings.xml                          |  4 ++++
+ res/values/crdroid_strings.xml                             |  4 ++++
+ res/xml/crdroid_settings_lockscreen.xml                    |  7 +++++++
+ src/com/crdroid/settings/fragments/LockScreenSettings.java | 12 ++++++++++++
+ 4 files changed, 27 insertions(+)
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index a2e62ef..b4aee11 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -556,6 +556,10 @@
+     <string name="pulse_filled_block_size">Размер блоков</string>
+     <string name="pulse_empty_block_size">Расстояние между блоками</string>
+ 
++    <!-- Lockscreen battery info indicator  -->
++    <string name="lockscreen_battery_info_title">Информация о зарядке</string>
++    <string name="lockscreen_battery_info_summary">Отображение тока зарядки, вольтажа, температуры на экране блокировки</string>
++
+     <!-- Navbar height -->
+     <string name="navigation_bar_size_title">Размер панели навигации</string>
+     <string name="portrait_title">Высота в портретном режиме</string>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 2f01c9d..3b06a2a 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -1267,6 +1267,10 @@
+     <string name="recents_finger_gesture">Recents finger gesture</string>
+     <string name="recents_finger_gesture_summary">Swipe finger up from bottom-right for recent apps</string>
+ 
++    <!-- Lockscreen battery info indicator  -->
++    <string name="lockscreen_battery_info_title">Lockscreen charging info</string>
++    <string name="lockscreen_battery_info_summary">Display negociated charger max current and voltage and battery temperature on lockscreen while charging</string>
++
+     <!-- Headers -->
+     <string name="status_bar_header_title">Headers</string>
+     <string name="status_bar_custom_header_title">Custom header image</string>
+diff --git a/res/xml/crdroid_settings_lockscreen.xml b/res/xml/crdroid_settings_lockscreen.xml
+index 7b8d45c..f9e3b9b 100644
+--- a/res/xml/crdroid_settings_lockscreen.xml
++++ b/res/xml/crdroid_settings_lockscreen.xml
+@@ -75,6 +75,13 @@
+ 
+     <PreferenceCategory 
+          android:title="@string/lockscreen_misc_category">
++
++        <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++               android:key="lockscreen_battery_info"
++               android:title="@string/lockscreen_battery_info_title"
++               android:summary="@string/lockscreen_battery_info_summary"
++               android:defaultValue="true" />
++
+         <com.crdroid.settings.preferences.SystemSettingSwitchPreference
+                android:key="lock_screen_custom_notif"
+                android:title="@string/lockscreen_maxnotif_title"
+diff --git a/src/com/crdroid/settings/fragments/LockScreenSettings.java b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+index a4d8ad3..933776f 100644
+--- a/src/com/crdroid/settings/fragments/LockScreenSettings.java
++++ b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+@@ -23,8 +23,10 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+         implements Preference.OnPreferenceChangeListener {
+ 
+     private static final String LOCKSCREEN_MAX_NOTIF_CONFIG = "lockscreen_max_notif_cofig";
++    private static final String LOCKSCREEN_CHARGING = "lockscreen_battery_info";
+ 
+     private SeekBarPreference mMaxKeyguardNotifConfig;
++    private SwitchPreference mLockscreenCharging;
+ 
+     @Override
+     protected int getMetricsCategory() {
+@@ -45,6 +47,11 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+                 Settings.System.LOCKSCREEN_MAX_NOTIF_CONFIG, 5);
+         mMaxKeyguardNotifConfig.setValue(kgconf / 1);
+         mMaxKeyguardNotifConfig.setOnPreferenceChangeListener(this);
++
++        mLockscreenCharging = (SwitchPreference) findPreference(LOCKSCREEN_CHARGING);
++        mLockscreenCharging.setChecked((Settings.System.getInt(getContentResolver(),
++                        Settings.System.LOCKSCREEN_BATTERY_INFO, 0) == 1));
++        mLockscreenCharging.setOnPreferenceChangeListener(this);
+     }
+ 
+     @Override
+@@ -55,6 +62,11 @@ public class LockScreenSettings extends SettingsPreferenceFragment
+             Settings.System.putInt(getActivity().getContentResolver(),
+                     Settings.System.LOCKSCREEN_MAX_NOTIF_CONFIG, kgconf);
+             return true;
++        } else if (preference == mLockscreenCharging) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(getActivity().getContentResolver(),
++                    Settings.System.LOCKSCREEN_BATTERY_INFO, value ? 1 : 0);
++            return true;
+         }
+         return false;
+     }
+-- 
+1.9.3 (Apple Git-50)
+

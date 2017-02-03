@@ -1,0 +1,29 @@
+From d7de6ff6a05f551af0518e1d8b0fbbf1b31f59fe Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 7 Dec 2016 10:35:47 +0300
+Subject: [PATCH] video zooming issue fix
+
+Change-Id: I394899a307e11dc7b042201edbabe29a36a7a626
+---
+ media/libstagefright/ACodec.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index 15433d9..41004f4 100644
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -5130,6 +5130,11 @@ status_t ACodec::getPortFormat(OMX_U32 portIndex, sp<AMessage> &notify) {
+                             return BAD_VALUE;
+                         }
+ 
++                        if(mUsingNativeWindow != 0){
++                            rect.nWidth = 1920;
++                            rect.nHeight = 1080;
++                        }
++
+                         notify->setRect(
+                                 "crop",
+                                 rect.nLeft,
+-- 
+1.9.3 (Apple Git-50)
+

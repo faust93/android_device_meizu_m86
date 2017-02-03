@@ -1,0 +1,364 @@
+From 921155f805d807a20daee457e3d75ad3272dec73 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sat, 21 Jan 2017 14:38:14 +0300
+Subject: [PATCH] Huawei One-hand UI Mode [2/2]
+
+Change-Id: I78a148a3110d40e9d7185484b73241c8684d09fe
+---
+ include/input/Input.h                     |   1 +
+ services/inputflinger/Android.mk          |   1 +
+ services/inputflinger/InputDispatcher.cpp | 193 +++++++++++++++++++++++++++++-
+ services/inputflinger/InputDispatcher.h   |   7 +-
+ 4 files changed, 197 insertions(+), 5 deletions(-)
+
+diff --git a/include/input/Input.h b/include/input/Input.h
+index 55787e7..2836e8a 100644
+--- a/include/input/Input.h
++++ b/include/input/Input.h
+@@ -211,6 +211,7 @@ enum {
+     // The input event should still be sent to the InputDispatcher so that it can see all
+     // input events received include those that it will not deliver.
+     POLICY_FLAG_PASS_TO_USER = 0x40000000,
++    POLICY_FLAG_REMOVE_HANDYMODE = 0x80000000,
+ };
+ 
+ /*
+diff --git a/services/inputflinger/Android.mk b/services/inputflinger/Android.mk
+index ed867d8..e23e2ea 100644
+--- a/services/inputflinger/Android.mk
++++ b/services/inputflinger/Android.mk
+@@ -32,6 +32,7 @@ LOCAL_SHARED_LIBRARIES := \
+     liblog \
+     libutils \
+     libui \
++    libgui \
+     libhardware_legacy
+ 
+ 
+diff --git a/services/inputflinger/InputDispatcher.cpp b/services/inputflinger/InputDispatcher.cpp
+index 7030f94..a3f2654 100644
+--- a/services/inputflinger/InputDispatcher.cpp
++++ b/services/inputflinger/InputDispatcher.cpp
+@@ -55,6 +55,9 @@
+ #include <errno.h>
+ #include <limits.h>
+ #include <time.h>
++#include <ui/DisplayInfo.h>
++#include <gui/SurfaceComposerClient.h>
++#include <gui/ISurfaceComposer.h>
+ 
+ #define INDENT "  "
+ #define INDENT2 "    "
+@@ -88,6 +91,8 @@ const nsecs_t SLOW_EVENT_PROCESSING_WARNING_TIMEOUT = 2000 * 1000000LL; // 2sec
+ // Number of recent events to keep for debugging purposes.
+ const size_t RECENT_QUEUE_MAX_SIZE = 10;
+ 
++const float SINGLE_HAND_SCALE = 0.75;
++
+ static inline nsecs_t now() {
+     return systemTime(SYSTEM_TIME_MONOTONIC);
+ }
+@@ -206,6 +211,8 @@ InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& polic
+     mNextUnblockedEvent(NULL),
+     mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
+     mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
++    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(ISurfaceComposer::eDisplayIdMain));
++    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+     mLooper = new Looper(false);
+ 
+     mKeyRepeatState.lastKeyEntry = NULL;
+@@ -480,6 +487,17 @@ sp<InputWindowHandle> InputDispatcher::findTouchedWindowAtLocked(int32_t display
+     for (size_t i = 0; i < numWindows; i++) {
+         sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
+         const InputWindowInfo* windowInfo = windowHandle->getInfo();
++        if (windowHandle->getName().find("SingleMode_windowbg") != -1) {
++            bool leftSingleHandScreen = (windowHandle->getName().find("left") != -1);
++            int32_t origin_xx = (int32_t)((float)x * SINGLE_HAND_SCALE);
++            int32_t origin_yy = (int32_t)((float) y * SINGLE_HAND_SCALE + (float)dinfo.h * (1-SINGLE_HAND_SCALE));
++            if (!leftSingleHandScreen) {
++                origin_xx += (int32_t)((float)dinfo.w * (1-SINGLE_HAND_SCALE));
++            }
++            if (singlehandRegionContainsPointLocked(origin_xx, origin_yy, leftSingleHandScreen)) {
++                continue;
++            }
++        }
+         if (windowInfo->displayId == displayId) {
+             int32_t flags = windowInfo->layoutParamsFlags;
+ 
+@@ -846,6 +864,7 @@ bool InputDispatcher::dispatchMotionLocked(
+     int32_t injectionResult;
+     if (isPointerEvent) {
+         // Pointer event.  (eg. touchscreen)
++        singleHandModePreProcessLocked(entry);
+         injectionResult = findTouchedWindowTargetsLocked(currentTime,
+                 entry, inputTargets, nextWakeupTime, &conflictingPointerActions);
+     } else {
+@@ -1129,7 +1148,7 @@ Unresponsive:
+ }
+ 
+ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
+-        const MotionEntry* entry, Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime,
++        MotionEntry* entry, Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime,
+         bool* outConflictingPointerActions) {
+     enum InjectionPermission {
+         INJECTION_PERMISSION_UNKNOWN,
+@@ -1172,6 +1191,15 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
+             || maskedAction == AMOTION_EVENT_ACTION_SCROLL
+             || isHoverAction);
+     bool wrongDevice = false;
++    size_t numWindows = mWindowHandles.size();
++    bool hasVirtualDevice = false;
++    bool isOriginCoordinate = true;
++    int32_t pointerIndex = getMotionEventActionPointerIndex(action);
++    int32_t xx = int32_t(entry->pointerCoords[pointerIndex].
++        getAxisValue(AMOTION_EVENT_AXIS_X));
++    int32_t yy = int32_t(entry->pointerCoords[pointerIndex].
++       getAxisValue(AMOTION_EVENT_AXIS_Y));
++    bool hint = false;
+     if (newGesture) {
+         bool down = maskedAction == AMOTION_EVENT_ACTION_DOWN;
+         if (switchedDevice && mTempTouchState.down && !down) {
+@@ -1191,10 +1219,43 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
+         isSplit = false;
+     }
+ 
++    for (size_t i = 0; i < numWindows; i++) {
++        sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
++        const InputWindowInfo* windowInfo = windowHandle->getInfo();
++        int32_t flags = windowInfo->layoutParamsFlags;
++        if (windowInfo->visible && windowHandle->getName().find("SingleMode_windowbg_hint") != -1) {
++            hint = true;
++            break;
++        }
++    }
++    for (size_t i = 0; (!hint && i < numWindows); i++) {
++        sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
++        const InputWindowInfo* windowInfo = windowHandle->getInfo();
++        int32_t flags = windowInfo->layoutParamsFlags;
++        if (windowInfo->visible && windowHandle->getName().find("SingleMode_windowbg") != -1) {
++            hasVirtualDevice = true;
++            bool leftSingleHandScreen = (windowHandle->getName().find("left") != -1);
++            if (singlehandRegionContainsPointLocked(xx, yy, leftSingleHandScreen)) {
++                if(leftSingleHandScreen) {
++                    xx = (int32_t)((float)xx / SINGLE_HAND_SCALE);
++                    yy -= (int32_t)((float)dinfo.h * (1-SINGLE_HAND_SCALE));
++                    yy = (int32_t)((float)yy / SINGLE_HAND_SCALE);
++                } else {
++                    xx -= (int32_t)((float)dinfo.w * (1-SINGLE_HAND_SCALE));
++                    xx = (int32_t)((float)xx / SINGLE_HAND_SCALE);
++                    yy -= (int32_t)((float)dinfo.h * (1-SINGLE_HAND_SCALE));
++                    yy = (int32_t)((float)yy / SINGLE_HAND_SCALE);
++                }
++                entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_X, (float)xx);
++                entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_Y, (float)yy);
++                isOriginCoordinate = false;
++            }
++        }
++    }
+     if (newGesture || (isSplit && maskedAction == AMOTION_EVENT_ACTION_POINTER_DOWN)) {
+         /* Case 1: New splittable pointer going down, or need target for hover or scroll. */
+ 
+-        int32_t pointerIndex = getMotionEventActionPointerIndex(action);
++        pointerIndex = getMotionEventActionPointerIndex(action);
+         int32_t x = int32_t(entry->pointerCoords[pointerIndex].
+                 getAxisValue(AMOTION_EVENT_AXIS_X));
+         int32_t y = int32_t(entry->pointerCoords[pointerIndex].
+@@ -1203,13 +1264,19 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
+         bool isTouchModal = false;
+ 
+         // Traverse windows from front to back to find touched window and outside targets.
+-        size_t numWindows = mWindowHandles.size();
++        //size_t numWindows = mWindowHandles.size();
+         for (size_t i = 0; i < numWindows; i++) {
+             sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
+             const InputWindowInfo* windowInfo = windowHandle->getInfo();
+             if (windowInfo->displayId != displayId) {
+                 continue; // wrong display
+             }
++            if ((windowHandle->getName().find("SingleMode_windowbg") != -1)) {
++                if (!isOriginCoordinate) {
++                    // Pass through when click_point is in small single_hand window
++                    continue;
++                }
++            }
+ 
+             int32_t flags = windowInfo->layoutParamsFlags;
+             if (windowInfo->visible) {
+@@ -1621,6 +1688,7 @@ bool InputDispatcher::checkInjectionPermission(const sp<InputWindowHandle>& wind
+ bool InputDispatcher::isWindowObscuredAtPointLocked(
+         const sp<InputWindowHandle>& windowHandle, int32_t x, int32_t y) const {
+     int32_t displayId = windowHandle->getInfo()->displayId;
++    const InputWindowInfo* windowInfo = windowHandle->getInfo();
+     size_t numWindows = mWindowHandles.size();
+     for (size_t i = 0; i < numWindows; i++) {
+         sp<InputWindowHandle> otherHandle = mWindowHandles.itemAt(i);
+@@ -1629,9 +1697,21 @@ bool InputDispatcher::isWindowObscuredAtPointLocked(
+         }
+ 
+         const InputWindowInfo* otherInfo = otherHandle->getInfo();
++        if (otherHandle->getName().find("SingleMode_windowbg") != -1) {
++            bool leftSingleHandScreen = (otherHandle->getName().find("left") != -1);
++            int32_t origin_xx = (int32_t)((float)x * SINGLE_HAND_SCALE);
++            int32_t origin_yy = (int32_t)((float) y * SINGLE_HAND_SCALE + (float)dinfo.h * (1-SINGLE_HAND_SCALE));
++            if (!leftSingleHandScreen) {
++                origin_xx += (int32_t)((float)dinfo.w * (1-SINGLE_HAND_SCALE));
++            }
++            if (singlehandRegionContainsPointLocked(origin_xx, origin_yy, leftSingleHandScreen)) {
++                continue;
++            }
++        }
+         if (otherInfo->displayId == displayId
+                 && otherInfo->visible && !otherInfo->isTrustedOverlay()
+-                && otherInfo->frameContainsPoint(x, y)) {
++                && (otherInfo->frameContainsPoint(x, y) || otherInfo->overlaps(windowInfo))) {
++
+             return true;
+         }
+     }
+@@ -4563,4 +4643,109 @@ bool InputDispatcherThread::threadLoop() {
+     return true;
+ }
+ 
++bool InputDispatcher::singlehandRegionContainsPointLocked(int32_t x, int32_t y, bool isLeft) const {
++    int32_t top = (int32_t)((float)dinfo.h * (1-SINGLE_HAND_SCALE));
++    int32_t bottom = (int32_t)(dinfo.h);
++    int32_t left;
++    int32_t right;
++    if(isLeft) {
++        left = 0;
++        right = (int32_t)((float)dinfo.w * SINGLE_HAND_SCALE);
++    } else {
++        left = (int32_t)((float)dinfo.w * (1-SINGLE_HAND_SCALE));
++        right = (int32_t)(dinfo.w);
++    }
++    if (y >= top && y < bottom && x >= left && x < right) {
++        return true;
++    }
++    return false;
++}
++void InputDispatcher::singleHandModePreProcessLocked(MotionEntry* entry) {
++    bool hasVirtualDevice = false;
++    bool leftSingleHandScreen  = false;
++    size_t numWindows = mWindowHandles.size();
++
++    for (size_t i = 0; i < numWindows; i++) {
++        sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
++        const InputWindowInfo* windowInfo = windowHandle->getInfo();
++        int32_t flags = windowInfo->layoutParamsFlags;
++        if (windowInfo->visible && windowHandle->getName().find("SingleMode_windowbg") != -1) {
++            hasVirtualDevice = true;
++            leftSingleHandScreen = (windowHandle->getName().find("left") != -1);
++            break;
++        }
++    }
++    if (!hasVirtualDevice) {
++        return;
++    }
++    int32_t displayId = entry->displayId;
++    int32_t action = entry->action;
++    int32_t maskedAction = action & AMOTION_EVENT_ACTION_MASK;
++    bool switchedDevice = mTempTouchState.deviceId >= 0 && mTempTouchState.displayId >= 0
++            && (mTempTouchState.deviceId != entry->deviceId
++                    || mTempTouchState.source != entry->source
++                    || mTempTouchState.displayId != displayId);
++    if (switchedDevice) {
++        return;
++    }
++
++    int32_t pointerIndex = getMotionEventActionPointerIndex(action);
++    int32_t xx = int32_t(entry->pointerCoords[pointerIndex].
++        getAxisValue(AMOTION_EVENT_AXIS_X));
++    int32_t yy = int32_t(entry->pointerCoords[pointerIndex].
++       getAxisValue(AMOTION_EVENT_AXIS_Y));
++
++    if (maskedAction == AMOTION_EVENT_ACTION_DOWN) {
++        mLastPointDownOuter = !singlehandRegionContainsPointLocked(xx, yy, leftSingleHandScreen);
++    } else  if (maskedAction == AMOTION_EVENT_ACTION_MOVE) {
++        bool pointDownOuter = !singlehandRegionContainsPointLocked(xx, yy, leftSingleHandScreen);
++        if (mLastPointDownOuter != pointDownOuter) {
++            if (mLastPointDownOuter) {
++#if DEBUG_FOCUS
++                ALOGD("SingleHandeMode, out ----->  in, we give a DOWN event to window inside");
++#endif
++                entry->action &= ~AMOTION_EVENT_ACTION_MOVE;
++                entry->action |= AMOTION_EVENT_ACTION_DOWN;
++            } else {
++#if DEBUG_FOCUS
++                ALOGD("SingleHandeMode, in ----->  out, we give a UP event to window inside");
++#endif
++                if(leftSingleHandScreen) {
++                    if (xx > (int32_t)((float)dinfo.w * SINGLE_HAND_SCALE)) {
++                        if (yy < (int32_t)((float)dinfo.h * (1-SINGLE_HAND_SCALE))) {
++                            // both x and y is outside
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_X, (float)dinfo.w * SINGLE_HAND_SCALE - 2);
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_Y, (float)dinfo.h * (1-SINGLE_HAND_SCALE) + 2);
++                        } else {
++                            // x is outside
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_X, (float)dinfo.w * SINGLE_HAND_SCALE - 2);
++                        }
++                    } else {
++                        // y is outside
++                        entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_Y, (float)dinfo.h * (1-SINGLE_HAND_SCALE) + 2);
++                    }
++                } else {
++                    if (xx < (int32_t)((float)dinfo.w * (1-SINGLE_HAND_SCALE))) {
++                        if (yy < (int32_t)((float)dinfo.h * (1-SINGLE_HAND_SCALE))) {
++                            // both x and y is outside
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_X, (float)dinfo.w * (1-SINGLE_HAND_SCALE) + 2);
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_Y, (float)dinfo.h * (1-SINGLE_HAND_SCALE) + 2);
++                        }
++                        else {
++                            // x is outside
++                            entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_X, (float)dinfo.w * (1-SINGLE_HAND_SCALE) + 2);
++                        }
++                    } else {
++                        // y is outside
++                        entry->pointerCoords[pointerIndex].setAxisValue(AMOTION_EVENT_AXIS_Y, (float)dinfo.h * (1-SINGLE_HAND_SCALE) + 2);
++                    }
++                }
++                entry->action &= ~AMOTION_EVENT_ACTION_MOVE;
++                entry->action |= AMOTION_EVENT_ACTION_UP;
++            }
++            mLastPointDownOuter = pointDownOuter;
++        }
++    }
++}
++
+ } // namespace android
+diff --git a/services/inputflinger/InputDispatcher.h b/services/inputflinger/InputDispatcher.h
+index 1c054f5..e6d8bc1 100644
+--- a/services/inputflinger/InputDispatcher.h
++++ b/services/inputflinger/InputDispatcher.h
+@@ -36,6 +36,7 @@
+ #include "InputWindow.h"
+ #include "InputApplication.h"
+ #include "InputListener.h"
++#include <ui/DisplayInfo.h>
+ 
+ 
+ namespace android {
+@@ -1041,9 +1042,11 @@ private:
+ 
+     int32_t findFocusedWindowTargetsLocked(nsecs_t currentTime, const EventEntry* entry,
+             Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime);
+-    int32_t findTouchedWindowTargetsLocked(nsecs_t currentTime, const MotionEntry* entry,
++    int32_t findTouchedWindowTargetsLocked(nsecs_t currentTime, MotionEntry* entry,
+             Vector<InputTarget>& inputTargets, nsecs_t* nextWakeupTime,
+             bool* outConflictingPointerActions);
++    void singleHandModePreProcessLocked(MotionEntry* entry);
++    bool singlehandRegionContainsPointLocked(int32_t x, int32_t y, bool left) const;
+ 
+     void addWindowTargetLocked(const sp<InputWindowHandle>& windowHandle,
+             int32_t targetFlags, BitSet32 pointerIds, Vector<InputTarget>& inputTargets);
+@@ -1136,6 +1139,8 @@ private:
+     void traceInboundQueueLengthLocked();
+     void traceOutboundQueueLengthLocked(const sp<Connection>& connection);
+     void traceWaitQueueLengthLocked(const sp<Connection>& connection);
++    bool mLastPointDownOuter;
++    DisplayInfo dinfo;
+ };
+ 
+ /* Enqueues and dispatches input events, endlessly. */
+-- 
+1.9.3 (Apple Git-50)
+

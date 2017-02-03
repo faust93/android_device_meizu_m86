@@ -1,0 +1,239 @@
+From ffc154864a07cda572021a17c78413fbcf37282d Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 11:23:57 +0300
+Subject: [PATCH] AlarmsBlocker [1/2] @faust93 based on WlBlocker by @maxwen
+
+Change-Id: Ifdbd4c9da49ab09269e6d1744f445ad7a0ecbbf2
+---
+ core/java/android/app/AlarmManager.java            |  11 +++
+ core/java/android/app/IAlarmManager.aidl           |   2 +
+ core/java/android/provider/Settings.java           |  12 +++
+ .../com/android/server/AlarmManagerService.java    | 101 ++++++++++++++++++++-
+ 4 files changed, 124 insertions(+), 2 deletions(-)
+
+diff --git a/core/java/android/app/AlarmManager.java b/core/java/android/app/AlarmManager.java
+index 4d85929..f89a354 100644
+--- a/core/java/android/app/AlarmManager.java
++++ b/core/java/android/app/AlarmManager.java
+@@ -1043,6 +1043,17 @@ public class AlarmManager {
+         }
+     }
+ 
++    /** @hide */
++    public String getSeenAlarms() {
++        try {
++            if (mService != null) {
++                return mService.getSeenAlarms();
++            }
++        } catch (RemoteException e) {
++        }
++        return null;
++    }
++
+     /**
+      * Gets information about the next alarm clock currently scheduled.
+      *
+diff --git a/core/java/android/app/IAlarmManager.aidl b/core/java/android/app/IAlarmManager.aidl
+index ab45e29..2bfbc3e 100644
+--- a/core/java/android/app/IAlarmManager.aidl
++++ b/core/java/android/app/IAlarmManager.aidl
+@@ -39,4 +39,6 @@ interface IAlarmManager {
+     AlarmManager.AlarmClockInfo getNextAlarmClock(int userId);
+     // update the uids being synchronized by network socket request manager
+     void updateBlockedUids(int uid, boolean isBlocked);
++    // blocked alarms support
++    String getSeenAlarms();
+ }
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 7386811..460748d 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -7696,6 +7696,18 @@ public final class Settings {
+         public static final String DOUBLE_TAP_TO_WAKE = "double_tap_to_wake";
+ 
+         /**
++         * List of alarms blocks selected
++         * @hide
++         */
++        public static final String ALARM_BLOCKING_LIST = "alarm_blocking_list";
++
++        /**
++         * Enable blocking alarm
++         * @hide
++         */
++        public static final String ALARM_BLOCKING_ENABLED = "alarm_blocking_enabled";
++
++        /**
+          * The current assistant component. It could be a voice interaction service,
+          * or an activity that handles ACTION_ASSIST, or empty which means using the default
+          * handling.
+diff --git a/services/core/java/com/android/server/AlarmManagerService.java b/services/core/java/com/android/server/AlarmManagerService.java
+index 76ba1ba..f76dc81 100644
+--- a/services/core/java/com/android/server/AlarmManagerService.java
++++ b/services/core/java/com/android/server/AlarmManagerService.java
+@@ -77,6 +77,12 @@ import java.util.Random;
+ import java.util.TimeZone;
+ import java.util.TreeSet;
+ 
++import java.util.Set;
++import java.util.Map;
++import java.util.HashSet;
++import java.util.HashMap;
++import java.util.Iterator;
++
+ import static android.app.AlarmManager.RTC_WAKEUP;
+ import static android.app.AlarmManager.RTC;
+ import static android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP;
+@@ -162,6 +168,10 @@ class AlarmManagerService extends SystemService {
+     long mAllowWhileIdleMinTime;
+     int mNumTimeChanged;
+ 
++    private Set<String> mSeenAlarms = new HashSet<String>();
++    private Map<String, Boolean[]> mBlockedAlarms = new HashMap<String, Boolean[]>();
++    private int mAlarmsBlockingEnabled;
++
+     /**
+      * The current set of user whitelisted apps for device idle mode, meaning these are allowed
+      * to freely schedule alarms.
+@@ -257,6 +267,12 @@ class AlarmManagerService extends SystemService {
+             mResolver = resolver;
+             mResolver.registerContentObserver(Settings.Global.getUriFor(
+                     Settings.Global.ALARM_MANAGER_CONSTANTS), false, this);
++            mResolver.registerContentObserver(Settings.System.getUriFor(
++                    Settings.Secure.ALARM_BLOCKING_ENABLED),
++                    false, this, UserHandle.USER_ALL);
++            mResolver.registerContentObserver(Settings.System.getUriFor(
++                    Settings.Secure.ALARM_BLOCKING_LIST),
++                    false, this, UserHandle.USER_ALL);
+             updateConstants();
+         }
+ 
+@@ -302,11 +318,20 @@ class AlarmManagerService extends SystemService {
+                 LISTENER_TIMEOUT = mParser.getLong(KEY_LISTENER_TIMEOUT,
+                         DEFAULT_LISTENER_TIMEOUT);
+ 
++                mAlarmsBlockingEnabled = Settings.System.getIntForUser(mResolver,
++                        Settings.Secure.ALARM_BLOCKING_ENABLED, 0, UserHandle.USER_CURRENT);
++                String blockedAlarmList = Settings.System.getStringForUser(mResolver,
++                        Settings.Secure.ALARM_BLOCKING_LIST, UserHandle.USER_CURRENT);
++                setBlockedAlarms(blockedAlarmList);
++                Slog.d(TAG, "mAlarmsBlockingEnabled=" + mAlarmsBlockingEnabled
++                        + " blockedAlarmList=" + blockedAlarmList);
++
+                 updateAllowWhileIdleMinTimeLocked();
+                 updateAllowWhileIdleWhitelistDurationLocked();
+             }
+         }
+ 
++
+         void dump(PrintWriter pw) {
+             pw.println("  Settings:");
+ 
+@@ -1064,6 +1089,7 @@ class AlarmManagerService extends SystemService {
+             PendingIntent operation, IAlarmListener directReceiver, String listenerTag,
+             int flags, WorkSource workSource, AlarmManager.AlarmClockInfo alarmClock,
+             int callingUid, String callingPackage) {
++
+         // must be *either* PendingIntent or AlarmReceiver, but not both
+         if ((operation == null && directReceiver == null)
+                 || (operation != null && directReceiver != null)) {
+@@ -1119,6 +1145,33 @@ class AlarmManagerService extends SystemService {
+             maxElapsed = triggerElapsed + windowLength;
+         }
+ 
++        boolean rejectAlarm = false;
++        if(operation != null){
++            String tag = operation.getTag("");
++
++            if (type == AlarmManager.RTC_WAKEUP || type == AlarmManager.ELAPSED_REALTIME_WAKEUP){
++
++                Slog.e(TAG, "RTC Alarm: " + type + " " + listenerTag + " " + callingPackage + " " + tag);
++
++                if (!mSeenAlarms.contains(tag)) {
++                    mSeenAlarms.add(tag);
++                }
++                if (mAlarmsBlockingEnabled == 1 && mBlockedAlarms.containsKey(tag)) {
++                    Boolean[] state = mBlockedAlarms.get(tag);
++                    if(state[1].booleanValue()){
++                        if (type == AlarmManager.RTC_WAKEUP) {
++                            type = AlarmManager.RTC;
++                        } else {
++                            type = AlarmManager.ELAPSED_REALTIME;
++                        }
++                        Slog.e(TAG, "RTC alarm blocked: " + type + " " + listenerTag + " " + callingPackage + " " + operation.getTag(""));
++                    } else if(state[0].booleanValue()){
++                        rejectAlarm = true;
++                    }
++                }
++            }
++        }
++
+         synchronized (mLock) {
+             if (DEBUG_BATCH) {
+                 Slog.v(TAG, "set(" + operation + ") : type=" + type
+@@ -1126,9 +1179,36 @@ class AlarmManagerService extends SystemService {
+                         + " tElapsed=" + triggerElapsed + " maxElapsed=" + maxElapsed
+                         + " interval=" + interval + " flags=0x" + Integer.toHexString(flags));
+             }
++
++            if(rejectAlarm){
++                Slog.e(TAG, "RTC alarm rejected: " + type + " " + listenerTag + " " + callingPackage + " " + operation.getTag(""));
++                return;
++            }
+             setImplLocked(type, triggerAtTime, triggerElapsed, windowLength, maxElapsed,
+-                    interval, operation, directReceiver, listenerTag, flags, true, workSource,
+-                    alarmClock, callingUid, callingPackage);
++                interval, operation, directReceiver, listenerTag, flags, true, workSource,
++                alarmClock, callingUid, callingPackage);
++        }
++    }
++
++    private void setBlockedAlarms(String AlarmTagsString) {
++        mBlockedAlarms = new HashMap<String,Boolean[]>();
++        if (AlarmTagsString != null && AlarmTagsString.length() != 0) {
++            String[] parts = AlarmTagsString.split("\\|");
++            Boolean rejected, blocked;
++            for (int i = 0; i < parts.length; i++) {
++                String[] state = parts[i].split("\\:");
++                if(state[1].equals("0")){
++                    rejected = false;
++                } else {
++                    rejected = true;
++                }
++                if(state[2].equals("0")){
++                    blocked = false;
++                } else {
++                    blocked = true;
++                }
++                mBlockedAlarms.put(state[0],new Boolean[]{rejected, blocked});
++            }
+         }
+     }
+ 
+@@ -1383,6 +1463,23 @@ class AlarmManagerService extends SystemService {
+         }
+ 
+         @Override
++        public String getSeenAlarms() {
++            StringBuffer buffer = new StringBuffer();
++            Iterator<String> nextAlarm = mSeenAlarms.iterator();
++
++            while (nextAlarm.hasNext()) {
++                String alarmTag = nextAlarm.next();
++                buffer.append(alarmTag + "|");
++            }
++
++            if (buffer.length() > 0) {
++                buffer.deleteCharAt(buffer.length() - 1);
++            }
++
++            return buffer.toString();
++        }
++
++        @Override
+         public AlarmManager.AlarmClockInfo getNextAlarmClock(int userId) {
+             userId = ActivityManager.handleIncomingUser(Binder.getCallingPid(),
+                     Binder.getCallingUid(), userId, false /* allowAll */, false /* requireFull */,
+-- 
+1.9.3 (Apple Git-50)
+

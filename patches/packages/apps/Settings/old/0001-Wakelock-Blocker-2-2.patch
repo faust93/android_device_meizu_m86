@@ -1,33 +1,35 @@
-From f6008217a98ecd13ca99837e6b0044b9047c4c74 Mon Sep 17 00:00:00 2001
+From 75ef163ddce04f641f5bcf197ad03b221ea4d05c Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Mon, 21 Nov 2016 14:01:46 +0300
-Subject: [PATCH] WakeLockBlocker [2/2]
+Date: Sun, 29 Jan 2017 18:20:31 +0300
+Subject: [PATCH] Wakelock Blocker [2/2]
 
-Change-Id: I7d638075524931ec2afcc26db8a363dc3e6c7eb5
+Change-Id: I59c697646513522a99ef2e1f7d1efcca2de4978d
 ---
  AndroidManifest.xml                                |   2 +
  res/drawable-hdpi/ic_settings_wakelock_blocker.png | Bin 0 -> 4082 bytes
  res/drawable-mdpi/ic_settings_wakelock_blocker.png | Bin 0 -> 4082 bytes
  .../ic_settings_wakelock_blocker.png               | Bin 0 -> 4082 bytes
- res/layout/wakelock_blocker.xml                    |  68 +++++
+ res/layout/wakelock_blocker.xml                    |  79 ++++++
  res/layout/wakelock_item.xml                       |  13 +
- res/values/cm_strings.xml                          |  11 +
+ res/values/cm_strings.xml                          |  10 +
  res/xml/development_prefs.xml                      |   5 +
  src/com/android/settings/SettingsActivity.java     |   1 +
  src/com/android/settings/WakeLockBlocker.java      | 302 +++++++++++++++++++++
- 10 files changed, 402 insertions(+)
+ wakelock_blocker.xml                               |  79 ++++++
+ 11 files changed, 491 insertions(+)
  create mode 100644 res/drawable-hdpi/ic_settings_wakelock_blocker.png
  create mode 100644 res/drawable-mdpi/ic_settings_wakelock_blocker.png
  create mode 100644 res/drawable-xhdpi/ic_settings_wakelock_blocker.png
  create mode 100644 res/layout/wakelock_blocker.xml
  create mode 100644 res/layout/wakelock_item.xml
  create mode 100644 src/com/android/settings/WakeLockBlocker.java
+ create mode 100644 wakelock_blocker.xml
 
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index e821456..e905fc6 100644
+index 9bc317e..45d6bfe 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -3293,5 +3293,7 @@
+@@ -3340,5 +3340,7 @@
              </intent-filter>
          </activity>
  
@@ -301,11 +303,29 @@ HcmV?d00001
 
 diff --git a/res/layout/wakelock_blocker.xml b/res/layout/wakelock_blocker.xml
 new file mode 100644
-index 0000000..f9ea2ef
+index 0000000..f6a6ded
 --- /dev/null
 +++ b/res/layout/wakelock_blocker.xml
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,79 @@
 +<?xml version="1.0" encoding="utf-8"?>
++<!--
++/*
++** Copyright 2013, The Android Open Source Project
++**
++** Licensed under the Apache License, Version 2.0 (the "License");
++** you may not use this file except in compliance with the License.
++** You may obtain a copy of the License at
++**
++**     http://www.apache.org/licenses/LICENSE-2.0
++**
++** Unless required by applicable law or agreed to in writing, software
++** distributed under the License is distributed on an "AS IS" BASIS,
++** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++** See the License for the specific language governing permissions and
++** limitations under the License.
++*/
++-->
++
 +<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 +    android:layout_width="match_parent"
 +    android:layout_height="match_parent"
@@ -318,15 +338,11 @@ index 0000000..f9ea2ef
 +    <LinearLayout
 +        android:layout_width="wrap_content"
 +        android:layout_height="wrap_content"
-+        android:gravity="center_vertical"
 +        android:orientation="horizontal">
 +
 +        <RelativeLayout
-+            android:layout_width="200dip"
-+            android:layout_height="wrap_content"
-+            android:layout_marginTop="6dip"
-+            android:layout_marginBottom="6dip"
-+            android:layout_weight="1">
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content">
 +
 +            <TextView android:id="@+id/wakelock_blocker_title"
 +                android:layout_width="wrap_content"
@@ -335,6 +351,7 @@ index 0000000..f9ea2ef
 +                android:textAppearance="?android:attr/textAppearanceMedium"
 +                android:ellipsize="marquee"
 +                android:text="@string/wakelock_blocker_title"
++                android:padding="6dp"
 +                android:fadingEdge="horizontal" />
 +
 +            <TextView android:id="@+id/wakelock_blocker_title_summary"
@@ -345,22 +362,17 @@ index 0000000..f9ea2ef
 +                android:textAppearance="?android:attr/textAppearanceSmall"
 +                android:textColor="?android:attr/textColorSecondary"
 +                android:text="@string/wakelock_blocker_summary"
++                android:padding="6dp"
 +                android:maxLines="4" />
 +
-+        </RelativeLayout>
-+
-+        <LinearLayout android:id="@+android:id/widget_frame"
-+            android:layout_width="wrap_content"
-+            android:layout_height="wrap_content"
-+            android:gravity="center_vertical"
-+            android:orientation="vertical" >
-+
-+            <Switch
++            <Switch 
 +                android:id="@+id/wakelock_blocker_switch"
 +                android:layout_width="wrap_content"
 +                android:layout_height="wrap_content"
-+                android:padding="4dip"/>
-+        </LinearLayout>
++                android:layout_alignParentRight="true" />
++
++        </RelativeLayout>
++
 +    </LinearLayout>
 +
 +    <TextView
@@ -369,9 +381,10 @@ index 0000000..f9ea2ef
 +        style="?android:attr/listSeparatorTextViewStyle" />
 +
 +    <ListView
-+            android:id="@+id/wakelock_list"
-+            android:layout_width="match_parent"
-+            android:layout_height="match_parent"/>
++        android:id="@+id/wakelock_list"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"/>
++
 +</LinearLayout>
 diff --git a/res/layout/wakelock_item.xml b/res/layout/wakelock_item.xml
 new file mode 100644
@@ -393,14 +406,13 @@ index 0000000..85e8022
 +
 +</LinearLayout>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 384076e..16545a8 100644
+index 94ed9e6..030f600 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -372,4 +372,15 @@
+@@ -417,6 +417,16 @@
+     <string name="heads_up_notifications_enabled_title">Heads-up</string>
+     <string name="heads_up_notifications_enabled_summary">Display priority notifications in a small floating window</string>
  
-     <!-- CM Legal -->
-     <string name="cmlicense_title">CyanogenMod legal</string>
-+
 +    <!-- Wakelock blocker -->
 +    <string name="wakelock_blocker">Wakelock blocker</string>
 +    <string name="wakelock_blocker_title">Enable</string>
@@ -411,12 +423,14 @@ index 384076e..16545a8 100644
 +    <string name="wakelock_blocker_warning_title">Proceed with caution</string>
 +    <string name="wakelock_blocker_warning">Blocking wakelocks have the potential to cause instability, crashes or data loss.</string>
 +
- </resources>
+     <!-- Encryption password -->
+     <string name="crypt_keeper_change_password_title">Change encryption password</string>
+     <string name="crypt_keeper_change_password_summary">Change the password used for device encryption</string>
 diff --git a/res/xml/development_prefs.xml b/res/xml/development_prefs.xml
-index 955861e..a795264 100644
+index 314da89..4ec2a9d 100644
 --- a/res/xml/development_prefs.xml
 +++ b/res/xml/development_prefs.xml
-@@ -46,6 +46,11 @@
+@@ -44,6 +44,11 @@
                  android:targetClass="com.android.development.Development" />
      </PreferenceScreen>
  
@@ -429,16 +443,16 @@ index 955861e..a795264 100644
              android:key="bugreport"
              android:title="@*android:string/bugreport_title"
 diff --git a/src/com/android/settings/SettingsActivity.java b/src/com/android/settings/SettingsActivity.java
-index 674da55..2df4580 100644
+index c513be0..e9f8ff0 100644
 --- a/src/com/android/settings/SettingsActivity.java
 +++ b/src/com/android/settings/SettingsActivity.java
-@@ -375,6 +375,7 @@ public class SettingsActivity extends SettingsDrawerActivity
+@@ -379,6 +379,7 @@ public class SettingsActivity extends SettingsDrawerActivity
+             NavbarSettings.class.getName(),
              FlingSettings.class.getName(),
              SmartbarSettings.class.getName(),
-             PulseSettings.class.getName(),
 +            WakeLockBlocker.class.getName(),
+             PulseSettings.class.getName()
      };
- 
  
 diff --git a/src/com/android/settings/WakeLockBlocker.java b/src/com/android/settings/WakeLockBlocker.java
 new file mode 100644
@@ -748,6 +762,91 @@ index 0000000..f03739c
 +        mAlertDialog.show();
 +    }
 +}
+diff --git a/wakelock_blocker.xml b/wakelock_blocker.xml
+new file mode 100644
+index 0000000..f6a6ded
+--- /dev/null
++++ b/wakelock_blocker.xml
+@@ -0,0 +1,79 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++/*
++** Copyright 2013, The Android Open Source Project
++**
++** Licensed under the Apache License, Version 2.0 (the "License");
++** you may not use this file except in compliance with the License.
++** You may obtain a copy of the License at
++**
++**     http://www.apache.org/licenses/LICENSE-2.0
++**
++** Unless required by applicable law or agreed to in writing, software
++** distributed under the License is distributed on an "AS IS" BASIS,
++** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++** See the License for the specific language governing permissions and
++** limitations under the License.
++*/
++-->
++
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:minHeight="?android:attr/listPreferredItemHeight"
++    android:gravity="center_vertical"
++    android:paddingEnd="?android:attr/scrollbarSize"
++    android:background="?android:attr/selectableItemBackground"
++    android:orientation="vertical">
++
++    <LinearLayout
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:orientation="horizontal">
++
++        <RelativeLayout
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content">
++
++            <TextView android:id="@+id/wakelock_blocker_title"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:singleLine="true"
++                android:textAppearance="?android:attr/textAppearanceMedium"
++                android:ellipsize="marquee"
++                android:text="@string/wakelock_blocker_title"
++                android:padding="6dp"
++                android:fadingEdge="horizontal" />
++
++            <TextView android:id="@+id/wakelock_blocker_title_summary"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_below="@id/wakelock_blocker_title"
++                android:layout_alignStart="@id/wakelock_blocker_title"
++                android:textAppearance="?android:attr/textAppearanceSmall"
++                android:textColor="?android:attr/textColorSecondary"
++                android:text="@string/wakelock_blocker_summary"
++                android:padding="6dp"
++                android:maxLines="4" />
++
++            <Switch 
++                android:id="@+id/wakelock_blocker_switch"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_alignParentRight="true" />
++
++        </RelativeLayout>
++
++    </LinearLayout>
++
++    <TextView
++        android:id="@+id/wakelock_list_header"
++        android:text="@string/wakelock_list_header"
++        style="?android:attr/listSeparatorTextViewStyle" />
++
++    <ListView
++        android:id="@+id/wakelock_list"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"/>
++
++</LinearLayout>
 -- 
 1.9.3 (Apple Git-50)
 

@@ -1,0 +1,26 @@
+From c0bb4112ef4b457411d98e51db3b4f00c4af20c2 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 2 Feb 2017 11:53:12 +0300
+Subject: [PATCH] disable datastall detection
+
+Change-Id: I2dc8167b6df0f505c2882890e2f0f40b78a6e719
+---
+ src/java/com/android/internal/telephony/dataconnection/DcTracker.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/dataconnection/DcTracker.java b/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+index 4159a53..7f01666 100644
+--- a/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
++++ b/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+@@ -563,7 +563,7 @@ public class DcTracker extends Handler {
+     // Reference counter for enabling fail fast
+     private static int sEnableFailFastRefCounter = 0;
+     // True if data stall detection is enabled
+-    private volatile boolean mDataStallDetectionEnabled = true;
++    private volatile boolean mDataStallDetectionEnabled = false;
+ 
+     private volatile boolean mFailFast = false;
+ 
+-- 
+1.9.3 (Apple Git-50)
+

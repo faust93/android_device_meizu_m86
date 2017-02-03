@@ -1,0 +1,391 @@
+From 07c8b6b92d0f3b7778c71106f39d3275b77c3084 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 31 Jan 2017 11:44:01 +0300
+Subject: [PATCH] Lock screen weather info [2/2] ported from Nitrogen
+
+Change-Id: I0044ec9bf5ad3cbc65a1d212a98027609f195481
+---
+ res/values-ru/crdroid_strings.xml                  |  29 +++++
+ res/values/crdroid_arrays.xml                      |  25 ++++
+ res/values/crdroid_strings.xml                     |  29 +++++
+ res/xml/crdroid_settings_lockscreen.xml            |   5 +
+ res/xml/lock_screen_weather_settings.xml           |  69 +++++++++++
+ .../settings/fragments/LockScreenSettings.java     |   3 +
+ .../fragments/LockScreenWeatherSettings.java       | 136 +++++++++++++++++++++
+ 7 files changed, 296 insertions(+)
+ create mode 100644 res/xml/lock_screen_weather_settings.xml
+ create mode 100644 src/com/crdroid/settings/fragments/LockScreenWeatherSettings.java
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index b4aee11..38b4713 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -1201,6 +1201,35 @@
+     <string name="disable_animations">Отключить анимацию</string>
+     <string name="disable_animations_summary">Отключение анимации перехода, например, при запуске приложения</string>
+ 
++    <!-- Lockscreen weather -->
++    <string name="display_category_weather_title">Настройка погоды на экране блокировки</string>
++    <string name="lock_screen_weather_settings_title">Погода на экране блокировки</string>
++    <string name="weather_cat_notifications_title">Уведомления</string>
++    <string name="weather_show_weather_title">Показывать погоду</string>
++    <string name="weather_show_weather_summary">Включить отображение информации о погоде</string>
++    <string name="weather_show_location_title">Показывать местоположение</string>
++    <string name="weather_show_location_summary">Включить отображение местоположения</string>
++    <string name="weather_show_timestamp_title">Показывать время</string>
++    <string name="weather_show_timestamp_summary">Включить отображение времени</string>
++    <string name="weather_condition_icon_title">Стиль иконок</string>
++    <string name="weather_condition_icon_dlg_title">Выберете стиль иконок для отображения погоды</string>
++    <string name="weather_condition_icon_monochrome_title">Монохромные</string>
++    <string name="weather_condition_icon_colored_title">Цветные</string>
++    <string name="weather_condition_icon_vclouds_title">Объёмные</string>
++    <string name="icons_title">Иконки</string>
++    <string name="position_right_title">Справа</string>
++    <string name="position_centered_title">По центру</string>
++    <string name="hidden_title">Скрыть</string>
++    <string name="weather_hide_panel_title">Скрыть панель погоды</string>
++    <string name="weather_hide_panel_dlg_title">Выберите, когда панель погоды должна быть скрыта</string>
++    <string name="weather_hide_panel_auto_title">Автоматически</string>
++    <string name="weather_hide_panel_custom_title">Свое значение</string>
++    <string name="weather_hide_panel_never_title">Никогда</string>
++    <string name="weather_hide_panel_auto_summary">Панель погоды будет скрыта, когда количество уведомлений на экране блокировки достигнет максимального значения</string>
++    <string name="weather_hide_panel_custom_summary">Панель погоды будет скрыта, когда количество уведомлений на экране блокировки будет равно (%s)</string>
++    <string name="weather_hide_panel_never_summary">Панель погоды не будет скрыта</string>
++    <string name="weather_number_of_notifications_title">Количество уведомлений</string>
++
+     <!-- XOSP Blur personalizations -->
+     <string name="settings_blur_cat">Настройки размытия</string>
+     <string name="blurred_status_bar_expanded_enabled_pref">Размытие фона строки состояния</string>
+diff --git a/res/values/crdroid_arrays.xml b/res/values/crdroid_arrays.xml
+index 0a1a0f6..83a304c 100644
+--- a/res/values/crdroid_arrays.xml
++++ b/res/values/crdroid_arrays.xml
+@@ -1088,6 +1088,31 @@
+         <item>7</item>
+     </string-array>
+ 
++    <!-- LS Weather -->
++    <string-array name="weather_condition_icon_entries">
++        <item>@string/weather_condition_icon_monochrome_title</item>
++        <item>@string/weather_condition_icon_colored_title</item>
++        <item>@string/weather_condition_icon_vclouds_title</item>
++    </string-array>
++
++    <string-array name="weather_condition_icon_values" translatable="false">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++    </string-array>
++
++    <string-array name="weather_hide_panel_entries">
++        <item>@string/weather_hide_panel_auto_title</item>
++        <item>@string/weather_hide_panel_custom_title</item>
++        <item>@string/weather_hide_panel_never_title</item>
++    </string-array>
++
++    <string-array name="weather_hide_panel_values" translatable="false">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++    </string-array>
++
+     <!-- Header options -->
+     <string-array name="custom_header_provider_entries" translatable="false">
+         <item>@string/daylight_header_provider_title</item>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 3b06a2a..8904600 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -1215,6 +1215,35 @@
+     <string name="disable_animations">Disable animations</string>
+     <string name="disable_animations_summary">Disables transition animations such as when launching an app</string>
+ 
++    <!-- Lockscreen weather -->
++    <string name="display_category_weather_title">Lockscreen weather options</string>
++    <string name="lock_screen_weather_settings_title">Weather</string>
++    <string name="weather_cat_notifications_title">Notifications</string>
++    <string name="weather_show_weather_title">Show weather</string>
++    <string name="weather_show_weather_summary">Enable to show weather information</string>
++    <string name="weather_show_location_title">Show location</string>
++    <string name="weather_show_location_summary">Enable to show the location</string>
++    <string name="weather_show_timestamp_title">Show timestamp</string>
++    <string name="weather_show_timestamp_summary">Enable to show the timestamp</string>
++    <string name="weather_condition_icon_title">Condition icon</string>
++    <string name="weather_condition_icon_dlg_title">Choose an icon for displaying the weather condition</string>
++    <string name="weather_condition_icon_monochrome_title">Monochrome</string>
++    <string name="weather_condition_icon_colored_title">Colored</string>
++    <string name="weather_condition_icon_vclouds_title">VClouds</string>
++    <string name="icons_title">Icons</string>
++    <string name="position_right_title">Right</string>
++    <string name="position_centered_title">Centered</string>
++    <string name="hidden_title">Hidden</string>
++    <string name="weather_hide_panel_title">Hide weather panel</string>
++    <string name="weather_hide_panel_dlg_title">Choose when the weather panel should be hidden</string>
++    <string name="weather_hide_panel_auto_title">Auto</string>
++    <string name="weather_hide_panel_custom_title">Custom</string>
++    <string name="weather_hide_panel_never_title">Never</string>
++    <string name="weather_hide_panel_auto_summary">The weather panel will be hidden when the visible notifications will reach the maximum allowed notifications on the lock screen</string>
++    <string name="weather_hide_panel_custom_summary">The weather panel will be hidden when the visible notifications will reach the chosen number of notifications</string>
++    <string name="weather_hide_panel_never_summary">The weather panel won\`t be hidden</string>
++    <string name="weather_number_of_notifications_title">Number of notifications</string>
++
+     <!-- XOSP Blur personalizations -->
+     <string name="settings_blur_cat">Blur</string>
+     <string name="blurred_status_bar_expanded_enabled_pref">Blur statusbar background</string>
+diff --git a/res/xml/crdroid_settings_lockscreen.xml b/res/xml/crdroid_settings_lockscreen.xml
+index f9e3b9b..7b83c7f 100644
+--- a/res/xml/crdroid_settings_lockscreen.xml
++++ b/res/xml/crdroid_settings_lockscreen.xml
+@@ -56,6 +56,11 @@
+             android:title="@string/hide_lockscreen_alarm_title"
+             android:summary="@string/hide_lockscreen_alarm_summary"
+             android:defaultValue="true" />
++
++         <PreferenceScreen
++            android:key="lockscreen_weather"
++            android:title="@string/lock_screen_weather_settings_title"
++            android:fragment="com.crdroid.settings.fragments.LockScreenWeatherSettings" />
+     </PreferenceCategory>
+ 
+     <PreferenceCategory 
+diff --git a/res/xml/lock_screen_weather_settings.xml b/res/xml/lock_screen_weather_settings.xml
+new file mode 100644
+index 0000000..37de903
+--- /dev/null
++++ b/res/xml/lock_screen_weather_settings.xml
+@@ -0,0 +1,69 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2014 DarkKat
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
++    android:title="@string/lock_screen_weather_settings_title"
++    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings" >
++
++    <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++        android:key="lock_screen_show_weather"
++        android:title="@string/weather_show_weather_title"
++        android:summary="@string/weather_show_weather_summary" />
++
++    <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++        android:key="lock_screen_show_weather_location"
++        android:title="@string/weather_show_location_title"
++        android:summary="@string/weather_show_location_summary"
++        android:defaultValue="true"
++        android:dependency="lock_screen_show_weather" />
++
++    <com.crdroid.settings.preferences.SystemSettingSwitchPreference
++        android:key="lock_screen_show_weather_timestamp"
++        android:title="@string/weather_show_timestamp_title"
++        android:summary="@string/weather_show_timestamp_summary"
++        android:defaultValue="true"
++        android:dependency="lock_screen_show_weather" />
++
++    <ListPreference
++        android:key="weather_condition_icon"
++        android:title="@string/weather_condition_icon_title"
++        android:dialogTitle="@string/weather_condition_icon_dlg_title"
++        android:entries="@array/weather_condition_icon_entries"
++        android:entryValues="@array/weather_condition_icon_values"
++        android:dependency="lock_screen_show_weather" />
++
++    <PreferenceCategory
++        android:key="weather_cat_notifications"
++        android:title="@string/weather_cat_notifications_title">
++
++        <ListPreference
++            android:key="weather_hide_panel"
++            android:title="@string/weather_hide_panel_title"
++            android:dialogTitle="@string/weather_hide_panel_dlg_title"
++            android:entries="@array/weather_hide_panel_entries"
++            android:entryValues="@array/weather_hide_panel_values"
++            android:dependency="lock_screen_show_weather" />
++
++        <com.crdroid.settings.preferences.SeekBarPreference
++            android:key="weather_number_of_notifications"
++            android:title="@string/weather_number_of_notifications_title"
++            android:max="6"
++            settings:min="1"
++            android:persistent="false"
++            android:dependency="lock_screen_show_weather" />
++
++    </PreferenceCategory>
++
++</PreferenceScreen>
+diff --git a/src/com/crdroid/settings/fragments/LockScreenSettings.java b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+index 933776f..7ba0d7a 100644
+--- a/src/com/crdroid/settings/fragments/LockScreenSettings.java
++++ b/src/com/crdroid/settings/fragments/LockScreenSettings.java
+@@ -5,6 +5,7 @@ import android.content.ContentResolver;
+ import android.content.res.Resources;
+ import android.support.v7.preference.ListPreference;
+ import android.support.v7.preference.Preference;
++import android.support.v7.preference.PreferenceCategory;
+ import android.support.v7.preference.PreferenceScreen;
+ import android.support.v7.preference.Preference.OnPreferenceChangeListener;
+ import android.support.v14.preference.SwitchPreference;
+@@ -12,6 +13,8 @@ import android.provider.Settings;
+ import android.text.TextUtils;
+ import android.view.View;
+ 
++import android.preference.PreferenceManager;
++
+ import com.android.settings.R;
+ import com.crdroid.settings.preferences.SeekBarPreference;
+ import com.android.settings.SettingsPreferenceFragment;
+diff --git a/src/com/crdroid/settings/fragments/LockScreenWeatherSettings.java b/src/com/crdroid/settings/fragments/LockScreenWeatherSettings.java
+new file mode 100644
+index 0000000..84e1131
+--- /dev/null
++++ b/src/com/crdroid/settings/fragments/LockScreenWeatherSettings.java
+@@ -0,0 +1,136 @@
++/* 
++ * Copyright (C) 2014 DarkKat
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.crdroid.settings.fragments;
++
++import android.content.ContentResolver;
++import android.os.Bundle;
++import android.support.v7.preference.ListPreference;
++import android.support.v14.preference.SwitchPreference;
++import android.support.v7.preference.Preference;
++import android.support.v7.preference.PreferenceCategory;
++import android.preference.PreferenceManager;
++import android.support.v7.preference.PreferenceScreen;
++import android.provider.Settings;
++
++import com.android.internal.logging.MetricsProto.MetricsEvent;
++
++import com.android.settings.R;
++import com.android.settings.SettingsPreferenceFragment;
++import com.crdroid.settings.preferences.SeekBarPreference;
++
++public class LockScreenWeatherSettings extends SettingsPreferenceFragment implements
++        Preference.OnPreferenceChangeListener {
++
++    private static final String PREF_CONDITION_ICON =
++            "weather_condition_icon";
++    private static final String PREF_HIDE_WEATHER =
++            "weather_hide_panel";
++    private static final String PREF_NUMBER_OF_NOTIFICATIONS =
++            "weather_number_of_notifications";
++
++    private static final int MONOCHROME_ICON = 0;
++
++    private ListPreference mConditionIcon;
++    private ListPreference mHideWeather;
++    private SeekBarPreference mNumberOfNotifications;
++
++    private ContentResolver mResolver;
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        addPreferencesFromResource(R.xml.lock_screen_weather_settings);
++        mResolver = getActivity().getContentResolver();
++        PreferenceScreen prefs = getPreferenceScreen();
++
++        mConditionIcon =
++                (ListPreference) findPreference(PREF_CONDITION_ICON);
++        int conditionIcon = Settings.System.getInt(mResolver,
++               Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON, MONOCHROME_ICON);
++        mConditionIcon.setValue(String.valueOf(conditionIcon));
++        mConditionIcon.setSummary(mConditionIcon.getEntry());
++        mConditionIcon.setOnPreferenceChangeListener(this);
++
++        mHideWeather =
++                (ListPreference) findPreference(PREF_HIDE_WEATHER);
++        int hideWeather = Settings.System.getInt(mResolver,
++               Settings.System.LOCK_SCREEN_WEATHER_HIDE_PANEL, 0);
++        mHideWeather.setValue(String.valueOf(hideWeather));
++        mHideWeather.setOnPreferenceChangeListener(this);
++
++        mNumberOfNotifications =
++                (SeekBarPreference) findPreference(PREF_NUMBER_OF_NOTIFICATIONS);
++        int numberOfNotifications = Settings.System.getInt(mResolver,
++                Settings.System.LOCK_SCREEN_WEATHER_NUMBER_OF_NOTIFICATIONS, 4);
++        mNumberOfNotifications.setValue(numberOfNotifications);
++        mNumberOfNotifications.setOnPreferenceChangeListener(this);
++
++        updatePreference();
++    }
++
++    @Override
++    protected int getMetricsCategory() {
++        return MetricsEvent.CRDROID_SETTINGS;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        updatePreference();
++    }
++
++    private void updatePreference() {
++        int hideWeather = Settings.System.getInt(mResolver,
++                Settings.System.LOCK_SCREEN_WEATHER_HIDE_PANEL, 0);
++        if (hideWeather == 0) {
++            mNumberOfNotifications.setEnabled(false);
++            mHideWeather.setSummary(R.string.weather_hide_panel_auto_summary);
++        } else if (hideWeather == 1) {
++            mNumberOfNotifications.setEnabled(true);
++            mHideWeather.setSummary(R.string.weather_hide_panel_custom_summary);
++        } else {
++            mNumberOfNotifications.setEnabled(false);
++            mHideWeather.setSummary(R.string.weather_hide_panel_never_summary);
++        }
++    }
++
++    public boolean onPreferenceChange(Preference preference, Object newValue) {
++        boolean value;
++        if (preference == mConditionIcon) {
++            int intValue = Integer.valueOf((String) newValue);
++            int index = mConditionIcon.findIndexOfValue((String) newValue);
++            Settings.System.putInt(mResolver,
++                    Settings.System.LOCK_SCREEN_WEATHER_CONDITION_ICON, intValue);
++            mConditionIcon.setSummary(mConditionIcon.getEntries()[index]);
++            return true;
++        } else if (preference == mHideWeather) {
++            int intValue = Integer.valueOf((String) newValue);
++            int index = mHideWeather.findIndexOfValue((String) newValue);
++            Settings.System.putInt(mResolver,
++                    Settings.System.LOCK_SCREEN_WEATHER_HIDE_PANEL, intValue);
++            updatePreference();
++            return true;
++        } else if (preference == mNumberOfNotifications) {
++            int numberOfNotifications = (Integer) newValue;
++            Settings.System.putInt(getActivity().getContentResolver(),
++                    Settings.System.LOCK_SCREEN_WEATHER_NUMBER_OF_NOTIFICATIONS,
++            numberOfNotifications);
++            return true;
++        }
++        return false;
++    }
++}
+-- 
+1.9.3 (Apple Git-50)
+

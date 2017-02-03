@@ -1,0 +1,26 @@
+From 75cffdef6ba373fb42890c1c5f45d1d4ca23d67f Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 25 Dec 2016 12:17:08 +0300
+Subject: [PATCH] another null check
+
+Change-Id: I3b1e89b8d2a4c3242451b00d1c33d5f5832737f5
+---
+ core/java/android/app/SharedPreferencesImpl.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/java/android/app/SharedPreferencesImpl.java b/core/java/android/app/SharedPreferencesImpl.java
+index 8cda337..fd1322f 100644
+--- a/core/java/android/app/SharedPreferencesImpl.java
++++ b/core/java/android/app/SharedPreferencesImpl.java
+@@ -436,7 +436,7 @@ final class SharedPreferencesImpl implements SharedPreferences {
+                             }
+                             mMap.remove(k);
+                         } else {
+-                            if (mMap.containsKey(k)) {
++                            if (mMap != null && k != null && mMap.containsKey(k)) {
+                                 Object existingValue = mMap.get(k);
+                                 if (existingValue != null && existingValue.equals(v)) {
+                                     continue;
+-- 
+1.9.3 (Apple Git-50)
+

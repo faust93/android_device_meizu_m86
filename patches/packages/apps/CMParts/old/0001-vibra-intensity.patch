@@ -1,9 +1,8 @@
-From 82987020ebb692d51c47a82bcc9db2278ceb4a36 Mon Sep 17 00:00:00 2001
+From b2819d2412bf23a6805fbf35c81b6113430ca185 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Tue, 15 Nov 2016 12:18:44 +0300
-Subject: [PATCH] Vibrator Intensity
+Date: Thu, 1 Dec 2016 12:05:39 +0300
+Subject: [PATCH] vibra intensity
 
-Change-Id: I1f9c68927d53f51506289df56724eacc40ecac38
 ---
  res/layout/vibrator_intensity.xml                  |  49 +++++
  res/values/strings.xml                             |   4 +
@@ -69,10 +68,10 @@ index 0000000..171f90e
 +
 +</RelativeLayout>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 47e1ea4..b25df33 100644
+index 79e8ae7..6c2169c 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -544,6 +544,10 @@
+@@ -546,6 +546,10 @@
      <string name="hifi_gain_high_title">High Gain</string>
      <string name="hifi_gain_line_title">LineOut</string>
  
@@ -84,7 +83,7 @@ index 47e1ea4..b25df33 100644
      <string name="perf_profile_settings_title">Battery saver and performance</string>
      <string name="perf_profile_settings_summary">Adjust power saving features and device performance</string>
 diff --git a/res/xml/button_settings.xml b/res/xml/button_settings.xml
-index 995d379..241c3a0 100644
+index c587fca..d01fc51 100644
 --- a/res/xml/button_settings.xml
 +++ b/res/xml/button_settings.xml
 @@ -30,6 +30,12 @@
@@ -98,8 +97,8 @@ index 995d379..241c3a0 100644
 +        android:persistent="false" />
 +
      <PreferenceCategory
-         android:key="power_key"
-         android:title="@string/hardware_keys_power_key_title" >
+         android:key="navigation_bar_category"
+         android:title="@string/navigation_bar_category" >
 diff --git a/src/org/cyanogenmod/cmparts/hardware/VibratorIntensity.java b/src/org/cyanogenmod/cmparts/hardware/VibratorIntensity.java
 new file mode 100644
 index 0000000..e7e37ba

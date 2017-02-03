@@ -1,0 +1,27 @@
+From b46936e18611f1c4c093ab661cab7b84c3f6cc1c Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 25 Jan 2017 16:32:18 +0300
+Subject: [PATCH] fix activitymanager-sleep wakelock
+
+Change-Id: Ia483ac2b4c11fd236c069198c4df11accf72bf68
+---
+ services/core/java/com/android/server/am/ActivityManagerService.java | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/services/core/java/com/android/server/am/ActivityManagerService.java b/services/core/java/com/android/server/am/ActivityManagerService.java
+index 5ff9d50..75df536 100644
+--- a/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -11809,7 +11809,8 @@ public final class ActivityManagerService extends ActivityManagerNative
+     }
+ 
+     boolean isSleepingLocked() {
+-        return mSleeping && mWakefulness == PowerManagerInternal.WAKEFULNESS_ASLEEP;
++        return mSleeping;
++// && mWakefulness == PowerManagerInternal.WAKEFULNESS_ASLEEP;
+     }
+ 
+     void onWakefulnessChanged(int wakefulness) {
+-- 
+1.9.3 (Apple Git-50)
+

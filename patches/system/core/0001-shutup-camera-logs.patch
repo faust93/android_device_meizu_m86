@@ -1,0 +1,29 @@
+From 8a0ab2d39e341637688c2f0941f52ff479f1495c Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 30 Dec 2016 10:57:24 +0300
+Subject: [PATCH] shutup camera logs
+
+Change-Id: Icdaf1dafd77f2376bf8db857b8d2efc027c9cbac
+---
+ liblog/logprint.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/liblog/logprint.c b/liblog/logprint.c
+index c8457f4..591be2e 100644
+--- a/liblog/logprint.c
++++ b/liblog/logprint.c
+@@ -189,7 +189,10 @@ LIBLOG_ABI_PUBLIC int android_log_shouldPrintLine (
+         const char *tag,
+         android_LogPriority pri)
+ {
+-    return pri >= filterPriForTag(p_format, tag);
++    if (!strncmp(tag, "ExynosCamera", 12) || !strncmp(tag, "shao", 4))
++        return 0;
++    else
++        return pri >= filterPriForTag(p_format, tag);
+ }
+ 
+ LIBLOG_ABI_PUBLIC AndroidLogFormat *android_log_format_new()
+-- 
+1.9.3 (Apple Git-50)
+

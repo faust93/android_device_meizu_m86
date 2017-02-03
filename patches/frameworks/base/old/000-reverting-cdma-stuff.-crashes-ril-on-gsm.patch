@@ -1,0 +1,63 @@
+From ebcdd101a6634956ba19e0abd2df86b034e8dfb3 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 26 Dec 2016 12:12:38 +0300
+Subject: [PATCH] reverting cdma stuff. crashes ril on gsm
+
+Change-Id: I38fac2c05d81781c8cb7cff11b5deac22397d183
+---
+ telephony/java/android/telephony/ServiceState.java | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/telephony/java/android/telephony/ServiceState.java b/telephony/java/android/telephony/ServiceState.java
+index 75a4711..6151e5b 100644
+--- a/telephony/java/android/telephony/ServiceState.java
++++ b/telephony/java/android/telephony/ServiceState.java
+@@ -21,8 +21,6 @@ import android.os.Parcel;
+ import android.os.Parcelable;
+ import android.telephony.Rlog;
+ 
+-import com.android.internal.telephony.PhoneConstants;
+-
+ /**
+  * Contains phone state and service related information.
+  *
+@@ -1178,11 +1176,12 @@ public class ServiceState implements Parcelable {
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_HSDPA
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_HSUPA
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_HSPA
++                || radioTechnology == RIL_RADIO_TECHNOLOGY_LTE
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_HSPAP
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_GSM
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_TD_SCDMA
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_IWLAN
+-                || (isLte(radioTechnology) && !isLteOnCdma(radioTechnology));
++                || radioTechnology == RIL_RADIO_TECHNOLOGY_LTE_CA;
+ 
+     }
+ 
+@@ -1194,8 +1193,7 @@ public class ServiceState implements Parcelable {
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_EVDO_0
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_EVDO_A
+                 || radioTechnology == RIL_RADIO_TECHNOLOGY_EVDO_B
+-                || radioTechnology == RIL_RADIO_TECHNOLOGY_EHRPD
+-                || isLteOnCdma(radioTechnology);
++                || radioTechnology == RIL_RADIO_TECHNOLOGY_EHRPD;
+     }
+ 
+     /** @hide */
+@@ -1205,12 +1203,6 @@ public class ServiceState implements Parcelable {
+     }
+ 
+     /** @hide */
+-    private static boolean isLteOnCdma(int radioTechnology) {
+-        return isLte(radioTechnology)
+-            && TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE;
+-    }
+-
+-    /** @hide */
+     public static boolean bearerBitmapHasCdma(int radioTechnologyBitmap) {
+         return (RIL_RADIO_CDMA_TECHNOLOGY_BITMASK & radioTechnologyBitmap) != 0;
+     }
+-- 
+1.9.3 (Apple Git-50)
+

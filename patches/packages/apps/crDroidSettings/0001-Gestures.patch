@@ -1,0 +1,63 @@
+From c8344c48e5f51029ad43d5acbfd037cc41bc5d2b Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 8 Dec 2016 14:57:34 +0300
+Subject: [PATCH] Gestures
+
+Change-Id: I7c51569cd6c7103c4ad5bf634c159b3e5a7a921a
+---
+ res/values-ru/crdroid_strings.xml   | 3 +++
+ res/values/crdroid_strings.xml      | 3 +++
+ res/xml/crdroid_settings_button.xml | 9 +++++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/res/values-ru/crdroid_strings.xml b/res/values-ru/crdroid_strings.xml
+index 5ae3621..751b4e2 100644
+--- a/res/values-ru/crdroid_strings.xml
++++ b/res/values-ru/crdroid_strings.xml
+@@ -940,6 +940,9 @@
+     <!-- Description of setting that controls gesture to open camera by double tapping the power button [CHAR LIMIT=NONE] -->
+     <string name="camera_double_tap_power_gesture_desc">Открывать камеру двойным нажатием кнопки питания</string>
+ 
++    <!-- Gestures settings -->
++    <string name="gesture_settings_title">Жесты экрана и сенсора</string>
++
+     <!--Status bar date -->
+     <string name="status_bar_date_title">Дата</string>
+     <string name="status_bar_date_none">Не показывать (по умолчанию)</string>
+diff --git a/res/values/crdroid_strings.xml b/res/values/crdroid_strings.xml
+index 6c74639..b237beb 100644
+--- a/res/values/crdroid_strings.xml
++++ b/res/values/crdroid_strings.xml
+@@ -958,6 +958,9 @@
+     <!-- Description of setting that controls gesture to open camera by double tapping the power button [CHAR LIMIT=NONE] -->
+     <string name="camera_double_tap_power_gesture_desc">Quickly open camera without unlocking your screen</string>
+ 
++    <!-- Gestures settings -->
++    <string name="gesture_settings_title">Screen and Sensor gestures</string>
++
+     <!--Status bar date -->
+     <string name="status_bar_date_title">Date</string>
+     <string name="status_bar_date_none">Hidden (default)</string>
+diff --git a/res/xml/crdroid_settings_button.xml b/res/xml/crdroid_settings_button.xml
+index 933c7cf..462755e 100644
+--- a/res/xml/crdroid_settings_button.xml
++++ b/res/xml/crdroid_settings_button.xml
+@@ -11,6 +11,15 @@
+         android:dialogTitle="@string/button_backlight_title"
+         android:persistent="false" />
+ 
++    <PreferenceScreen
++        android:key="device_gesture_settings"
++        android:title="@string/gesture_settings_title">
++        <intent 
++            android:action="com.cyanogenmod.action.LAUNCH_TOUCHSCREEN_GESTURE_SETTINGS"
++            android:targetPackage="com.cyanogenmod.settings.device"
++            android:targetClass="com.cyanogenmod.settings.device.TouchscreenGestureSettings" />
++    </PreferenceScreen>
++
+     <PreferenceCategory
+         android:key="power_key"
+         android:title="@string/hardware_keys_power_key_title" >
+-- 
+1.9.3 (Apple Git-50)
+

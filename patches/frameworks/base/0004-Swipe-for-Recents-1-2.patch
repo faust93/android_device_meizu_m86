@@ -1,0 +1,204 @@
+From 685934b8bb0da1f5d0814729506de109523fbdaf Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 2 Jan 2017 15:09:48 +0300
+Subject: [PATCH] Swipe for Recents [1/2]
+
+Change-Id: I1c2b54cb3514b6ed0330b915b61c48d1a645c401
+---
+ core/java/android/provider/Settings.java           |  7 ++++
+ .../android/server/policy/OPGesturesListener.java  | 37 +++++++++++++++++++---
+ .../android/server/policy/PhoneWindowManager.java  | 36 +++++++++++++++++++--
+ 3 files changed, 74 insertions(+), 6 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 04d5d88..b937722 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4542,6 +4542,13 @@ public final class Settings {
+          */
+         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
+ 
++         /**
++          * Recents Finger Gesture
++          *
++          * @hide
++          */
++        public static final String RECENTS_FINGER_GESTURE = "recents_finger_gesture";
++
+           /**
+           * Whether to show the battery info on the lockscreen while charging
+           * @hide
+diff --git a/services/core/java/com/android/server/policy/OPGesturesListener.java b/services/core/java/com/android/server/policy/OPGesturesListener.java
+index e798372..1035cc9 100644
+--- a/services/core/java/com/android/server/policy/OPGesturesListener.java
++++ b/services/core/java/com/android/server/policy/OPGesturesListener.java
+@@ -27,10 +27,16 @@ public class OPGesturesListener implements PointerEventListener {
+     private static final String TAG = "OPGestures";
+     private static final boolean DEBUG = false;
+     private static final int NUM_POINTER_SCREENSHOT = 3;
+-    private static final long SWIPE_TIMEOUT_MS = 500;
++    private static final long SWIPE_TIMEOUT_MS = 250;
+     private static final int MAX_TRACKED_POINTERS = 32;
+     private static final int UNTRACKED_POINTER = -1;
+     private static final int THREE_SWIPE_DISTANCE = 350;
++
++    private static final int RECENTS_SWIPE_DISTANCE = 250;
++    private static final int RECENTS_SWIPE_XMIN = 733;
++    private static final int RECENTS_SWIPE_XMAX = 994;
++    private static final int RECENTS_SWIPE_YRES = 1920;
++
+     private final int GESTURE_THREE_SWIPE_MASK = 15;
+     private final int POINTER_1_MASK = 2;
+     private final int POINTER_2_MASK = 4;
+@@ -45,6 +51,9 @@ public class OPGesturesListener implements PointerEventListener {
+     private boolean mSwipeFireable = false;
+     private int mSwipeMask = 1;
+ 
++    public boolean mSwipeRecents = true;
++    public boolean mThreeSwipe = false;
++
+     public OPGesturesListener(Context paramContext, Callbacks callbacks) {
+         mCallbacks = checkNull("callbacks", callbacks);
+     }
+@@ -58,6 +67,8 @@ public class OPGesturesListener implements PointerEventListener {
+ 
+     @Override
+     public void onPointerEvent(MotionEvent event) {
++        if( !mSwipeRecents && !mThreeSwipe )
++            return;
+         switch (event.getActionMasked()) {
+             case MotionEvent.ACTION_DOWN:
+                 mSwipeFireable = true;
+@@ -69,14 +80,20 @@ public class OPGesturesListener implements PointerEventListener {
+                 break;
+             case MotionEvent.ACTION_MOVE:
+                 if (DEBUG) Slog.d(TAG, "count3" + event.getPointerCount());
+-                if (mSwipeFireable) {
++                if (mSwipeFireable && mThreeSwipe || mSwipeRecents) {
+                     detectSwipe(event);
+                 }
+                 break;
+             case MotionEvent.ACTION_UP:
+-                if (mSwipeMask == GESTURE_THREE_SWIPE_MASK) {
++                if (DEBUG) Slog.d(TAG, "SwipeMask " + mSwipeMask);
++                if (mSwipeMask == GESTURE_THREE_SWIPE_MASK && mThreeSwipe ) {
+                     mSwipeMask = 1;
+                     mCallbacks.onSwipeThreeFinger();
++                    break;
++                }
++                if ( mSwipeMask == POINTER_1_MASK && mSwipeRecents ) {
++                    mSwipeMask = 1;
++                    mCallbacks.onSwipeRecents();
+                 }
+                 break;
+             case MotionEvent.ACTION_CANCEL:
+@@ -140,15 +157,27 @@ public class OPGesturesListener implements PointerEventListener {
+         final long elapsed = time - mDownTime[i];
+         if (DEBUG) Slog.d(TAG, "pointer " + mDownPointerId[i]
+                 + " moved (" + fromX + "->" + x + "," + fromY + "->" + y + ") in " + elapsed);
++
++        if ( mSwipeRecents && fromY > RECENTS_SWIPE_YRES - 50 ) {
++            if( x >= RECENTS_SWIPE_XMIN && x <= RECENTS_SWIPE_XMAX 
++                && y < RECENTS_SWIPE_YRES - RECENTS_SWIPE_DISTANCE
++                && elapsed < SWIPE_TIMEOUT_MS) {
++                mSwipeMask = POINTER_1_MASK;
++                return;
++                }
++         }
++
+         if (mSwipeMask < GESTURE_THREE_SWIPE_MASK
+                 && y > fromY + THREE_SWIPE_DISTANCE
+                 && elapsed < SWIPE_TIMEOUT_MS) {
+             mSwipeMask |= 1 << i + 1;
+             if (DEBUG) Slog.d(TAG, "swipe mask = " + mSwipeMask);
++            }
+         }
+-    }
+ 
+     interface Callbacks {
+         void onSwipeThreeFinger();
++        void onSwipeRecents();
+     }
++
+ }
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index b88d5ab..645c311 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -827,6 +827,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+     private int mCurrentUserId;
+     private boolean haveEnableGesture = false;
++    private boolean haveEnableRecentsGesture = false;
+ 
+     // Maps global key codes to the components that will handle them.
+     private GlobalKeyManager mGlobalKeyManager;
+@@ -1115,6 +1116,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             resolver.registerContentObserver(Settings.System.getUriFor(
+                     Settings.System.THREE_FINGER_GESTURE), false, this,
+                     UserHandle.USER_ALL);
++            resolver.registerContentObserver(Settings.System.getUriFor(
++                    Settings.System.RECENTS_FINGER_GESTURE), true, this,
++                    UserHandle.USER_ALL);
+             updateSettings();
+         }
+ 
+@@ -1946,6 +1950,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             public void onSwipeThreeFinger() {
+                 mHandler.post(mScreenshotRunnable);
+             }
++            @Override
++            public void onSwipeRecents() {
++                toggleRecentApps();
++            }
+         });
+ 
+         // Init display burn-in protection
+@@ -2253,11 +2261,31 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         if (enable) {
+             if (haveEnableGesture) return;
+             haveEnableGesture = true;
+-            mWindowManagerFuncs.registerPointerEventListener(mOPGestures);
++            mOPGestures.mThreeSwipe = true;
++            if (!haveEnableRecentsGesture)
++                mWindowManagerFuncs.registerPointerEventListener(mOPGestures);
+         } else {
+ 	    if (!haveEnableGesture) return;
+             haveEnableGesture = false;
+-            mWindowManagerFuncs.unregisterPointerEventListener(mOPGestures);
++            mOPGestures.mThreeSwipe = false;
++            if (!haveEnableRecentsGesture)
++                mWindowManagerFuncs.unregisterPointerEventListener(mOPGestures);
++        }
++    }
++
++    private void enableSwipeRecentsFingerGesture(boolean enable){
++        if (enable) {
++            if (haveEnableRecentsGesture) return;
++            haveEnableRecentsGesture = true;
++            mOPGestures.mSwipeRecents = true;
++            if (!haveEnableGesture)
++                mWindowManagerFuncs.registerPointerEventListener(mOPGestures);
++        } else {
++            if (!haveEnableRecentsGesture) return;
++            haveEnableRecentsGesture = false;
++            mOPGestures.mSwipeRecents = false;
++            if (!haveEnableGesture)
++                mWindowManagerFuncs.unregisterPointerEventListener(mOPGestures);
+         }
+     }
+ 
+@@ -2562,6 +2590,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 updateEdgeGestureListenerState();
+             }
+ 
++            boolean recentsFingerGesture = Settings.System.getIntForUser(resolver,
++                    Settings.System.RECENTS_FINGER_GESTURE, 0, UserHandle.USER_CURRENT) == 1;
++            enableSwipeRecentsFingerGesture(recentsFingerGesture);
++
+ 	        //Three Finger Gesture
+             boolean threeFingerGesture = Settings.System.getIntForUser(resolver,
+                     Settings.System.THREE_FINGER_GESTURE, 0, UserHandle.USER_CURRENT) == 1;
+-- 
+1.9.3 (Apple Git-50)
+
