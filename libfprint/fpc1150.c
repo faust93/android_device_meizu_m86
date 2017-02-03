@@ -188,6 +188,7 @@ static void capture_mode()
 	write_sysfs(FP_CAP_MODE, "1");
 	write_sysfs(FP_CAP_COUNT, "2");
 	write_sysfs(FP_PXL_CTRL, "0");
+        fp_dbg("cap mode..\n");
 }
 
 static void nav_mode()
@@ -197,6 +198,7 @@ static void nav_mode()
 	write_sysfs(FP_CAP_MODE, "7");
 	write_sysfs(FP_CAP_COUNT, "1");
 	write_sysfs(FP_PXL_CTRL, "30");
+        fp_dbg("nav mode..\n");
 }
 
 
@@ -285,7 +287,7 @@ int wait_finger()
 int wait_finger_up()
 {
     int fn,ret = 0;
-    int retries = 3;
+    int cycles = 3;
     char buf[6];
 
     fp_dbg("waiting for finger up..\n");
@@ -296,18 +298,21 @@ int wait_finger_up()
                 return -1;
     }
 
-wfp_again:
-        if(read(fn,buf,4) != 4) {
-        retries--;
-            if(retries!=0) {
-                usleep(10000);
-                goto wfp_again;
-            } else {
-                ret = -1;
+    do {
+        ret = read(fn,buf,4);
+        usleep(10000);
+        if(ret == 4)
+            break;
+        cycles--;
+        if(!cycles){
+            close(fn);
+            return FP_TIMEOUT;
             }
-        }
+        } while(ret == -1 || !ret );
+
+
     write_sysfs(FP_CAP_MODE, "7");
-    close(fn);
+    fp_dbg("waiting for finger up done..\n");
 
     return ret;
 }
@@ -320,7 +325,7 @@ static int mode(struct fp_img_dev *dev, int sensor_mode)
 
         switch(sensor_mode){
             case NAV_MODE:
-             wait_finger_up();
+//             wait_finger_up();
              nav_mode();
              break;
             case CAP_MODE:

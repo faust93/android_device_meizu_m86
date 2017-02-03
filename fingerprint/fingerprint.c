@@ -116,8 +116,11 @@ void *enroll_thread_loop()
     int r, status = 1;
     int enroll_timeout = ENROLL_TIMEOUT;
 
+    fp_dev_mode(fp_dev, 1);
+
     do {
         ALOGD("%s : Looking for Input", __func__);
+        usleep(500);
         status = fp_enroll_finger(fp_dev, &enrolled_print);
 
         switch(status) {
@@ -179,7 +182,7 @@ void *enroll_thread_loop()
 
                 fingerprint_load_templates(fp_dev, db_path);
 
-                break;
+                goto out;
             }
         } else {
                 enroll_timeout--;
@@ -188,11 +191,11 @@ void *enroll_thread_loop()
         pthread_mutex_lock(&lock);
         if (!auth_thread_running || !enroll_timeout) {
             pthread_mutex_unlock(&lock);
-            break;
+            goto out;
         }
         pthread_mutex_unlock(&lock);
     } while ( status != FP_ENROLL_COMPLETE);
-
+out:
     // detach to prevent memory leak
     pthread_detach(thread);
 
@@ -223,7 +226,10 @@ void *auth_thread_loop()
     }
     pthread_mutex_unlock(&lock);
 
+    fp_dev_mode(fp_dev, 1);
+
     do {
+        usleep(1500);
         status = fp_identify_finger(fp_dev, fp_tpls, &match_idx);
         ALOGD("%s : verify thread loop", __func__);
 
@@ -238,12 +244,11 @@ void *auth_thread_loop()
                     msg.type = FINGERPRINT_ACQUIRED;
                     msg.data.acquired.acquired_info = FINGERPRINT_ACQUIRED_INSUFFICIENT;
                     callback(&msg);
-        }
+            }
 
-        if (status == FP_VERIFY_MATCH) {
+            if(status == FP_VERIFY_MATCH) {
                 uint32_t print_id = match_idx+1;
                 ALOGI("%s : Got print id : %lu", __func__, print_id);
-
                 hw_auth_token_t hat = {0};
                 hat.version = HW_AUTH_TOKEN_VERSION;
                 hat.challenge = operation;
@@ -266,18 +271,17 @@ void *auth_thread_loop()
                 msg.data.authenticated.finger.fid = print_id;
                 msg.data.authenticated.hat = hat;
                 callback(&msg);
-                break;
-
+                goto out;
         }
 
         pthread_mutex_lock(&lock);
         if (!auth_thread_running) {
             pthread_mutex_unlock(&lock);
-            break;
+            goto out;
         }
         pthread_mutex_unlock(&lock);
 
-    } while ( status != FP_VERIFY_MATCH || auth_thread_running == true);
+    } while ( status != FP_VERIFY_MATCH );
 
 out:
     // detach to prevent memory leak
@@ -315,6 +319,11 @@ static int fingerprint_post_enroll(struct fingerprint_device __unused *dev)
 {
     ALOGD("%s",__func__);
     challenge = 0;
+
+    pthread_mutex_lock(&lock);
+    auth_thread_running = false;
+    pthread_mutex_unlock(&lock);
+
     return 0;
 }
 
@@ -356,8 +365,6 @@ static int fingerprint_enroll(struct fingerprint_device __unused *dev,
         return FINGERPRINT_ERROR;
     }
 
-    fp_dev_mode(fp_dev, 1);
-
     return 0;
 
 }
@@ -383,8 +390,6 @@ static int fingerprint_cancel(struct fingerprint_device __unused *dev)
         return 0;
     }
 
-    fp_dev_mode(fp_dev, 0);
-
     pthread_mutex_lock(&lock);
     auth_thread_running = false;
     pthread_mutex_unlock(&lock);
@@ -398,6 +403,8 @@ static int fingerprint_cancel(struct fingerprint_device __unused *dev)
     msg.type = FINGERPRINT_ERROR;
     msg.data.error = FINGERPRINT_ERROR_CANCELED;
     callback(&msg);
+
+    fp_dev_mode(fp_dev, 0);
 
     return 0;
 }
@@ -473,9 +480,6 @@ static int fingerprint_authenticate(struct fingerprint_device __unused *dev,
         auth_thread_running = false;
         return FINGERPRINT_ERROR;
     }
-
-    ALOGD("%s set sensor to cap mode",__func__);
-    fp_dev_mode(fp_dev, 1);
 
     return 0;
 }
