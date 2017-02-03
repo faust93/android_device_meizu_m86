@@ -29,6 +29,18 @@
             android:title="@string/fpc_gesture_right_summary" />
 
     <SwitchPreference
+            android:key="fpc_gesture_right_menu"
+            android:title="@string/fpc_gesture_right_menu_summary" />
+
+    <SwitchPreference
+            android:key="fpc_gesture_left_oh"
+            android:title="@string/fpc_gesture_left_oh_summary" />
+
+    <SwitchPreference
+            android:key="fpc_gesture_right_oh"
+            android:title="@string/fpc_gesture_right_oh_summary" />
+
+    <SwitchPreference
             android:key="fpc_gesture_dtp"
             android:title="@string/fpc_gesture_dtp_summary"
             android:enabled="true" />

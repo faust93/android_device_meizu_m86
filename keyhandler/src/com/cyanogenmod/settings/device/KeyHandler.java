@@ -70,6 +70,12 @@ public class KeyHandler implements DeviceKeyHandler {
             "fpc_gesture_left";
     private static final String KEY_FPC_RIGHT =
             "fpc_gesture_right";
+    private static final String KEY_FPC_LEFT_OH =
+            "fpc_gesture_left_oh";
+    private static final String KEY_FPC_RIGHT_OH =
+            "fpc_gesture_right_oh";
+    private static final String KEY_FPC_RIGHT_MENU =
+            "fpc_gesture_right_menu";
 
     private static final String TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK =
             "touchscreen_gesture_haptic_feedback";
@@ -233,11 +239,20 @@ public class KeyHandler implements DeviceKeyHandler {
                 if(getCMApref(KEY_FPC_LEFT, false)) {
                     m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_HOME );
                     doHapticFeedback();
+                } else if(getCMApref(KEY_FPC_LEFT_OH, false)) {
+                    toggleOneHandedMode(mContext, "left");
+                    doHapticFeedback();
                 }
                 break;
             case GESTURE_FPC_RIGHT_SCANCODE:
                 if(getCMApref(KEY_FPC_RIGHT, false)) {
                     m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_APP_SWITCH );
+                    doHapticFeedback();
+                } else if(getCMApref(KEY_FPC_RIGHT_OH, false)) {
+                    toggleOneHandedMode(mContext, "right");
+                    doHapticFeedback();
+                } else if(getCMApref(KEY_FPC_RIGHT_MENU, false)) {
+                    m_Instrumentation.sendKeyDownUpSync( KeyEvent.KEYCODE_MENU );
                     doHapticFeedback();
                 }
                 break;
@@ -366,6 +381,16 @@ public class KeyHandler implements DeviceKeyHandler {
         } catch (ActivityNotFoundException e) {
             // Ignore
         }
+    }
+
+    private static void toggleOneHandedMode(Context context, String direction) {
+        String str = Settings.Global.getString(context.getContentResolver(), Settings.Global.SINGLE_HAND_MODE);
+
+        Settings.Global.putString(context.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, direction);
+
+//        if (str.isEmpty())
+//            Settings.Global.putString(context.getContentResolver(), Settings.Global.SINGLE_HAND_MODE, "");
+//        else
     }
 
     // TODO implement it more graceful way

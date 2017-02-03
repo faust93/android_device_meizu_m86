@@ -47,6 +47,9 @@
     <string name="fpc_gesture_dtp_summary">Double tap for Menu</string>
     <string name="fpc_gesture_left_summary">Swipe left for Home</string>
     <string name="fpc_gesture_right_summary">Swipe right for Recent Apps</string>
+    <string name="fpc_gesture_right_menu_summary">Swipe right for Menu</string>
+    <string name="fpc_gesture_left_oh_summary">Swipe left for One hand mode (left)</string>
+    <string name="fpc_gesture_right_oh_summary">Swipe right for One hand mode (right)</string>
 
     <!-- haptic feedback  -->
     <string name="touchscreen_extras">Extras</string>

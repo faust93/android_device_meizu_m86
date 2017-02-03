@@ -20,7 +20,9 @@ package com.cyanogenmod.settings.device;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
+import android.preference.SwitchPreference;
 import android.provider.Settings;
 
 import android.util.Log;
@@ -46,8 +48,12 @@ public class CMActionsSettings {
 
     public static final String FPC_GESTURE_TAP_KEY = "fpc_gesture_tap";
     public static final String FPC_GESTURE_DTP_KEY = "fpc_gesture_dtp";
-    public static final String FPC_GESTURE_LEFT_GESTURE_KEY = "fpc_gesture_left";
-    public static final String FPC_GESTURE_RIGHT_KEY = "fpc_gesture_right";
+
+    public static final String FPC_GESTURE_LEFT = "fpc_gesture_left";
+    public static final String FPC_GESTURE_RIGHT = "fpc_gesture_right";
+    public static final String FPC_GESTURE_RIGHT_MENU = "fpc_gesture_right_menu";
+    public static final String FPC_GESTURE_LEFT_OH = "fpc_gesture_left_oh";
+    public static final String FPC_GESTURE_RIGHT_OH = "fpc_gesture_right_oh";
 
     public static final String TOUCHSCREEN_GESTURE_HAPTIC_FEEDBACK =
             "touchscreen_gesture_haptic_feedback";
@@ -134,6 +140,37 @@ public class CMActionsSettings {
                         final boolean val  = sharedPreferences.getBoolean(TOUCHSCREEN_GTR_GESTURE_KEY, false);
                     } else if (FPC_GESTURE_DTP_KEY.equals(key)) {
                         mIsFpc_DTP_Enabled = sharedPreferences.getBoolean(FPC_GESTURE_DTP_KEY, false);
+                    } else if (FPC_GESTURE_LEFT.equals(key)) {
+                        if(sharedPreferences.getBoolean(FPC_GESTURE_LEFT, false)){
+                            TouchscreenGestureSettings.fpc_gesture_left_oh.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_LEFT_OH, false).commit();
+                        }
+                    } else if (FPC_GESTURE_LEFT_OH.equals(key)) {
+                        if(sharedPreferences.getBoolean(FPC_GESTURE_LEFT_OH, false)){
+                            TouchscreenGestureSettings.fpc_gesture_left.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_LEFT, false).commit();
+                        }
+                    } else if (FPC_GESTURE_RIGHT.equals(key)) {
+                        if(sharedPreferences.getBoolean(FPC_GESTURE_RIGHT, false)){
+                            TouchscreenGestureSettings.fpc_gesture_right_oh.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT_OH, false).commit();
+                            TouchscreenGestureSettings.fpc_gesture_right_menu.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT_MENU, false).commit();
+                        }
+                    } else if (FPC_GESTURE_RIGHT_MENU.equals(key)) {
+                        if(sharedPreferences.getBoolean(FPC_GESTURE_RIGHT_MENU, false)){
+                            TouchscreenGestureSettings.fpc_gesture_right_oh.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT_OH, false).commit();
+                            TouchscreenGestureSettings.fpc_gesture_right.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT, false).commit();
+                        }
+                    } else if (FPC_GESTURE_RIGHT_OH.equals(key)) {
+                        if(sharedPreferences.getBoolean(FPC_GESTURE_RIGHT_OH, false)){
+                            TouchscreenGestureSettings.fpc_gesture_right.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT, false).commit();
+                            TouchscreenGestureSettings.fpc_gesture_right_menu.setChecked(false);
+                            sharedPreferences.edit().putBoolean(FPC_GESTURE_RIGHT_MENU, false).commit();
+                            }
                     } else {
                         updated = false;
                     }

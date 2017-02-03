@@ -47,6 +47,9 @@
     <string name="fpc_gesture_dtp_summary">Двойной тап для вызова меню</string>
     <string name="fpc_gesture_left_summary">Свайп влево для вызова рабочего стола</string>
     <string name="fpc_gesture_right_summary">Свайп вправо для вызова недавних приложений</string>
+    <string name="fpc_gesture_right_menu_summary">Свайп вправо для вызова меню</string>
+    <string name="fpc_gesture_left_oh_summary">Свайп влево для режима одной руки (слева)</string>
+    <string name="fpc_gesture_right_oh_summary">Свайп вправо для режима одной руки (справа)</string>
 
     <!-- haptic feedback  -->
     <string name="touchscreen_extras">Дополнительные настройки</string>

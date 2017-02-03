@@ -22,16 +22,37 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.preference.SwitchPreference;
 
 public class TouchscreenGestureSettings extends PreferenceActivity {
     public static final String CATEGORY_GESTURES = "category_gestures";
-    public static PreferenceCategory gestureCat;
+    public static final String FPC_GESTURE_LEFT = "fpc_gesture_left";
+    public static final String FPC_GESTURE_RIGHT = "fpc_gesture_right";
+    public static final String FPC_GESTURE_RIGHT_MENU = "fpc_gesture_right_menu";
+    public static final String FPC_GESTURE_LEFT_OH = "fpc_gesture_left_oh";
+    public static final String FPC_GESTURE_RIGHT_OH = "fpc_gesture_right_oh";
+
+    protected static PreferenceCategory gestureCat;
+
+    protected static SwitchPreference fpc_gesture_left;
+    protected static SwitchPreference fpc_gesture_right;
+    protected static SwitchPreference fpc_gesture_right_menu;
+    protected static SwitchPreference fpc_gesture_left_oh;
+    protected static SwitchPreference fpc_gesture_right_oh;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.touchscreen_panel);
+
+        fpc_gesture_left = (SwitchPreference) findPreference(FPC_GESTURE_LEFT);
+        fpc_gesture_right = (SwitchPreference) findPreference(FPC_GESTURE_RIGHT);
+        fpc_gesture_right_menu = (SwitchPreference) findPreference(FPC_GESTURE_RIGHT_MENU);
+        fpc_gesture_left_oh = (SwitchPreference) findPreference(FPC_GESTURE_LEFT_OH);
+        fpc_gesture_right_oh = (SwitchPreference) findPreference(FPC_GESTURE_RIGHT_OH);
+
         gestureCat = (PreferenceCategory) findPreference(CATEGORY_GESTURES);
+
         if (gestureCat != null) {
             gestureCat.setEnabled(CMActionsSettings.areGesturesEnabled());
         }
