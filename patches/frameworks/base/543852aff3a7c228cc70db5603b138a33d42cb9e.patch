@@ -1,0 +1,35 @@
+From 543852aff3a7c228cc70db5603b138a33d42cb9e Mon Sep 17 00:00:00 2001
+From: Sultanxda <sultanxda@gmail.com>
+Date: Fri, 16 Oct 2015 17:58:18 -0700
+Subject: [PATCH] telephony: Hack GSM and LTE signal strength
+
+makeSignalStrengthFromRilParcel() is used for both solicited and
+unsolicited requests, so we can hack it to send better signal strength
+values to the modem backend. This significantly helps in areas where
+GSM or LTE signal is poor but usable, in which case the modem would often
+disconnect completely or fall back to a lower network mode (resulting in
+poor UX).
+
+Revised to fix the invalid GSM signal strength values (over 31 ASU).
+
+Change-Id: Id2daa40b96bfe226faa2cae3c8e349fb3201ad13
+---
+ telephony/java/android/telephony/SignalStrength.java | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/telephony/java/android/telephony/SignalStrength.java b/telephony/java/android/telephony/SignalStrength.java
+index fced667..d42a016 100644
+--- a/telephony/java/android/telephony/SignalStrength.java
++++ b/telephony/java/android/telephony/SignalStrength.java
+@@ -325,6 +325,11 @@ public static SignalStrength makeSignalStrengthFromRilParcel(Parcel in) {
+         ss.mLteRssnr = in.readInt();
+         ss.mLteCqi = in.readInt();
+         ss.mTdScdmaRscp = in.readInt();
++        /* Hack signal strength */
++        if (ss.mGsmSignalStrength < 27) ss.mGsmSignalStrength += 3;
++        if (ss.mLteSignalStrength < 91) ss.mLteSignalStrength += 5;
++        if (ss.mLteRsrp != ss.INVALID && ss.mLteRsrp > 49) ss.mLteRsrp -= 5;
++        if (ss.mLteRsrq != ss.INVALID && ss.mLteRsrq > 3) ss.mLteRsrq -= 2;
+         return ss;
+     }
+ 

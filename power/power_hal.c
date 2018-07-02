@@ -27,7 +27,7 @@
 #include <stdbool.h>
 
 #define LOG_TAG "PowerHAL"
-/* #define LOG_NDEBUG 0 */
+// #define LOG_NDEBUG 0
 #include <utils/Log.h>
 
 #include <hardware/hardware.h>
@@ -42,6 +42,15 @@
 
 #define BOOSTPULSE_PATH "/sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse"
 
+#define MODE_HIGH "0"
+#define MODE_BALANCED "1"
+#define MODE_ECO "2"
+
+#define HOTPLUG_PROFILE_PATH "/sys/module/exynos_march_cpu_hotplug/parameters/current_profile_no"
+#define HOTPLUG_CL1_BOOST_PATH "/sys/module/exynos_march_cpu_hotplug/parameters/cl1_booster"
+#define HOTPLUG_CL1_MIN_CPU_BOOST_PATH "/sys/module/exynos_march_cpu_hotplug/parameters/min_cpu_boosted"
+#define HOTPLUG_MAX_CPU_ONLINE_PATH "/sys/module/exynos_march_cpu_hotplug/parameters/max_cpus_online"
+
 #define BOOST_PULSE_DURATION 400000
 #define BOOST_PULSE_DURATION_STR POWERHAL_STRINGIFY(BOOST_PULSE_DURATION)
 
@@ -53,6 +62,7 @@
 
 #define LOW_POWER_MAX_FREQ "800000"
 #define NORMAL_MAX_FREQ "1500000"
+#define CL1_BALANCED_MAX_FREQ "1800000"
 #define HIGH_MAX_FREQ "2100000"
 
 #define TOUCHKEY_PATH "/proc/nav_switch"
@@ -77,7 +87,8 @@ static bool low_power_mode = false;
 enum power_profile_e {
     PROFILE_POWER_SAVE = 0,
     PROFILE_BALANCED,
-    PROFILE_HIGH_PERFORMANCE
+    PROFILE_HIGH_PERFORMANCE,
+    PROFILE_ECO
 };
 static enum power_profile_e current_power_profile = PROFILE_BALANCED;
 
@@ -166,24 +177,34 @@ static void set_power_profile(enum power_profile_e profile)
 
     switch (profile) {
         case PROFILE_POWER_SAVE:
+            sysfs_write(HOTPLUG_PROFILE_PATH, MODE_ECO);
             sysfs_write(CPU0_MAX_FREQ_PATH, LOW_POWER_MAX_FREQ);
-            rc = stat(CPU4_MAX_FREQ_PATH, &sb);
-            if (rc == 0) {
-                sysfs_write(CPU4_MAX_FREQ_PATH, LOW_POWER_MAX_FREQ);
-            }
-
+            sysfs_write(HOTPLUG_CL1_BOOST_PATH, "0");
             ALOGD("%s: set powersave mode", __func__);
             break;
-        case PROFILE_BALANCED:
+        case PROFILE_ECO:
+            sysfs_write(HOTPLUG_PROFILE_PATH, MODE_ECO);
             sysfs_write(CPU0_MAX_FREQ_PATH, NORMAL_MAX_FREQ);
+            sysfs_write(HOTPLUG_CL1_BOOST_PATH, "0");
+            ALOGD("%s: set eco mode", __func__);
+            break;
+        case PROFILE_BALANCED:
+            sysfs_write(HOTPLUG_PROFILE_PATH, MODE_BALANCED);
+            sysfs_write(CPU0_MAX_FREQ_PATH, NORMAL_MAX_FREQ);
+            sysfs_write(HOTPLUG_CL1_BOOST_PATH, "1");
+            sysfs_write(HOTPLUG_CL1_BOOST_PATH, "1");
+            sysfs_write(HOTPLUG_CL1_MIN_CPU_BOOST_PATH, "1");
             rc = stat(CPU4_MAX_FREQ_PATH, &sb);
             if (rc == 0) {
-                sysfs_write(CPU4_MAX_FREQ_PATH, NORMAL_MAX_FREQ);
+                sysfs_write(CPU4_MAX_FREQ_PATH, CL1_BALANCED_MAX_FREQ);
             }
             ALOGD("%s: set balanced mode", __func__);
             break;
         case PROFILE_HIGH_PERFORMANCE:
+            sysfs_write(HOTPLUG_PROFILE_PATH, MODE_HIGH);
             sysfs_write(CPU0_MAX_FREQ_PATH, NORMAL_MAX_FREQ);
+            sysfs_write(HOTPLUG_CL1_BOOST_PATH, "1");
+            sysfs_write(HOTPLUG_CL1_MIN_CPU_BOOST_PATH, "3");
             rc = stat(CPU4_MAX_FREQ_PATH, &sb);
             if (rc == 0) {
                 sysfs_write(CPU4_MAX_FREQ_PATH, HIGH_MAX_FREQ);
@@ -433,39 +454,6 @@ static void exynos5430_power_hint(struct power_module *module,
 
             break;
         }
-        case POWER_HINT_VSYNC: {
-            struct timespec now, diff;
-
-            ALOGV("%s: POWER_HINT_VSYNC", __func__);
-
-            pthread_mutex_lock(&exynos5430_pwr->lock);
-            if (data) {
-                if (vsync_count < UINT_MAX)
-                    vsync_count++;
-            } else {
-                if (vsync_count)
-                    vsync_count--;
-                if (vsync_count == 0 && touch_boost) {
-                    touch_boost = false;
-
-                    clock_gettime(CLOCK_MONOTONIC, &now);
-                    diff = timespec_diff(now, last_touch_boost);
-
-                    if (check_boostpulse_on(diff)) {
-                        struct stat sb;
-                        int rc;
-
-                        sysfs_write(BOOST_CPU0_PATH, "0");
-                        rc = stat(CPU4_MAX_FREQ_PATH, &sb);
-                        if (rc == 0) {
-                            sysfs_write(BOOST_CPU4_PATH, "0");
-                        }
-                    }
-                }
-            }
-            pthread_mutex_unlock(&exynos5430_pwr->lock);
-            break;
-        }
         case POWER_HINT_SET_PROFILE: {
             int profile = *((intptr_t *)data);
 
@@ -503,7 +491,7 @@ static int exynos5430_get_feature(struct power_module *module __unused,
                                   feature_t feature)
 {
     if (feature == POWER_FEATURE_SUPPORTED_PROFILES) {
-        return 3;
+        return 4;
     }
 
     return -1;

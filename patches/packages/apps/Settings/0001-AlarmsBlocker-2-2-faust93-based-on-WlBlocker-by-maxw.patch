@@ -1,0 +1,216 @@
+From bb97dd4e39a6eecc7886ffbdbdb846a737e58840 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 26 Feb 2017 15:54:46 +0300
+Subject: [PATCH] AlarmsBlocker [2/2] @faust93 based on WlBlocker by @maxwen
+
+---
+ res/layout/alarm_item.xml                     | 18 +++++-
+ src/com/android/settings/rr/AlarmBlocker.java | 84 ++++++++++++++++++++-------
+ 2 files changed, 78 insertions(+), 24 deletions(-)
+
+diff --git a/res/layout/alarm_item.xml b/res/layout/alarm_item.xml
+index 0360c04..cc9fbe4 100644
+--- a/res/layout/alarm_item.xml
++++ b/res/layout/alarm_item.xml
+@@ -1,13 +1,27 @@
+ <LinearLayout
+     xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_width="fill_parent"
+-    android:layout_height="wrap_content">
++    android:layout_height="wrap_content"
++    android:minHeight="100px">
+ 
+     <CheckBox
+-        android:id="@+id/alarm_blocked"
++        android:id="@+id/alarm_rejected"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:textAppearance="?android:attr/textAppearanceSmall"
+         android:focusable="false"/>
+ 
++    <CheckBox
++        android:id="@+id/alarm_blocked"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:focusable="false"/>
++
++    <TextView
++        android:id="@+id/alarm_name"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:gravity="left"
++        android:textAppearance="?android:attr/textAppearanceSmall" />
++
+ </LinearLayout>
+diff --git a/src/com/android/settings/rr/AlarmBlocker.java b/src/com/android/settings/rr/AlarmBlocker.java
+index a98a2f6..3b817fa 100644
+--- a/src/com/android/settings/rr/AlarmBlocker.java
++++ b/src/com/android/settings/rr/AlarmBlocker.java
+@@ -60,7 +60,7 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+     private List<String> mSeenAlarms;
+     private List<String> mBlockedAlarms;
+     private LayoutInflater mInflater;
+-    private Map<String, Boolean> mAlarmState;
++    private Map<String, Boolean[]> mAlarmState;
+     private AlarmListAdapter mListAdapter;
+     private boolean mEnabled;
+     private AlertDialog mAlertDialog;
+@@ -79,26 +79,51 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+         @Override
+         public View getView(int position, View convertView, ViewGroup parent) {
+             View rowView = mInflater.inflate(R.layout.alarm_item, parent, false);
++
++            final TextView alarm_name = (TextView)rowView.findViewById(R.id.alarm_name);
+             final CheckBox check = (CheckBox)rowView.findViewById(R.id.alarm_blocked);
+-            check.setText(mSeenAlarms.get(position));
++            final CheckBox checkReject = (CheckBox)rowView.findViewById(R.id.alarm_rejected);
++
++            alarm_name.setText(mSeenAlarms.get(position));
++
++            check.setTag(mSeenAlarms.get(position));
++            checkReject.setTag(mSeenAlarms.get(position));
++
++            Boolean[] checkedBoxes = mAlarmState.get(alarm_name.getText().toString());
++            Boolean checked_r = checkedBoxes[0];
++            Boolean checked = checkedBoxes[1];
+ 
+-            Boolean checked = mAlarmState.get(check.getText().toString());
++            checkReject.setChecked(checked_r.booleanValue());
+             check.setChecked(checked.booleanValue());
+ 
+-            if(checked.booleanValue()){
+-                check.setTextColor(getResources().getColor(android.R.color.holo_red_light));
++            if(checked_r.booleanValue()){
++                alarm_name.setTextColor(getResources().getColor(android.R.color.holo_red_light));
++            } else if(checked.booleanValue()){
++                alarm_name.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+             }
+ 
+             check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                     @Override
+                     public void onCheckedChanged(CompoundButton v, boolean checked) {
+-                        mAlarmState.put(v.getText().toString(), new Boolean(checked));
++                        mAlarmState.put(v.getTag().toString(), new Boolean[] {false, checked});
++                        if(checked){
++                            checkReject.setChecked(false);
++                            alarm_name.setTextColor(getResources().getColor(android.R.color.holo_green_light));
++                        } else {
++                            alarm_name.setTextColor(getResources().getColor(android.R.color.black));
++                        }
++                    }
++            });
++
++            checkReject.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
++                    @Override
++                    public void onCheckedChanged(CompoundButton v, boolean checked) {
++                        mAlarmState.put(v.getTag().toString(), new Boolean[] {checked, false});
+                         if(checked){
+-                            check.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+-                            mListAdapter.notifyDataSetChanged();
++                            check.setChecked(false);
++                            alarm_name.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+                         } else {
+-                            check.setTextColor(getResources().getColor(android.R.color.primary_text_dark));
+-                            mListAdapter.notifyDataSetChanged();
++                            alarm_name.setTextColor(getResources().getColor(android.R.color.black));
+                         }
+                     }
+             });
+@@ -124,7 +149,7 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+     public void onActivityCreated(Bundle savedInstanceState) {
+         super.onActivityCreated(savedInstanceState);
+ 
+-        mAlarmState = new HashMap<String, Boolean>();
++        mAlarmState = new HashMap<String, Boolean[]>();
+         updateSeenAlarmsList();
+         updateBlockedAlarmsList();
+ 
+@@ -160,6 +185,7 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+                 });
+     }
+ 
++    @Override
+     protected int getMetricsCategory() {
+         return MetricsEvent.RESURRECTED;
+     }
+@@ -204,7 +230,7 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+             String[] parts = seenAlarms.split("\\|");
+             for(int i = 0; i < parts.length; i++){
+                 mSeenAlarms.add(parts[i]);
+-                mAlarmState.put(parts[i], new Boolean(false));
++                mAlarmState.put(parts[i], new Boolean[] {false, false});
+             }
+         }
+     }
+@@ -214,17 +240,29 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+                 Settings.Secure.ALARM_BLOCKING_LIST);
+ 
+         mBlockedAlarms = new ArrayList<String>();
++        Boolean rejected, blocked;
+ 
+         if (blockedAlarmList!=null && blockedAlarmList.length()!=0){
+             String[] parts = blockedAlarmList.split("\\|");
+             for(int i = 0; i < parts.length; i++){
+-                mBlockedAlarms.add(parts[i]);
++                String[] state = parts[i].split("\\:");
++                if(state[1].equals("0")){
++                    rejected = false;
++                } else {
++                    rejected = true;
++                }
++                if(state[2].equals("0")){
++                    blocked = false;
++                } else {
++                    blocked = true;
++                }
++                mBlockedAlarms.add(state[0]);
+ 
+                 // add all blocked but not seen so far
+-                if(!mSeenAlarms.contains(parts[i])){
+-                    mSeenAlarms.add(parts[i]);
++                if(!mSeenAlarms.contains(state[0])){
++                    mSeenAlarms.add(state[0]);
+                 }
+-                mAlarmState.put(parts[i], new Boolean(true));
++                mAlarmState.put(state[0], new Boolean[] {rejected, blocked});
+             }
+         }
+ 
+@@ -236,9 +274,11 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+         Iterator<String> nextState = mAlarmState.keySet().iterator();
+         while(nextState.hasNext()){
+             String name = nextState.next();
+-            Boolean state=mAlarmState.get(name);
+-            if(state.booleanValue()){
+-                buffer.append(name + "|");
++            Boolean[] state = mAlarmState.get(name);
++            if(state[0].booleanValue() || state[1].booleanValue()){
++                int rej = state[0] ? 1:0;
++                int blk = state[1] ? 1:0;
++                buffer.append(name + ":" + rej + ":" + blk + "|");
+             }
+         }
+         if(buffer.length()>0){
+@@ -249,7 +289,7 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+     }
+ 
+     private void reload(){
+-        mAlarmState = new HashMap<String, Boolean>();
++        mAlarmState = new HashMap<String, Boolean[]>();
+         updateSeenAlarmsList();
+         updateBlockedAlarmsList();
+ 
+@@ -275,8 +315,8 @@ public class AlarmBlocker extends SettingsPreferenceFragment {
+         switch (item.getItemId()) {
+             case MENU_RELOAD:
+                 if (mEnabled){
+-                    reload();
+-                }
++			reload();
++		}
+                 return true;
+             case MENU_SAVE:
+                 if (mEnabled){
+-- 
+1.9.3 (Apple Git-50)
+

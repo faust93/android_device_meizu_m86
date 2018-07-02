@@ -1,13 +1,12 @@
-From 8319332c08126613574ec792a9655e69c4357b72 Mon Sep 17 00:00:00 2001
+From d99950a16cd00461aa24dc8cc5675fc958fc8b05 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Sun, 29 Jan 2017 18:25:58 +0300
+Date: Sun, 26 Feb 2017 15:42:41 +0300
 Subject: [PATCH] Suspend Actions [3/3]
 
-Change-Id: Ic43e9fba38dc72d3f716f095e612a483e00d2c21
 ---
  src/com/android/phone/MobileNetworkSettings.java |  1 +
- src/com/android/phone/PhoneInterfaceManager.java | 34 ++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+ src/com/android/phone/PhoneInterfaceManager.java | 35 ++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
 
 diff --git a/src/com/android/phone/MobileNetworkSettings.java b/src/com/android/phone/MobileNetworkSettings.java
 index 2434599..5e9afd2 100644
@@ -22,17 +21,15 @@ index 2434599..5e9afd2 100644
                  case Phone.NT_MODE_LTE_CDMA_EVDO_GSM_WCDMA:
                  case Phone.NT_MODE_CDMA:
 diff --git a/src/com/android/phone/PhoneInterfaceManager.java b/src/com/android/phone/PhoneInterfaceManager.java
-index 631288d..a63ee63 100755
+index c537943..76ab8e2 100755
 --- a/src/com/android/phone/PhoneInterfaceManager.java
 +++ b/src/com/android/phone/PhoneInterfaceManager.java
-@@ -152,12 +152,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
-     private static final int CMD_SIM_GET_ATR = 143;
-     private static final int EVENT_SIM_GET_ATR_DONE = 144;
-     private static final int CMD_OPEN_CHANNEL_WITH_P2 = 145;
-+    private static final int CMD_TOGGLE_2G = 998;
-     private static final int CMD_TOGGLE_LTE = 999; // not used yet
+@@ -154,10 +154,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
+     private static final int CMD_OPEN_CHANNEL_WITH_P2 = 49;
  
      private static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
++    private static final int CMD_TOGGLE_2G = 98;
+     private static final int CMD_TOGGLE_LTE = 99; // not used yet
  
      /** The singleton instance. */
      private static PhoneInterfaceManager sInstance;
@@ -40,10 +37,11 @@ index 631288d..a63ee63 100755
  
      private PhoneGlobals mApp;
      private Phone mPhone;
-@@ -1127,6 +1129,38 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
+@@ -1453,6 +1455,39 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
+               Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
          return network;
      }
- 
++
 +     public void toggle2G(boolean on) {
 +        int network = -1;
 +        final int phoneSubId = mSubscriptionController.getDefaultDataSubId();
@@ -76,7 +74,7 @@ index 631288d..a63ee63 100755
 +        log("NetworkType: " + network);
 +    }
 +
-     public void toggleLTE(boolean on) {
+ public void toggleLTE(boolean on) {
          int network = getPreferredNetworkMode();
          boolean isCdmaDevice = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
 -- 

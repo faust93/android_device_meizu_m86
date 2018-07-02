@@ -1,0 +1,43 @@
+From 1233dd0e41899192fc3530b208636bab3c279595 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 1 Mar 2017 18:52:08 +0300
+Subject: [PATCH] signature spoof [2/2]
+
+---
+ res/values/rr_strings.xml | 5 +++++
+ res/xml/rr_misc.xml       | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/res/values/rr_strings.xml b/res/values/rr_strings.xml
+index 2f21767..b7224e2 100644
+--- a/res/values/rr_strings.xml
++++ b/res/values/rr_strings.xml
+@@ -2299,6 +2299,11 @@
+     <string name="wired_ringtone_focus_mode_dynamic">Wired headset if connected and playing music</string>
+     <string name="wired_ringtone_focus_mode_stock">Speakerphone and headset (default)</string>
+ 
++    <!-- Allow fake signature checkbox in developer settings -->
++    <string name="allow_signature_fake">Allow signature spoofing</string>
++    <string name="allow_signature_fake_summary">Allow apps to bypass security systems by pretending to be a different app</string>
++    <string name="allow_signature_fake_warning">Allowing apps to bypass security systems can lead to serious security and privacy problems! Check that only benign apps use the corresponding permission when this is active.</string>
++
+     <!-- Slim Recent App Sidebar  -->
+     <string name="recent_app_sidebar_title">Recents app sidebar</string>
+     <string name="use_recent_app_sidebar_title">Enable app sidebar</string>
+diff --git a/res/xml/rr_misc.xml b/res/xml/rr_misc.xml
+index 60b52dc..1061224 100644
+--- a/res/xml/rr_misc.xml
++++ b/res/xml/rr_misc.xml
+@@ -119,4 +119,9 @@
+             android:summary="@string/system_app_remover_summary"
+             android:fragment="com.android.settings.rr.fragments.SystemappRemover" />
+ 
++        <com.android.settings.rr.Preferences.SecureSettingSwitchPreference
++            android:key="allow_signature_fake"
++            android:title="@string/allow_signature_fake"
++            android:summary="@string/allow_signature_fake_summary"/>
++
+ </PreferenceScreen>
+-- 
+1.9.3 (Apple Git-50)
+

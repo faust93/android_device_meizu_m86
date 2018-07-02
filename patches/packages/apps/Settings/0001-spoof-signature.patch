@@ -1,0 +1,179 @@
+From 1e051cc0b12bc175bdbb4b2d4d6117f94b074b0e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Mon, 27 Feb 2017 12:21:25 +0300
+Subject: [PATCH] spoof signature
+
+---
+ res/values-ru/cm_strings.xml                      |  3 ++
+ res/values/cm_strings.xml                         |  6 +++
+ res/xml/development_prefs.xml                     |  5 +++
+ src/com/android/settings/DevelopmentSettings.java | 47 +++++++++++++++++++++++
+ 4 files changed, 61 insertions(+)
+
+diff --git a/res/values-ru/cm_strings.xml b/res/values-ru/cm_strings.xml
+index b6407dd..0217dcf 100644
+--- a/res/values-ru/cm_strings.xml
++++ b/res/values-ru/cm_strings.xml
+@@ -389,4 +389,7 @@
+   <!-- Status bar - double tap to sleep -->
+   <string name="status_bar_double_tap_to_sleep_title">Выключать экран при двойном нажатии</string>
+   <string name="status_bar_double_tap_to_sleep_summary">Дважды коснитесь строки состояния, чтобы перевести устройство в спящий режим</string>
++  <string name="allow_signature_fake">Разрешить подмену подписи APK</string>
++  <string name="allow_signature_fake_summary">Разрешить приложениям обманывать системы безопасности, выдавая себя за другое приложение</string>
++  <string name="allow_signature_fake_warning">Разрешение приложениям обманывать системы безопасности может привести к серьезным проблемам безопасности и конфиденциальности! Убедитесь, что только доверенные приложения используют соответствующее разрешение.</string>
+ </resources>
+diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
+index 2bd528e..77c1819 100644
+--- a/res/values/cm_strings.xml
++++ b/res/values/cm_strings.xml
+@@ -435,4 +435,10 @@
+     <!-- Status bar - double tap to sleep -->
+     <string name="status_bar_double_tap_to_sleep_title">Double-tap to sleep</string>
+     <string name="status_bar_double_tap_to_sleep_summary">Double-tap on the status bar to turn off the display</string>
++
++    <!-- Allow fake signature checkbox in developer settings -->
++    <string name="allow_signature_fake">Allow signature spoofing</string>
++    <string name="allow_signature_fake_summary">Allow apps to bypass security systems by pretending to be a different app</string>
++    <string name="allow_signature_fake_warning">Allowing apps to bypass security systems can lead to serious security and privacy problems! Check that only benign apps use the corresponding permission when this is active.</string>
++
+ </resources>
+diff --git a/res/xml/development_prefs.xml b/res/xml/development_prefs.xml
+index 8a7ffb4..932c269 100644
+--- a/res/xml/development_prefs.xml
++++ b/res/xml/development_prefs.xml
+@@ -400,6 +400,11 @@
+             android:title="@string/immediately_destroy_activities"
+             android:summary="@string/immediately_destroy_activities_summary"/>
+ 
++        <CheckBoxPreference
++            android:key="allow_signature_fake"
++            android:title="@string/allow_signature_fake"
++            android:summary="@string/allow_signature_fake_summary"/>
++
+         <ListPreference
+             android:key="app_process_limit"
+             android:title="@string/app_process_limit_title"
+diff --git a/src/com/android/settings/DevelopmentSettings.java b/src/com/android/settings/DevelopmentSettings.java
+index 7b5ab1c..66f66cb 100644
+--- a/src/com/android/settings/DevelopmentSettings.java
++++ b/src/com/android/settings/DevelopmentSettings.java
+@@ -219,6 +219,8 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+ 
+     private static final String IMMEDIATELY_DESTROY_ACTIVITIES_KEY
+             = "immediately_destroy_activities";
++    private static final String ALLOW_SIGNATURE_FAKE_KEY = "allow_signature_fake";
++
+     private static final String APP_PROCESS_LIMIT_KEY = "app_process_limit";
+ 
+     private static final String BACKGROUND_CHECK_KEY = "background_check";
+@@ -324,6 +326,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+     private SwitchPreference mImmediatelyDestroyActivities;
+ 
+     private ListPreference mAppProcessLimit;
++    private CheckBoxPreference mAllowSignatureFake;
+ 
+     private SwitchPreference mShowAllANRs;
+ 
+@@ -357,6 +360,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+ 
+     private boolean mLogpersistCleared;
+     private Dialog mLogpersistClearDialog;
++    private Dialog mAllowSignatureFakeDialog;
+ 
+     public DevelopmentSettings() {
+         super(UserManager.DISALLOW_DEBUGGING_FEATURES);
+@@ -502,6 +506,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+         mAllPrefs.add(mImmediatelyDestroyActivities);
+         mResetSwitchPrefs.add(mImmediatelyDestroyActivities);
+ 
++        mAllowSignatureFake = (CheckBoxPreference) findPreference(ALLOW_SIGNATURE_FAKE_KEY);
++        mAllPrefs.add(mAllowSignatureFake);
++        mResetCbPrefs.add(mAllowSignatureFake);
++
+         mAppProcessLimit = addListPreference(APP_PROCESS_LIMIT_KEY);
+ 
+         mShowAllANRs = (SwitchPreference) findPreference(
+@@ -780,6 +788,7 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+         updateAnimationScaleOptions();
+         updateOverlayDisplayDevicesOptions();
+         updateImmediatelyDestroyActivitiesOptions();
++        updateAllowSignatureFakeOption();
+         updateAppProcessLimitOptions();
+         updateShowAllANRsOptions();
+         updateVerifyAppsOverUsbOptions();
+@@ -1910,6 +1919,11 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+                 getActivity().getContentResolver(), Settings.Global.ALWAYS_FINISH_ACTIVITIES, 0) != 0);
+     }
+ 
++    private void updateAllowSignatureFakeOption() {
++        updateCheckBox(mAllowSignatureFake, Settings.Secure.getInt(
++            getActivity().getContentResolver(), Settings.Secure.ALLOW_SIGNATURE_FAKE, 0) != 0);
++    }
++
+     private void updateAnimationScaleValue(int which, ListPreference pref) {
+         try {
+             float scale = mWindowManager.getAnimationScale(which);
+@@ -2228,6 +2242,24 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+             writeCpuInfoOptions();
+         } else if (preference == mImmediatelyDestroyActivities) {
+             writeImmediatelyDestroyActivitiesOptions();
++        } else if (preference == mAllowSignatureFake) {
++            if (mAllowSignatureFake.isChecked()) {
++                if (mAllowSignatureFakeDialog != null) {
++                    dismissDialogs();
++                }
++                mAllowSignatureFakeDialog = new AlertDialog.Builder(getActivity()).setMessage(
++                        getResources().getString(R.string.allow_signature_fake_warning))
++                        .setTitle(R.string.allow_signature_fake)
++                        .setIconAttribute(android.R.attr.alertDialogIcon)
++                        .setPositiveButton(android.R.string.yes, this)
++                        .setNegativeButton(android.R.string.no, this)
++                        .show();
++                mAllowSignatureFakeDialog.setOnDismissListener(this);
++            } else {
++                Settings.Secure.putInt(getActivity().getContentResolver(),
++                        Settings.Secure.ALLOW_SIGNATURE_FAKE, 0);
++                updateAllowSignatureFakeOption();
++            }
+         } else if (preference == mShowAllANRs) {
+             writeShowAllANRsOptions();
+         } else if (preference == mForceHardwareUi) {
+@@ -2397,6 +2429,10 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+             mLogpersistClearDialog.dismiss();
+             mLogpersistClearDialog = null;
+         }
++        if (mAllowSignatureFakeDialog != null) {
++            mAllowSignatureFakeDialog.dismiss();
++            mAllowSignatureFakeDialog = null;
++        }
+     }
+ 
+     public void onClick(DialogInterface dialog, int which) {
+@@ -2439,6 +2475,14 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+             } else {
+                 // Reset the toggle
+                 mSwitchBar.setChecked(false);
++            } 
++        } else if (dialog == mAllowSignatureFakeDialog) {
++            if (which == DialogInterface.BUTTON_POSITIVE) {
++                Settings.Secure.putInt(getActivity().getContentResolver(),
++                        Settings.Secure.ALLOW_SIGNATURE_FAKE, 1);
++            } else {
++                // Reset the toggle
++                mAllowSignatureFake.setChecked(false);
+             }
+         } else if (dialog == mRootDialog) {
+             if (which == DialogInterface.BUTTON_POSITIVE) {
+@@ -2481,6 +2525,9 @@ public class DevelopmentSettings extends RestrictedSettingsFragment
+             mAdbTcpDialog = null;
+         } else if (dialog == mLogpersistClearDialog) {
+             mLogpersistClearDialog = null;
++        } else if (dialog == mAllowSignatureFakeDialog) {
++            updateAllowSignatureFakeOption();
++            mAllowSignatureFakeDialog = null;
+         }
+     }
+ 
+-- 
+1.9.3 (Apple Git-50)
+

@@ -1,0 +1,138 @@
+From 3937259164bb02aedd80bbf595fc7782bed416d9 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 24 Mar 2017 11:50:27 +0300
+Subject: [PATCH] Suspend Actions WiFi Toggle [1/2]
+
+---
+ core/java/android/provider/Settings.java           |  5 ++
+ .../systemui/screenstate/ScreenStateService.java   |  3 +
+ .../android/systemui/screenstate/WifiToggle.java   | 80 ++++++++++++++++++++++
+ 3 files changed, 88 insertions(+)
+ create mode 100644 packages/SystemUI/src/com/android/systemui/screenstate/WifiToggle.java
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index c868a63..febf461 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -5842,6 +5842,11 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
+         public static final String SCREEN_STATE_ON_DELAY = "screen_state_on_delay";
+ 
+         /**
++         * @hide
++         */
++        public static final String SCREEN_STATE_WIFI = "screen_state_wifi";
++
++        /**
+          * Use Dnd when call active
+          * @hide
+          */
+diff --git a/packages/SystemUI/src/com/android/systemui/screenstate/ScreenStateService.java b/packages/SystemUI/src/com/android/systemui/screenstate/ScreenStateService.java
+index 835ab04..40d7b63 100644
+--- a/packages/SystemUI/src/com/android/systemui/screenstate/ScreenStateService.java
++++ b/packages/SystemUI/src/com/android/systemui/screenstate/ScreenStateService.java
+@@ -38,6 +38,7 @@ public class ScreenStateService extends Service  {
+     private TwoGToggle mTwoGToggle;
+     private GpsToggle mGpsToggle;
+     private MobileDataToggle mMobileDataToggle;
++    private WifiToggle mWifiToggle;
+     private boolean mEnabled = true;
+     private Context mContext;
+     private List<ScreenStateToggle> fEnabledToggles;
+@@ -112,6 +113,8 @@ public class ScreenStateService extends Service  {
+         fAllToggles.add(mGpsToggle);
+         mMobileDataToggle = new MobileDataToggle(mContext);
+         fAllToggles.add(mMobileDataToggle);
++        mWifiToggle = new WifiToggle(mContext);
++        fAllToggles.add(mWifiToggle);
+ 
+         updateEnabledToggles();
+     }
+diff --git a/packages/SystemUI/src/com/android/systemui/screenstate/WifiToggle.java b/packages/SystemUI/src/com/android/systemui/screenstate/WifiToggle.java
+new file mode 100644
+index 0000000..26deeca
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/screenstate/WifiToggle.java
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (C) 2007 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++*/
++package com.android.systemui.screenstate;
++
++import android.content.Context;
++import android.provider.Settings;
++import android.net.ConnectivityManager;
++import android.net.wifi.WifiManager;
++import android.util.Log;
++
++public class WifiToggle extends ScreenStateToggle {
++    private static final String TAG = "ScreenStateService_WifiToggle";
++
++    public WifiToggle(Context context){
++        super(context);
++    }
++
++    protected boolean isEnabled(){
++        int s = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_STATE_WIFI, 0);
++        if(s!=0)
++            return true;
++        else
++            return false;
++    }
++
++    protected boolean doScreenOnAction(){
++        return mDoAction;
++    }
++
++    protected boolean doScreenOffAction(){
++        if (isWifiEnabled()){
++            mDoAction = true;
++        } else {
++            mDoAction = false;
++        }
++        return mDoAction;
++    }
++
++    private boolean isWifiEnabled(){
++        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
++        return wifiManager.isWifiEnabled();
++    }
++
++    private void setWifiState(boolean WifiEnabled){
++        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
++        wifiManager.setWifiEnabled(WifiEnabled);
++    }
++
++    protected Runnable getScreenOffAction(){
++        return new Runnable() {
++            @Override
++            public void run() {
++                setWifiState(false);
++                Log.d(TAG, "Wifi = false");
++            }
++        };
++    }
++    protected Runnable getScreenOnAction(){
++        return new Runnable() {
++            @Override
++            public void run() {
++                setWifiState(true);
++                Log.d(TAG, "Wifi = true");
++            }
++        };
++    }
++}
+-- 
+1.9.3 (Apple Git-50)
+

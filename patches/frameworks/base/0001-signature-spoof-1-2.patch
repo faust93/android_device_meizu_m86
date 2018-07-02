@@ -1,0 +1,113 @@
+From cff505cefb0c088cee6e3b5aa2792c9c238bb182 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 1 Mar 2017 18:38:22 +0300
+Subject: [PATCH] signature spoof [1/2]
+
+---
+ core/java/android/provider/Settings.java           | 10 ++++++++-
+ core/res/AndroidManifest.xml                       |  7 ++++++
+ core/res/res/values/rr_strings.xml                 |  5 +++++
+ .../android/server/pm/PackageManagerService.java   | 25 ++++++++++++++++++++--
+ 4 files changed, 44 insertions(+), 3 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 3f6cb95..53edc62 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -5056,7 +5056,6 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
+          */
+         public static final String LOCKSCREEN_ALARM_COLOR = "lockscreen_alarm_color";
+ 
+-
+         /**
+          * Number of columns used for the Quick Settings (landscape)
+          *
+@@ -7022,6 +7021,15 @@ public static final String PHONE_BLACKLIST_REGEX_ENABLED = "phone_blacklist_rege
+          */
+         public static final String INSTALL_NON_MARKET_APPS = "install_non_market_apps";
+ 
++         /**
++          * Whether applications can fake a signature.
++          *
++          * <p>1 = permit apps to fake signature
++          * <p>0 = disable this feature
++          * @hide
++          */
++         public static final String ALLOW_SIGNATURE_FAKE = "allow_signature_fake";
++
+         /**
+          * One Handed mode toggle
+          * @hide
+diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
+index 4dfec15..9d9c8c1 100644
+--- a/core/res/AndroidManifest.xml
++++ b/core/res/AndroidManifest.xml
+@@ -1941,6 +1941,13 @@
+         android:description="@string/permdesc_getPackageSize"
+         android:protectionLevel="normal" />
+ 
++    <!-- @hide Allows an application to change the package signature as
++         seen by applications -->
++    <permission android:name="android.permission.FAKE_PACKAGE_SIGNATURE"
++        android:protectionLevel="dangerous"
++        android:label="@string/permlab_fakePackageSignature"
++        android:description="@string/permdesc_fakePackageSignature" />
++
+     <!-- @deprecated No longer useful, see
+          {@link android.content.pm.PackageManager#addPackageToPreferred}
+          for details. -->
+diff --git a/core/res/res/values/rr_strings.xml b/core/res/res/values/rr_strings.xml
+index 97efe53..9635993 100644
+--- a/core/res/res/values/rr_strings.xml
++++ b/core/res/res/values/rr_strings.xml
+@@ -44,6 +44,11 @@
+     <!-- Button to soft reboot the device, within the Reboot Options dialog -->
+     <string name="reboot_systemui">Restart SystemUI</string>
+ 
++    <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
++    <string name="permlab_fakePackageSignature">Spoof package signature</string>
++    <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
++    <string name="permdesc_fakePackageSignature">Allows the app to pretend to be a different app. Malicious applications might be able to use this to access private application data. Grant this permission with caution only!</string>
++
+     <!-- On-The-Go -->
+     <string name="global_action_onthego">On-The-Go Mode</string>
+ 
+diff --git a/services/core/java/com/android/server/pm/PackageManagerService.java b/services/core/java/com/android/server/pm/PackageManagerService.java
+index b5ac48e..be89993 100644
+--- a/services/core/java/com/android/server/pm/PackageManagerService.java
++++ b/services/core/java/com/android/server/pm/PackageManagerService.java
+@@ -3202,8 +3202,29 @@ public class PackageManagerService extends IPackageManager.Stub {
+                 ? Collections.<String>emptySet() : permissionsState.getPermissions(userId);
+         final PackageUserState state = ps.readUserState(userId);
+ 
+-        return PackageParser.generatePackageInfo(p, gids, flags,
+-                ps.firstInstallTime, ps.lastUpdateTime, permissions, state, userId);
++        return mayFakeSignature(p, PackageParser.generatePackageInfo(p, gids, flags,
++                ps.firstInstallTime, ps.lastUpdateTime, permissions, state, userId),
++                permissions);
++    }
++
++    private PackageInfo mayFakeSignature(PackageParser.Package p, PackageInfo pi,
++            Set<String> permissions) {
++        try {
++            if (permissions.contains("android.permission.FAKE_PACKAGE_SIGNATURE")
++                    && p.applicationInfo.targetSdkVersion > Build.VERSION_CODES.LOLLIPOP_MR1
++                    && p.mAppMetaData != null
++                    && android.provider.Settings.Secure.getInt(mContext.getContentResolver(),
++                       android.provider.Settings.Secure.ALLOW_SIGNATURE_FAKE, 0) == 1) {
++                String sig = p.mAppMetaData.getString("fake-signature");
++                if (sig != null) {
++                    pi.signatures = new Signature[] {new Signature(sig)};
++                }
++            }
++        } catch (Throwable t) {
++            // We should never die because of any failures, this is system code!
++            Log.w("PackageManagerService.FAKE_PACKAGE_SIGNATURE", t);
++        }
++        return pi;
+     }
+ 
+     @Override
+-- 
+1.9.3 (Apple Git-50)
+

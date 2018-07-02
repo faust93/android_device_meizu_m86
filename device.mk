@@ -27,7 +27,7 @@ $(call inherit-product-if-exists, prebuilts/chromium/chromium_prebuilt.mk)
 DEVICE_PACKAGE_OVERLAYS += device/meizu/m86/overlay
 
 # Device uses high-density artwork where available
-PRODUCT_AAPT_CONFIG := normal hdpi xhdpi xxhdpi
+PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := xxhdpi
 
 # Boot animation
@@ -35,8 +35,6 @@ TARGET_SCREEN_HEIGHT := 1920
 TARGET_SCREEN_WIDTH := 1080
 
 $(call inherit-product, frameworks/native/build/phone-xxxhdpi-3072-dalvik-heap.mk)
-
-$(call inherit-product-if-exists, frameworks/native/build/phone-xxxhdpi-3072-hwui-memory.mk)
 
 # These are the hardware-specific features
 PRODUCT_COPY_FILES += \
@@ -94,10 +92,6 @@ PRODUCT_PACKAGES += \
     libstlport \
     libprotobuf-cpp-full
 
-# ril
-PRODUCT_PACKAGES += \
-    libril_smiril
-
 # shims
 PRODUCT_PACKAGES += \
     libshim_media
@@ -124,7 +118,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
-    $(LOCAL_PATH)/configs/gpsconfig.xml:system/etc/gpsconfig.xml
+    $(LOCAL_PATH)/configs/gps.xml:system/etc/gps.xml
 
 
 # Keylayouts
@@ -229,7 +223,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     fstab.m86 \
     init.m86.rc \
-    init.power.rc \
     init.m86.usb.rc \
     init.superuser.rc \
     ueventd.m86.rc
@@ -263,7 +256,7 @@ PRODUCTY_COPY_FILES += \
 PRODUCT_PACKAGES += \
     Terminal \
     CMWallpapers \
-    Camera2 \
+    Snap \
     Gello
 
 PRODUCT_PACKAGES += \

@@ -1,0 +1,42 @@
+From 16da77b2561b8a86fca3caefe4594bef1407d74e Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 26 Feb 2017 15:38:55 +0300
+Subject: [PATCH] wifi direct fix
+
+Change-Id: Ia3439613115094dc9c6d45cc67f30fad7fb6b1ca
+---
+ wpa_supplicant/config_file.c | 4 ++--
+ wpa_supplicant/ctrl_iface.c  | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
+index e72f844..e6c61d3 100644
+--- a/wpa_supplicant/config_file.c
++++ b/wpa_supplicant/config_file.c
+@@ -1129,8 +1129,8 @@ static void wpa_config_write_global(FILE *f, struct wpa_config *config)
+ 		fprintf(f, "p2p_go_vht=%d\n", config->p2p_go_vht);
+ 	if (config->p2p_go_ctwindow != DEFAULT_P2P_GO_CTWINDOW)
+ 		fprintf(f, "p2p_go_ctwindow=%d\n", config->p2p_go_ctwindow);
+-	if (config->p2p_disabled)
+-		fprintf(f, "p2p_disabled=%d\n", config->p2p_disabled);
++//	if (config->p2p_disabled)
++//		fprintf(f, "p2p_disabled=%d\n", config->p2p_disabled);
+ 	if (config->p2p_no_group_iface)
+ 		fprintf(f, "p2p_no_group_iface=%d\n",
+ 			config->p2p_no_group_iface);
+diff --git a/wpa_supplicant/ctrl_iface.c b/wpa_supplicant/ctrl_iface.c
+index 9ff6a4a..0f2c641 100644
+--- a/wpa_supplicant/ctrl_iface.c
++++ b/wpa_supplicant/ctrl_iface.c
+@@ -6039,7 +6039,7 @@ static int p2p_ctrl_set(struct wpa_supplicant *wpa_s, char *cmd)
+ 		return wpa_drv_set_p2p_powersave(wpa_s, -1, -1, atoi(param));
+ 
+ 	if (os_strcmp(cmd, "disabled") == 0) {
+-		wpa_s->global->p2p_disabled = atoi(param);
++		wpa_s->global->p2p_disabled = 0; //atoi(param);
+ 		wpa_printf(MSG_DEBUG, "P2P functionality %s",
+ 			   wpa_s->global->p2p_disabled ?
+ 			   "disabled" : "enabled");
+-- 
+1.9.3 (Apple Git-50)
+

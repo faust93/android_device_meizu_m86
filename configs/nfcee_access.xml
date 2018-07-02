@@ -8,6 +8,7 @@
         <package android:name="com.meizu.nfc.jcop" />
         <package android:name="com.meizu.cardwallet" />
         <package android:name="com.meizu.flyme.wallet" />
+        <package android:name="com.meizu.mznfcpay" />
     </signer>
 
     <!-- Signature for user  -->
@@ -17,6 +18,7 @@
         <package android:name="com.meizu.nfc.jcop" />
         <package android:name="com.meizu.cardwallet" />
         <package android:name="com.meizu.flyme.wallet" />
+        <package android:name="com.meizu.mznfcpay" />
     </signer>
 
     <!-- Signature for prd  -->
@@ -26,6 +28,7 @@
         <package android:name="com.meizu.nfc.jcop" />
         <package android:name="com.meizu.cardwallet" />
         <package android:name="com.meizu.flyme.wallet" />
+        <package android:name="com.meizu.mznfcpay" />
     </signer>
 
     <!-- Signature for eSE related APs. -->

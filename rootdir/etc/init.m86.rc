@@ -2,16 +2,16 @@ import init.m86.usb.rc
 
 on init
 
-    export LD_SHIM_LIBS "/system/lib64/hw/hwcomposer.exynos5.so|libshim_media.so:/system/lib/hw/audio.primary.m86.so|/system/lib/libshim_media.so:/system/lib/libexynoscamera.so|/system/lib/libshim_media.so:/system/bin/gpsd|libgps_shim.so"
+    export LD_SHIM_LIBS "/system/lib64/hw/hwcomposer.exynos5.so|libshim_media.so:/system/lib/hw/audio.primary.m86.so|/system/lib/libshim_media.so:/system/lib/libexynoscamera.so|/system/lib/libshim_media.so:/system/bin/gpsd|libgps_shim.so:/data/app/com.meizu.media.camera-1/lib/arm/libjni_glrenderer.so|/data/app/com.meizu.media.camera-1/lib/arm/libshim_media.so"
 
     # Directory for mount custom partition
     mkdir /custom 0555 root root
 
-    symlink /sdcard /mnt/sdcard
     symlink /sdcard /storage/sdcard0
 
+    write /proc/sys/vm/page-cluster 0
+
 on post-fs-data
-    mkdir /data/media 0770 media_rw media_rw
 
     # permissions for bluetooth.
     #setprop ro.bt.bdaddr_path "/factory/bluetooth/bt_addr"
@@ -117,8 +117,62 @@ on boot
     chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse_duration
     chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy
     chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/multi_enter_load
+    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/multi_enter_load
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/single_enter_load
+    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/single_enter_load
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/param_index
+    chmod 0660 /sys/devices/system/cpu/cpu0/cpufreq/interactive/param_index
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_enter_load
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_enter_load
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_enter_time
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_enter_time
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_exit_load
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_exit_load
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_exit_time
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/multi_exit_time
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_enter_load
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_enter_load
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_enter_time
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_enter_time
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_exit_load
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_exit_load
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_exit_time
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/single_exit_time
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/interactive/param_index
+    chmod 0660 /sys/devices/system/cpu/cpu4/cpufreq/interactive/param_index
+    chown system system /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
 
-# Permission for USB SELECT
+    # hotplug profiles
+    chown system system /sys/module/exynos_march_cpu_hotplug/parameters/current_profile_no
+    chown system system /sys/module/exynos_march_cpu_hotplug/parameters/cl1_booster
+    chown system system /sys/module/exynos_march_cpu_hotplug/parameters/min_cpu_boosted
+    chown system system /sys/module/exynos_march_cpu_hotplug/parameters/max_cpus_online
+
+    # update cpuset now that processors are up
+    # Foreground should contain most cores (7 is reserved for top-app)
+    write /dev/cpuset/foreground/cpus 0-6
+
+    # top-app gets all cpus (including reserved #7)
+    write /dev/cpuset/top-app/cpus 0-7
+
+    #background contains a small subset (generally one little core)
+    write /dev/cpuset/background/cpus 0
+
+    # add system-background cpuset, a new cpuset for system services
+    # that should not run on larger cores
+    # system-background is for system tasks that should only run on
+    # little cores, not on bigs to be used only by init
+    write /dev/cpuset/system-background/cpus 0-3
+
+    # EAS stune boosting interfaces
+    #
+    chown system system /dev/stune/foreground/schedtune.boost
+    chown system system /dev/stune/schedtune.boost
+    write /dev/stune/foreground/schedtune.boost 10
+    write /dev/stune/schedtune.boost 0
+
+    # Permission for USB SELECT
     chown system system /sys/class/android_usb/android0/enable
     chmod 0660 /sys/class/android_usb/android0/enable
     chown system system /sys/class/android_usb/android0/idVendor
@@ -189,11 +243,6 @@ on boot
     chmod 0700           /sys/bus/iio/devices/iio:device1/trigger
     chown system system /sys/bus/iio/devices/iio:device1/scan_elements
     chmod 0700           /sys/bus/iio/devices/iio:device1/scan_elements
-
-# mediaserver cache machanism
-    mkdir /data/mediaserver 0771 media media
-    chown media media /data/mediaserver
-    chmod 0771 /data/mediaserver
 
 # permission for sensor hub
     chown system system /sys/class/meizu/mx_hub/batch
@@ -610,14 +659,6 @@ service gpsd /system/bin/gpsd -c /system/etc/gpsconfig.xml
     user gps
     group system wakelock sdcard_rw inet root radio wifi
 
-# for wifi related...
-#service p2p_supplicant /system/bin/wpa_supplicant \
-#    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
-#    -puse_p2p_group_interface=1p2p_device=1 \
-#    -e/data/misc/wifi/entropy.bin \
-#    -O/data/misc/wifi/sockets \
-#    -g@android:wpa_wlan0
-
 service p2p_supplicant /system/bin/wpa_supplicant \
     -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
     -I/system/etc/wifi/wpa_supplicant_overlay.conf  \
@@ -708,6 +749,13 @@ on property:sys.rild_reset=1
     setprop sys.rild_reset 0
     start ril-daemon
 
+# Modem boot daemon
+service cpboot-daemon /sbin/cbd -d
+    class main
+    user root
+    group system radio cache inet misc audio sdcard_rw log sdcard_r shell
+#    seclabel u:r:cbd:s0
+
 # s333 modem ril service
 service ril-daemon /system/bin/rild_exynos
     class main
@@ -717,14 +765,8 @@ service ril-daemon /system/bin/rild_exynos
     socket rild2-debug stream 660 radio system
     user root
     group radio cache inet misc audio log
-    onrestart restart cpboot-daemon
+#    onrestart restart cpboot-daemon
 
-# Modem boot daemon
-service cpboot-daemon /sbin/cbd -d
-    class main
-    user root
-    group system
-#    seclabel u:r:cbd:s0
 
 # DM daemon
 service DM-daemon /system/bin/dmd

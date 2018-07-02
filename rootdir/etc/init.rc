@@ -7,7 +7,6 @@
 import /init.environ.rc
 import /init.usb.rc
 import /init.m86.rc
-import /init.power.rc
 import /init.usb.configfs.rc
 import /init.${ro.zygote}.rc
 
@@ -120,14 +119,13 @@ on init
     write /proc/sys/kernel/sched_tunable_scaling 0
     write /proc/sys/kernel/sched_latency_ns 10000000
     write /proc/sys/kernel/sched_wakeup_granularity_ns 2000000
-    write /proc/sys/kernel/sched_compat_yield 1
     write /proc/sys/kernel/sched_child_runs_first 0
 
-    write /proc/sys/kernel/randomize_va_space 2
+    write /proc/sys/kernel/randomize_va_space 0
     write /proc/sys/kernel/kptr_restrict 2
     write /proc/sys/vm/mmap_min_addr 32768
     write /proc/sys/net/ipv4/ping_group_range "0 2147483647"
-    write /proc/sys/net/unix/max_dgram_qlen 600
+    write /proc/sys/net/unix/max_dgram_qlen 300
     write /proc/sys/kernel/sched_rt_runtime_us 950000
     write /proc/sys/kernel/sched_rt_period_us 1000000
 
@@ -149,13 +147,14 @@ on init
     chown system system /dev/cpuctl/tasks
     chmod 0666 /dev/cpuctl/tasks
     write /dev/cpuctl/cpu.rt_period_us 1000000
-    write /dev/cpuctl/cpu.rt_runtime_us 950000
+    write /dev/cpuctl/cpu.rt_runtime_us 800000
 
     mkdir /dev/cpuctl/bg_non_interactive
     chown system system /dev/cpuctl/bg_non_interactive/tasks
     chmod 0666 /dev/cpuctl/bg_non_interactive/tasks
     # 5.0 %
     write /dev/cpuctl/bg_non_interactive/cpu.shares 52
+    write /dev/cpuctl/bg_non_interactive/cpu.rt_runtime_us 700000
     write /dev/cpuctl/bg_non_interactive/cpu.rt_period_us 1000000
     # active FIFO threads will never be in BG
     write /dev/cpuctl/bg_non_interactive/cpu.rt_runtime_us 10000
@@ -211,7 +210,6 @@ on init
     chmod 0664 /dev/cpuset/top-app/tasks
     chmod 0664 /dev/cpuset/tasks
 
-
     # qtaguid will limit access to specific data based on group memberships.
     #   net_bw_acct grants impersonation of socket owners.
     #   net_bw_stats grants access to other apps' detailed tagged-socket stats.
@@ -225,6 +223,9 @@ on init
     # Create location for fs_mgr to store abbreviated output from filesystem
     # checker programs.
     mkdir /dev/fscklogs 0770 root system
+
+# To sync between sdcard & installd
+    setprop installd.sdcard_manipulate_done 0
 
     # pstore/ramoops previous console log
     mount pstore pstore /sys/fs/pstore
@@ -429,7 +430,7 @@ on post-fs-data
 
     # create directory for MediaDrm plug-ins - give drm the read/write access to
     # the following directory.
-    mkdir /data/mediadrm 0777 mediadrm mediadrm
+    mkdir /data/mediadrm 0770 mediadrm mediadrm
 
     mkdir /data/anr 0775 system system
 
@@ -592,8 +593,8 @@ on nonencrypted
 on property:sys.init_log_level=*
     loglevel ${sys.init_log_level}
 
-on charger
-    class_start charger
+#on charger
+#    class_start charger
 
 on property:vold.decrypt=trigger_reset_main
     class_reset main

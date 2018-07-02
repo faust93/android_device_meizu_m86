@@ -1,27 +1,26 @@
-From ffa38db9d670beb741aad47674f886f1569e6489 Mon Sep 17 00:00:00 2001
+From bd12bd18ba1780a6ce9cf8e3b6ea2d66898f2b27 Mon Sep 17 00:00:00 2001
 From: faust93 <monumentum@gmail.com>
-Date: Sat, 21 Jan 2017 13:33:00 +0300
+Date: Sun, 26 Feb 2017 15:48:00 +0300
 Subject: [PATCH] HiFi Settings
 
-Change-Id: Ie468a39d5b2c6a0e5a040c0ed4f41b5d5905e35c
 ---
  res/xml/sound_settings.xml | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/res/xml/sound_settings.xml b/res/xml/sound_settings.xml
-index a9ce37d..df378fd 100644
+index 1d1813d..4215009 100644
 --- a/res/xml/sound_settings.xml
 +++ b/res/xml/sound_settings.xml
-@@ -97,6 +97,9 @@
-                 android:persistent="false"
-                 android:ringtoneType="alarm" />
+@@ -103,6 +103,9 @@
+                 android:title="@string/headset_connect_player_title"
+                 android:summary="@string/headset_connect_player_summary" />
  
 +        <org.cyanogenmod.internal.cmparts.CMPartsPreference
 +                android:key="hifi" />
 +
-         <!-- Launch music player when headset is connected
-         <cyanogenmod.preference.CMSystemSettingSwitchPreference
-                 android:key="headset_connect_player"
+         <!-- Other sounds -->
+         <Preference
+                 android:key="other_sounds"
 -- 
 1.9.3 (Apple Git-50)
 

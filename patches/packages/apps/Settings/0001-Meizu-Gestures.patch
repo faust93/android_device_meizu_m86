@@ -1,0 +1,60 @@
+From 034636ff807ae93a7be701e749fac9038c306f85 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 26 Feb 2017 16:07:35 +0300
+Subject: [PATCH] Meizu Gestures
+
+---
+ res/values-ru/rr_strings.xml   | 2 ++
+ res/values/rr_strings.xml      | 3 +++
+ res/xml/rr_button_settings.xml | 8 ++++++++
+ 3 files changed, 13 insertions(+)
+
+diff --git a/res/values-ru/rr_strings.xml b/res/values-ru/rr_strings.xml
+index 06bf58b..7084284 100644
+--- a/res/values-ru/rr_strings.xml
++++ b/res/values-ru/rr_strings.xml
+@@ -1935,6 +1935,8 @@
+   <string name="alarm_blocker_reload">Перезагрузить</string>
+   <string name="alarm_blocker_warning_title">Продолжайте с осторожностью</string>
+   <string name="alarm_blocker_warning">Блокировка будящих процессов может вызвать нестабильность приложений, принудительные закрытия или потерю данных.</string>
++  <!-- Gestures settings -->
++  <string name="gesture_settings_title">Жесты экрана и сенсора</string>
+   <!-- DUI Double Tap to Sleep -->
+   <string name="smartbar_doubletap_sleep_title">Двойное нажатие для отключения экрана</string>
+   <string name="smartbar_doubletap_sleep_summary">Двойное нажатие на пустое место на панели навигации для отключения экрана</string>
+diff --git a/res/values/rr_strings.xml b/res/values/rr_strings.xml
+index bd6f888..5f5509d 100644
+--- a/res/values/rr_strings.xml
++++ b/res/values/rr_strings.xml
+@@ -2188,6 +2188,9 @@
+     <string name="alarm_blocker_warning_title">Proceed with caution</string>
+     <string name="alarm_blocker_warning">Blocking alarms has the potential to cause instability, crashes or data loss.</string>
+ 
++    <!-- Gestures settings -->
++    <string name="gesture_settings_title">Screen and Sensor gestures</string>
++
+     <!-- DUI Double Tap to Sleep -->
+     <string name="smartbar_doubletap_sleep_title">Double tap to sleep</string>
+     <string name="smartbar_doubletap_sleep_summary">Double tap on navbar empty areas to switch off the screen</string>
+diff --git a/res/xml/rr_button_settings.xml b/res/xml/rr_button_settings.xml
+index e69eac9..6364a4e 100644
+--- a/res/xml/rr_button_settings.xml
++++ b/res/xml/rr_button_settings.xml
+@@ -45,6 +45,14 @@
+ 
+     </PreferenceCategory>
+ 
++    <PreferenceScreen
++        android:key="device_gesture_settings"
++        android:title="@string/gesture_settings_title">
++        <intent 
++            android:action="com.cyanogenmod.action.LAUNCH_TOUCHSCREEN_GESTURE_SETTINGS"
++            android:targetPackage="com.cyanogenmod.settings.device"
++            android:targetClass="com.cyanogenmod.settings.device.TouchscreenGestureSettings" />
++    </PreferenceScreen>
+ 
+    <PreferenceCategory
+         android:key="power_key"
+-- 
+1.9.3 (Apple Git-50)
+

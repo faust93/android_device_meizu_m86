@@ -1,0 +1,29 @@
+From bdaac57144dd19fd621ee482fb693f841e602891 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Thu, 27 Jul 2017 22:55:06 +0300
+Subject: [PATCH] pkcs payload null fix
+
+Change-Id: I90a8a8c4cd050bfe6335fa4da8d07248f926ccab
+---
+ src/java/com/android/internal/telephony/uicc/UiccPkcs15.java | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccPkcs15.java b/src/java/com/android/internal/telephony/uicc/UiccPkcs15.java
+index ca7bb9d..943c1cd 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccPkcs15.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccPkcs15.java
+@@ -123,8 +123,9 @@ public class UiccPkcs15 extends Handler {
+ 
+                 case EVENT_READ_BINARY_DONE:
+                     IccIoResult response = (IccIoResult) ar.result;
+-                    String result = IccUtils.bytesToHexString(response.payload)
+-                            .toUpperCase(Locale.US);
++                    //String result = IccUtils.bytesToHexString(response.payload)
++                    //        .toUpperCase(Locale.US);
++                    String result = null;
+                     log("IccIoResult: " + response + " payload: " + result);
+                     AsyncResult.forMessage(mCallback, result, (result == null) ?
+                             new IccException("Error: null response for " + mFileId) : null);
+-- 
+1.9.3 (Apple Git-50)
+

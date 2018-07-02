@@ -117,3 +117,10 @@
 # libs
 /system/lib64/libfprint.so     -- u:object_r:fingerprintd_exec:s0
 /system/lib/libfprint.so       -- u:object_r:fingerprintd_exec:s0
+
+#
+/data/media/multirom(/.*)?          <<none>>
+/data/media/0/multirom(/.*)?        <<none>>
+/realdata/media/multirom(/.*)?      <<none>>
+/realdata/media/0/multirom(/.*)?    <<none>>
+/mnt/mrom(/.*)?                     <<none>>

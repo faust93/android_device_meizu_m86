@@ -4,36 +4,48 @@
 echo "temporary none" > /sys/class/scsi_disk/0:0:0:1/cache_type
 echo "temporary none" > /sys/class/scsi_disk/0:0:0:2/cache_type
 
-#Setup Mhz Min/Max Cluster 0
-echo 400000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-echo 1500000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
-echo 1500000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
-echo 1500000 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
-echo 1500000 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+#####################################################################
+# Disable rotational storage for all blocks
+# We need faster I/O so do not try to force moving to other CPU cores (dorimanx)
+for i in /sys/block/*/queue; do
+        echo "0" > "$i"/rotational
+        echo "2" > "$i"/rq_affinity
+done
 
-#Setup Mhz Min/Max Cluster 1
-echo 400000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-echo 2100000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu5/cpufreq/scaling_min_freq
-echo 2100000 > /sys/devices/system/cpu/cpu5/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu6/cpufreq/scaling_min_freq
-echo 2100000 > /sys/devices/system/cpu/cpu6/cpufreq/scaling_max_freq
-echo 400000 > /sys/devices/system/cpu/cpu7/cpufreq/scaling_min_freq
-echo 2100000 > /sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq
+#####################################################################
+# Set UKSM Governor
+echo "low" > /sys/kernel/mm/uksm/cpu_governor
 
-# Google Services battery drain fixer by Alcolawl@xda
-# http://forum.xda-developers.com/google-nexus-5/general/script-google-play-services-battery-t3059585/post59563859
-pm enable com.google.android.gms/.update.SystemUpdateActivity
-pm enable com.google.android.gms/.update.SystemUpdateService
-pm enable com.google.android.gms/.update.SystemUpdateService$ActiveReceiver
-pm enable com.google.android.gms/.update.SystemUpdateService$Receiver
-pm enable com.google.android.gms/.update.SystemUpdateService$SecretCodeReceiver
-pm enable com.google.android.gsf/.update.SystemUpdateActivity
-pm enable com.google.android.gsf/.update.SystemUpdatePanoActivity
-pm enable com.google.android.gsf/.update.SystemUpdateService
-pm enable com.google.android.gsf/.update.SystemUpdateService$Receiver
-pm enable com.google.android.gsf/.update.SystemUpdateService$SecretCodeReceiver
+#####################################################################
+# Tune entropy parameters
+echo "512" > /proc/sys/kernel/random/read_wakeup_threshold
+echo "256" > /proc/sys/kernel/random/write_wakeup_threshold
 
+#####################################################################
+# Default IO Scheduler
+echo "sioplus" > /sys/block/mmcblk0/queue/scheduler
+echo "sioplus" > /sys/block/sda/queue/scheduler
+echo "sioplus" > /sys/block/sdb/queue/scheduler
+echo "sioplus" > /sys/block/sdc/queue/scheduler
+
+#####################################################################
+# GPU CLOCK
+echo "100" > /sys/devices/platform/gpusysfs/gpu_min_clock
+echo "772" > /sys/devices/platform/gpusysfs/gpu_max_clock
+
+#####################################################################
+# Default TCP Congestion Controller
+echo "westwood" > /proc/sys/net/ipv4/tcp_congestion_control
+
+#####################################################################
+# Enable Arch Power
+echo "1" > /sys/kernel/sched/arch_power
+
+#####################################################################
+# Disable Gentle Fair Sleepers
+echo "0" > /sys/kernel/sched/gentle_fair_sleepers
+
+echo "1" > /sys/module/workqueue/parameters/power_efficient;
+
+# increase in-call volume
+tinymix 58 160

@@ -44,8 +44,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.hwui.fbo_cache_size=16
 
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.sys.sdcardfs=true
+    ro.sys.sdcardfs=true \
+    vold.no_sd_adopt_encryption=1
 
 # GSM Signal
-ro.telephony.ril.config=datacallapn,signalstrength
+#PRODUCT_PROPERTY_OVERRIDES += \
+#ro.telephony.ril.config=datacallapn,signalstrength
 

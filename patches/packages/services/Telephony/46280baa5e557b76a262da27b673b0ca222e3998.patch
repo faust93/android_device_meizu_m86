@@ -1,0 +1,39 @@
+From 46280baa5e557b76a262da27b673b0ca222e3998 Mon Sep 17 00:00:00 2001
+From: Jesse Chan <jc@linux.com>
+Date: Sat, 4 Feb 2017 13:52:48 +0800
+Subject: [PATCH] MobileNetworkSettings: allow users to choice all network
+ modes
+
+This patch allows users to choice 6 more network modes:
+NT_MODE_WCDMA_ONLY, NT_MODE_GSM_UMTS, NT_MODE_EVDO_NO_CDMA,
+NT_MODE_GLOBAL, NT_MODE_LTE_ONLY, NT_MODE_LTE_WCDMA.
+
+Change-Id: I7623ef12fd13e2d1a1d50a610a8e0cd53b3d0660
+---
+ src/com/android/phone/MobileNetworkSettings.java | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/com/android/phone/MobileNetworkSettings.java b/src/com/android/phone/MobileNetworkSettings.java
+index 2434599..20b3058 100644
+--- a/src/com/android/phone/MobileNetworkSettings.java
++++ b/src/com/android/phone/MobileNetworkSettings.java
+@@ -815,11 +815,17 @@ public boolean onPreferenceChange(Preference preference, Object objValue) {
+             switch (buttonNetworkMode) {
+                 case Phone.NT_MODE_WCDMA_PREF:
+                 case Phone.NT_MODE_GSM_ONLY:
+-                case Phone.NT_MODE_LTE_GSM_WCDMA:
+-                case Phone.NT_MODE_LTE_CDMA_EVDO_GSM_WCDMA:
++                case Phone.NT_MODE_WCDMA_ONLY:
++                case Phone.NT_MODE_GSM_UMTS:
+                 case Phone.NT_MODE_CDMA:
+                 case Phone.NT_MODE_CDMA_NO_EVDO:
++                case Phone.NT_MODE_EVDO_NO_CDMA:
++                case Phone.NT_MODE_GLOBAL:
+                 case Phone.NT_MODE_LTE_CDMA_AND_EVDO:
++                case Phone.NT_MODE_LTE_GSM_WCDMA:
++                case Phone.NT_MODE_LTE_CDMA_EVDO_GSM_WCDMA:
++                case Phone.NT_MODE_LTE_ONLY:
++                case Phone.NT_MODE_LTE_WCDMA:
+                 case Phone.NT_MODE_TDSCDMA_ONLY:
+                 case Phone.NT_MODE_TDSCDMA_WCDMA:
+                 case Phone.NT_MODE_LTE_TDSCDMA:

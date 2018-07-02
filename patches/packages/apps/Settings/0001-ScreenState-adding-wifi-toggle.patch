@@ -1,0 +1,152 @@
+From 636443aa15fdee268810daa06ade736be86c53d4 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 31 Mar 2017 11:56:27 +0300
+Subject: [PATCH] ScreenState adding wifi toggle
+
+---
+ res/values-ru/rr_strings.xml                       |  3 +++
+ res/values/rr_strings.xml                          |  3 +++
+ res/xml/screen_state_toggles.xml                   | 12 +++++++++++
+ .../android/settings/rr/ScreenStateToggles.java    | 24 ++++++++++++++++++++++
+ 4 files changed, 42 insertions(+)
+
+diff --git a/res/values-ru/rr_strings.xml b/res/values-ru/rr_strings.xml
+index c79bff2..0d55edd 100644
+--- a/res/values-ru/rr_strings.xml
++++ b/res/values-ru/rr_strings.xml
+@@ -2157,6 +2157,9 @@
+   <string name="screen_state_off_delay_summary">Время в секундах перед выполнением действий после выключения экрана</string>
+   <string name="screen_state_on_delay_title">Задержка выполнения действий при включении экрана</string>
+   <string name="screen_state_on_delay_summary">Время в секундах перед выполнением действий после включения экрана</string>
++  <string name="screen_state_toggles_wifi_title">Wi-Fi</string>
++  <string name="screen_state_toggles_wifi">Выключить Wi-Fi</string>
++  <string name="screen_state_toggles_wifi_summary">Принудительно отключать Wi-Fi при выключенном экране</string>
+   <!-- In-call DND -->
+   <string name="dnd_when_call_title">Режим \"Не беспокоить\" во время голосового вызова</string>
+   <string name="dnd_when_call_summary">Автоматическое включение режима \"Не беспокоить\" во время голосовых вызовов</string>
+diff --git a/res/values/rr_strings.xml b/res/values/rr_strings.xml
+index 0f7747c..2d13aa2 100644
+--- a/res/values/rr_strings.xml
++++ b/res/values/rr_strings.xml
+@@ -2376,6 +2376,9 @@
+     <string name="screen_state_off_delay_summary">Number of seconds to wait before performing actions after screen off</string>
+     <string name="screen_state_on_delay_title">Screen On actions delay</string>
+     <string name="screen_state_on_delay_summary">Number of seconds to wait before performing actions after screen on</string>
++    <string name="screen_state_toggles_wifi_title">WIFI</string>
++    <string name="screen_state_toggles_wifi">Disable Wi-Fi</string>
++    <string name="screen_state_toggles_wifi_summary">Forcibly disable Wi-Fi while screen is off</string>
+ 
+     <!-- In-call DND -->
+     <string name="dnd_when_call_title">In-call do not disturb</string>
+diff --git a/res/xml/screen_state_toggles.xml b/res/xml/screen_state_toggles.xml
+index ae5d91e..b86094b 100644
+--- a/res/xml/screen_state_toggles.xml
++++ b/res/xml/screen_state_toggles.xml
+@@ -57,4 +57,16 @@
+             android:summary="@string/screen_state_toggles_gps_summary"
+             android:defaultValue="false"/>
+     </PreferenceCategory>
++
++    <PreferenceCategory
++        android:key="screen_state_toggles_wifi_key"
++        android:title="@string/screen_state_toggles_wifi_title">
++
++       <com.android.settings.rr.Preferences.SystemSettingSwitchPreference
++            android:key="screen_state_toggles_wifi"
++            android:title="@string/screen_state_toggles_wifi"
++            android:summary="@string/screen_state_toggles_wifi_summary"
++            android:defaultValue="false"/>
++    </PreferenceCategory>
++
+ </PreferenceScreen>
+diff --git a/src/com/android/settings/rr/ScreenStateToggles.java b/src/com/android/settings/rr/ScreenStateToggles.java
+index 8ec9da4..681de6f 100644
+--- a/src/com/android/settings/rr/ScreenStateToggles.java
++++ b/src/com/android/settings/rr/ScreenStateToggles.java
+@@ -40,6 +40,7 @@ import android.preference.PreferenceManager;
+ import com.android.settings.R;
+ import com.android.settings.SettingsPreferenceFragment;
+ import com.android.settings.Utils;
++import com.android.settings.rr.SeekBarPreference;
+ 
+ import com.android.internal.logging.MetricsProto.MetricsEvent;
+ 
+@@ -55,6 +56,8 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+     private static final String SCREEN_STATE_OFF_DELAY = "screen_state_off_delay";
+     private static final String SCREEN_STATE_CATGEGORY_LOCATION = "screen_state_toggles_location_key";
+     private static final String SCREEN_STATE_CATGEGORY_MOBILE_DATA = "screen_state_toggles_mobile_key";
++    private static final String SCREEN_STATE_TOOGLES_WIFI = "screen_state_toggles_wifi";
++    private static final String SCREEN_STATE_CATGEGORY_WIFI = "screen_state_toggles_wifi_key";
+ 
+     private Context mContext;
+ 
+@@ -62,10 +65,12 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+     private SwitchPreference mEnableScreenStateTogglesTwoG;
+     private SwitchPreference mEnableScreenStateTogglesGps;
+     private SwitchPreference mEnableScreenStateTogglesMobileData;
++    private SwitchPreference mEnableScreenStateTogglesWifi;
+     private SeekBarPreference mSecondsOffDelay;
+     private SeekBarPreference mSecondsOnDelay;
+     private PreferenceCategory mMobileDateCategory;
+     private PreferenceCategory mLocationCategory;
++    private PreferenceCategory mWifiCategory;
+ 
+     @Override
+     protected int getMetricsCategory() {
+@@ -105,6 +110,8 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+                 SCREEN_STATE_CATGEGORY_MOBILE_DATA);
+         mLocationCategory = (PreferenceCategory) findPreference(
+                 SCREEN_STATE_CATGEGORY_LOCATION);
++        mWifiCategory = (PreferenceCategory) findPreference(
++                SCREEN_STATE_CATGEGORY_WIFI);
+ 
+         mEnableScreenStateTogglesTwoG = (SwitchPreference) findPreference(
+                 SCREEN_STATE_TOGGLES_TWOG);
+@@ -129,6 +136,11 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+                 Settings.System.getInt(resolver, Settings.System.SCREEN_STATE_MOBILE_DATA, 0) == 1));
+             mEnableScreenStateTogglesMobileData.setOnPreferenceChangeListener(this);
+         }
++        mEnableScreenStateTogglesWifi = (SwitchPreference) findPreference(
++                SCREEN_STATE_TOOGLES_WIFI);
++        mEnableScreenStateTogglesWifi.setChecked((
++                Settings.System.getInt(getActivity().getContentResolver(), Settings.System.SCREEN_STATE_WIFI, 0) == 1));
++        mEnableScreenStateTogglesWifi.setOnPreferenceChangeListener(this);
+ 
+         // Only enable these controls if this user is allowed to change location
+         // sharing settings.
+@@ -150,6 +162,7 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+ 
+         mMobileDateCategory.setEnabled(enabled != 0);
+         mLocationCategory.setEnabled(enabled != 0);
++        mWifiCategory.setEnabled(enabled != 0);
+     }
+ 
+     @Override
+@@ -172,6 +185,8 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+ 
+             mMobileDateCategory.setEnabled(value);
+             mLocationCategory.setEnabled(value);
++            mWifiCategory.setEnabled(value);
++
+             return true;
+         } else if (preference == mEnableScreenStateTogglesTwoG) {
+             boolean value = (Boolean) newValue;
+@@ -196,6 +211,15 @@ public class ScreenStateToggles extends SettingsPreferenceFragment
+ 
+             Intent intent = new Intent("android.intent.action.SCREEN_STATE_SERVICE_UPDATE");
+             mContext.sendBroadcast(intent);
++
++            return true;
++        } else if (preference == mEnableScreenStateTogglesWifi) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putInt(resolver,
++                    Settings.System.SCREEN_STATE_WIFI, value ? 1 : 0);
++
++            Intent intent = new Intent("android.intent.action.SCREEN_STATE_SERVICE_UPDATE");
++            mContext.sendBroadcast(intent);
+             return true;
+         } else if (preference == mSecondsOffDelay) {
+             int delay = (Integer) newValue;
+-- 
+1.9.3 (Apple Git-50)
+

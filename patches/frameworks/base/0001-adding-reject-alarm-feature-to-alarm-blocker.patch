@@ -1,0 +1,115 @@
+From 971a85216407cca9e506d51d38341a1ada67f89a Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Tue, 7 Feb 2017 22:15:40 +0300
+Subject: [PATCH] adding reject alarm feature to alarm blocker
+
+---
+ .../com/android/server/AlarmManagerService.java    | 38 +++++++++++++++++-----
+ 1 file changed, 29 insertions(+), 9 deletions(-)
+
+diff --git a/services/core/java/com/android/server/AlarmManagerService.java b/services/core/java/com/android/server/AlarmManagerService.java
+index 6be7179..f89a9a5 100644
+--- a/services/core/java/com/android/server/AlarmManagerService.java
++++ b/services/core/java/com/android/server/AlarmManagerService.java
+@@ -78,7 +78,9 @@ import java.util.TimeZone;
+ import java.util.TreeSet;
+ 
+ import java.util.Set;
++import java.util.Map;
+ import java.util.HashSet;
++import java.util.HashMap;
+ import java.util.Iterator;
+ 
+ import static android.app.AlarmManager.RTC_WAKEUP;
+@@ -167,7 +169,7 @@ class AlarmManagerService extends SystemService {
+     int mNumTimeChanged;
+ 
+     private Set<String> mSeenAlarms = new HashSet<String>();
+-    private Set<String> mBlockedAlarms = new HashSet<String>();
++    private Map<String, Boolean[]> mBlockedAlarms = new HashMap<String, Boolean[]>();
+     private int mAlarmsBlockingEnabled;
+ 
+     /**
+@@ -1131,7 +1133,7 @@ class AlarmManagerService extends SystemService {
+         // Try to prevent spamming by making sure we aren't firing alarms in the immediate future
+         final long minTrigger = nowElapsed + mConstants.MIN_FUTURITY;
+         final long triggerElapsed = (nominalTrigger > minTrigger) ? nominalTrigger : minTrigger;
+-
++        triggerAtTime = (nominalTrigger > minTrigger) ? triggerAtTime : triggerAtTime + mConstants.MIN_FUTURITY;
+         final long maxElapsed;
+         if (windowLength == AlarmManager.WINDOW_EXACT) {
+             maxElapsed = triggerElapsed;
+@@ -1143,7 +1145,7 @@ class AlarmManagerService extends SystemService {
+             maxElapsed = triggerElapsed + windowLength;
+         }
+ 
+-        boolean blockAlarm = false;
++        boolean rejectAlarm = false;
+         if(operation != null){
+             String tag = operation.getTag("");
+ 
+@@ -1154,16 +1156,21 @@ class AlarmManagerService extends SystemService {
+                 if (!mSeenAlarms.contains(tag)) {
+                     mSeenAlarms.add(tag);
+                 }
+-                if (mAlarmsBlockingEnabled == 1 && mBlockedAlarms.contains(tag)) {
++                if (mAlarmsBlockingEnabled == 1 && mBlockedAlarms.containsKey(tag)) {
++                    Boolean[] state = mBlockedAlarms.get(tag);
++                    if(state[1].booleanValue()){
+                         if (type == AlarmManager.RTC_WAKEUP) {
+                             type = AlarmManager.RTC;
+                         } else {
+                             type = AlarmManager.ELAPSED_REALTIME;
+                         }
+-                    blockAlarm = true;
++                        Slog.e(TAG, "RTC alarm blocked: " + type + " " + listenerTag + " " + callingPackage + " " + operation.getTag(""));
++                    } else if(state[0].booleanValue()){
++                        rejectAlarm = true;
+                     }
+                 }
+             }
++        }
+ 
+         synchronized (mLock) {
+             if (DEBUG_BATCH) {
+@@ -1173,8 +1180,9 @@ class AlarmManagerService extends SystemService {
+                         + " interval=" + interval + " flags=0x" + Integer.toHexString(flags));
+             }
+ 
+-            if(blockAlarm){
+-                Slog.e(TAG, "RTC alarm blocked: " + type + " " + listenerTag + " " + callingPackage + " " + operation.getTag(""));
++            if(rejectAlarm){
++                Slog.e(TAG, "RTC alarm rejected: " + type + " " + listenerTag + " " + callingPackage + " " + operation.getTag(""));
++                return;
+             }
+             setImplLocked(type, triggerAtTime, triggerElapsed, windowLength, maxElapsed,
+                 interval, operation, directReceiver, listenerTag, flags, true, workSource,
+@@ -1183,11 +1191,23 @@ class AlarmManagerService extends SystemService {
+     }
+ 
+     private void setBlockedAlarms(String AlarmTagsString) {
+-        mBlockedAlarms = new HashSet<String>();
++        mBlockedAlarms = new HashMap<String,Boolean[]>();
+         if (AlarmTagsString != null && AlarmTagsString.length() != 0) {
+             String[] parts = AlarmTagsString.split("\\|");
++            Boolean rejected, blocked;
+             for (int i = 0; i < parts.length; i++) {
+-                mBlockedAlarms.add(parts[i]);
++                String[] state = parts[i].split("\\:");
++                if(state[1].equals("0")){
++                    rejected = false;
++                } else {
++                    rejected = true;
++                }
++                if(state[2].equals("0")){
++                    blocked = false;
++                } else {
++                    blocked = true;
++                }
++                mBlockedAlarms.put(state[0],new Boolean[]{rejected, blocked});
+             }
+         }
+     }
+-- 
+1.9.3 (Apple Git-50)
+

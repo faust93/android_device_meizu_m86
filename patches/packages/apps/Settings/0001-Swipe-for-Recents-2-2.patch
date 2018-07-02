@@ -1,0 +1,61 @@
+From 5538c2442ca81d70a7fe9651fd464becf9ff4004 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 26 Feb 2017 16:31:35 +0300
+Subject: [PATCH] Swipe for Recents [2/2]
+
+---
+ res/values-ru/rr_strings.xml | 3 +++
+ res/values/rr_strings.xml    | 4 ++++
+ res/xml/rr_gestures.xml      | 8 ++++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/res/values-ru/rr_strings.xml b/res/values-ru/rr_strings.xml
+index 7084284..5d7767b 100644
+--- a/res/values-ru/rr_strings.xml
++++ b/res/values-ru/rr_strings.xml
+@@ -1770,6 +1770,9 @@
+   <!-- Three-fingers-swipe to screenshot -->
+   <string name="three_finger_gesture">Жест тремя пальцами</string>
+   <string name="three_finger_gesture_summary">Проведите тремя пальцами для создания скриншота</string>
++  <!-- Swipe bottom right up for recents -->
++  <string name="recents_finger_gesture">Свайп вызова недавних приложений</string>
++  <string name="recents_finger_gesture_summary">Свайп одним пальцем вверх из нижнего правого угла для вызова недавних</string>
+   <!-- Lockscreen Colors -->
+   <string name="lockscreen_colors">Расширенные настройки цвета</string>
+   <string name="lockscreen_colors_summary">Дополнительные настройки цвета</string>
+diff --git a/res/values/rr_strings.xml b/res/values/rr_strings.xml
+index 5f5509d..544da21 100644
+--- a/res/values/rr_strings.xml
++++ b/res/values/rr_strings.xml
+@@ -1992,6 +1992,10 @@
+     <string name="three_finger_gesture">Three finger gesture</string>
+     <string name="three_finger_gesture_summary">Swipe three finger to screenshot</string>
+ 
++    <!-- Swipe bottom right up for recents -->
++    <string name="recents_finger_gesture">Recents finger gesture</string>
++    <string name="recents_finger_gesture_summary">Swipe finger up from bottom-right for recent apps</string>
++
+     <!-- Lockscreen Colors -->
+     <string name="lockscreen_colors">Color customizations</string>
+     <string name="lockscreen_colors_summary">Advanced color options</string>
+diff --git a/res/xml/rr_gestures.xml b/res/xml/rr_gestures.xml
+index 25ac415..f6b20b0 100644
+--- a/res/xml/rr_gestures.xml
++++ b/res/xml/rr_gestures.xml
+@@ -49,5 +49,13 @@
+             android:defaultValue="false"
+             android:icon="@drawable/rr_three_finger_gesture_icon" />
+ 
++       <!-- Bottom-right swipe up to recents -->
++       <com.android.settings.rr.Preferences.SystemSettingSwitchPreference
++             android:key="recents_finger_gesture"
++             android:title="@string/recents_finger_gesture"
++             android:summary="@string/recents_finger_gesture_summary"
++             android:defaultValue="true"
++             android:icon="@drawable/rr_three_finger_gesture_icon" />
++
+ </PreferenceScreen>
+ 
+-- 
+1.9.3 (Apple Git-50)
+

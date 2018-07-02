@@ -306,7 +306,8 @@ int wait_finger_up()
         cycles--;
         if(!cycles){
             close(fn);
-            return FP_TIMEOUT;
+            break;
+//            return FP_TIMEOUT;
             }
         } while(ret == -1 || !ret );
 
@@ -325,7 +326,8 @@ static int mode(struct fp_img_dev *dev, int sensor_mode)
 
         switch(sensor_mode){
             case NAV_MODE:
-//             wait_finger_up();
+             usleep(10000);
+            // wait_finger_up();
              nav_mode();
              break;
             case CAP_MODE:
